@@ -394,9 +394,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function resetMeta() {
+    function resetMeta(mode) {
         elements.tokenCount.textContent = '0';
-        initAnalysisMeta(currentMode);
+        initAnalysisMeta(mode);
     }
 
     async function startAnalysis() {
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.loadingState.classList.remove('hidden');
         elements.resultArea.classList.add('hidden');
         resetProgress();
-        resetMeta();
+        resetMeta(currentMode); // 传入当前模式进行重置
         initStepper(currentMode);
         updateSidebarUI(); // 在此处真正切换功能入口
         
@@ -1132,8 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.textContent = ' 生成画像';
         }
 
-        // --- 注意：此处不再调用 updateSidebarUI，保留当前展示的面板 ---
-        initAnalysisMeta(mode);
+        // --- 注意：此处不再调用 updateSidebarUI 和 initAnalysisMeta，保留当前展示的面板和数据 ---
     }
 
     function updateSidebarUI() {
