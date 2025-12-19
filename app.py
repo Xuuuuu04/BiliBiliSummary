@@ -114,6 +114,12 @@ def index():
     return send_from_directory(app.static_folder, 'index.html')
 
 
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """托管资源文件"""
+    return send_from_directory('assets', filename)
+
+
 @app.route('/api/search', methods=['POST'])
 def search_content():
     """通用搜索接口，返回列表供用户选择"""
