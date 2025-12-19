@@ -96,7 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
         articleOriginalContent: document.getElementById('articleOriginalContent'),
         userPortraitContentPane: document.getElementById('userPortraitContentPane'),
         userWorksContent: document.getElementById('userWorksContent'),
-        userWorksList: document.getElementById('userWorksList')
+        userWorksList: document.getElementById('userWorksList'),
+
+        // Search Results Panel
+        searchResultsPanel: document.getElementById('searchResultsPanel'),
+        resultsList: document.getElementById('resultsList'),
+        resultsCount: document.getElementById('resultsCount'),
+        closeResultsBtn: document.getElementById('closeResultsBtn')
     };
 
     // State
@@ -399,16 +405,33 @@ document.addEventListener('DOMContentLoaded', () => {
         initAnalysisMeta(mode);
     }
 
+    // Search Results Panel
+    elements.closeResultsBtn.onclick = () => elements.searchResultsPanel.classList.add('hidden');
+
     async function startAnalysis() {
         if (isAnalyzing) return;
         
-        const url = elements.videoUrl.value.trim();
-        if (!url) {
-            showToast('请输入B站链接');
+        const input = elements.videoUrl.value.trim();
+        if (!input) {
+            showToast('请输入B站链接或关键词');
             return;
         }
 
-        // Reset UI
+        // Hide previous search results
+        elements.searchResultsPanel.classList.add('hidden');
+
+        // Check if input is a direct ID/Link or a keyword
+        const isBvid = input.includes('BV') || input.includes('video/');
+        const isCvid = input.includes('cv') || input.includes('read/') || input.includes('opus/');
+        const isUid = input.includes('space.bilibili.com') || (input.match(/^\d+$/) && input.length > 5);
+        
+        // If it's a keyword (not a link/ID), perform search first
+        if (!isBvid && !isCvid && !isUid && !input.startsWith('http')) {
+            await performSearch(input);
+            return;
+        }
+
+        // --- Standard Analysis Flow ---
         isAnalyzing = true;
         elements.analyzeBtn.disabled = true;
         elements.welcomeSection.classList.add('hidden');
@@ -1424,7 +1447,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function formatNumber(num) {
+    async function performSearch(keyword) {
+        elements.analyzeBtn.disabled = true;
+        const btnText = elements.analyzeBtn.lastChild;
+        const originalText = btnText.textContent;
+        btnText.textContent = ' 搜索中...';
+
+        try {
+            const res = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ keyword, mode: currentMode })
+            });
+            const json = await res.json();
+            if (json.success && json.data && json.data.length > 0) {
+                renderSearchResults(json.data);
+            } else {
+                showToast('未找到相关内容，请尝试更精确的关键词');
+            }
+        } catch (e) {
+            showToast('搜索失败，请检查网络');
+        } finally {
+            elements.analyzeBtn.disabled = false;
+            btnText.textContent = originalText;
+        }
+    }
+
+    function renderSearchResults(results) {
+        elements.resultsList.innerHTML = '';
+        elements.resultsCount.textContent = `找到 ${results.length} 条相关结果`;
+        elements.searchResultsPanel.classList.remove('hidden');
+
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            
+            let idValue = '';
+            let metaText = '';
+            let thumbClass = 'result-thumb';
+
+            if (currentMode === 'video') {
+                idValue = item.bvid;
+                metaText = `UP主: ${item.author} | 播放: ${formatNumber(item.play)}`;
+            } else if (currentMode === 'user') {
+                idValue = item.mid;
+                metaText = `等级: L${item.level} | 签名: ${item.sign || '无'}`;
+                thumbClass += ' user-face';
+            } else if (currentMode === 'article') {
+                idValue = 'cv' + item.cvid;
+                metaText = `作者: ${item.author}`;
+            }
+
+            div.innerHTML = `
+                <img class="${thumbClass}" src="/api/image-proxy?url=${encodeURIComponent(item.pic || item.face)}">
+                <div class="result-info">
+                    <div class="result-title">${item.title}</div>
+                    <div class="result-meta">${metaText}</div>
+                </div>
+            `;
+
+            div.onclick = () => {
+                elements.videoUrl.value = idValue;
+                elements.searchResultsPanel.classList.add('hidden');
+                startAnalysis();
+            };
+            elements.resultsList.appendChild(div);
+        });
+    }
         if (!num) return '0';
         if (num > 10000) return (num / 10000).toFixed(1) + '万';
         return num;

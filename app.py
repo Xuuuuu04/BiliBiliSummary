@@ -114,6 +114,29 @@ def index():
     return send_from_directory(app.static_folder, 'index.html')
 
 
+@app.route('/api/search', methods=['POST'])
+def search_content():
+    """通用搜索接口，返回列表供用户选择"""
+    try:
+        data = request.get_json()
+        keyword = data.get('keyword', '')
+        mode = data.get('mode', 'video')
+        
+        if not keyword:
+            return jsonify({'success': False, 'error': '请输入搜索关键词'}), 400
+            
+        if mode == 'article':
+            res = run_async(bilibili_service.search_articles(keyword, limit=10))
+        elif mode == 'user':
+            res = run_async(bilibili_service.search_users(keyword, limit=10))
+        else:
+            res = run_async(bilibili_service.search_videos(keyword, limit=10))
+            
+        return jsonify(res)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze_video():
     """分析视频的主接口"""

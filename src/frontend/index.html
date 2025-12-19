@@ -84,6 +84,17 @@
                             开始分析
                         </button>
                     </div>
+
+                    <!-- 搜索结果下拉面板 (新) -->
+                    <div id="searchResultsPanel" class="search-results-panel hidden">
+                        <div class="results-header">
+                            <span id="resultsCount">找到 0 条相关结果</span>
+                            <button id="closeResultsBtn" class="btn-icon-small">×</button>
+                        </div>
+                        <div id="resultsList" class="results-list">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
                     <div id="loginHint" class="login-hint hidden">
                         <span class="hint-icon">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
