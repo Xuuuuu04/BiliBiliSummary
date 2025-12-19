@@ -250,12 +250,42 @@ def analyze_video_stream():
         bvid = BilibiliService.extract_bvid(url)
         article_meta = BilibiliService.extract_article_id(url)
 
-        if not bvid and not article_meta:
-            return jsonify({'success': False, 'error': '无效的B站链接'}), 400
-
         def generate_stream():
             try:
                 import json
+                
+                nonlocal bvid, article_meta # 允许在内部修改 ID
+                
+                # --- 智能搜索逻辑：如果输入的不是 ID，则视为关键词搜索 ---
+                if not bvid and not article_meta:
+                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'searching', 'message': f'正在为您搜索相关内容...', 'progress': 5})}\n\n"
+                    
+                    # 假设前端通过 mode 选择器告知了意图，或者我们根据内容猜
+                    # 这里简化逻辑：根据当前调用的接口参数（如果有的话）或默认先搜视频
+                    # 为了精准，我们优先在 generate_stream 外部根据 URL 特征已经判过一次了
+                    # 如果走到这里还没 ID，说明是纯文字
+                    
+                    # 我们需要知道用户当前选的是什么模式，这里暂定从 url 内容判断意图
+                    # 实际上可以通过 request.get_json().get('mode') 获取
+                    mode = data.get('mode', 'video')
+                    
+                    if mode == 'article':
+                        search_res = run_async(bilibili_service.search_articles(url, limit=1))
+                        if search_res['success'] and search_res['data']:
+                            article_meta = {'type': 'cv', 'id': search_res['data'][0]['cvid']}
+                            yield f"data: {json.dumps({'type': 'stage', 'stage': 'search_complete', 'message': f'为您找到专栏: {search_res['data'][0]['title']}', 'progress': 10})}\n\n"
+                        else:
+                            yield f"data: {json.dumps({'type': 'error', 'error': '未找到相关专栏内容'})}\n\n"
+                            return
+                    else:
+                        search_res = run_async(bilibili_service.search_videos(url, limit=1))
+                        if search_res['success'] and search_res['data']:
+                            bvid = search_res['data'][0]['bvid']
+                            yield f"data: {json.dumps({'type': 'stage', 'stage': 'search_complete', 'message': f'为您找到视频: {search_res['data'][0]['title']}', 'progress': 10})}\n\n"
+                        else:
+                            yield f"data: {json.dumps({'type': 'error', 'error': '未找到相关视频'})}\n\n"
+                            return
+
                 # --- 专栏 / Opus 分析逻辑 ---
                 if article_meta:
                     a_type = article_meta['type']
@@ -713,14 +743,27 @@ def check_current_login():
 
 @app.route('/api/user/portrait', methods=['POST'])
 def get_user_portrait():
-    """获取UP主深度画像"""
+    """获取UP主深度画像（支持UID或关键词搜索）"""
     try:
         data = request.get_json()
-        uid = data.get('uid')
-        if not uid: return jsonify({'success': False, 'error': '缺少UID'}), 400
+        input_val = data.get('uid')
+        if not input_val: return jsonify({'success': False, 'error': '缺少输入内容'}), 400
         
+        target_uid = None
+        # 识别是否为 UID
+        if str(input_val).isdigit():
+            target_uid = int(input_val)
+        else:
+            # 视为关键词搜索
+            search_res = run_async(bilibili_service.search_users(str(input_val), limit=1))
+            if search_res['success'] and search_res['data']:
+                target_uid = search_res['data'][0]['mid']
+                print(f"[搜索] 为关键词 '{input_val}' 找到用户: {search_res['data'][0]['name']} (UID: {target_uid})")
+            else:
+                return jsonify({'success': False, 'error': f'未找到名为 "{input_val}" 的用户'}), 404
+
         # 获取用户信息和最近视频
-        user_info_res = run_async(bilibili_service.get_user_info(int(uid)))
+        user_info_res = run_async(bilibili_service.get_user_info(target_uid))
         recent_videos_res = run_async(bilibili_service.get_user_recent_videos(int(uid)))
         
         if not user_info_res['success']: return jsonify(user_info_res), 400

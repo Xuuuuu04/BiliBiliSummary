@@ -493,7 +493,48 @@ class BilibiliService:
                 })
             return {'success': True, 'data': result_list}
         except Exception as e:
-            return {'success': False, 'error': f'搜索失败: {str(e)}'}
+            return {'success': False, 'error': f'搜索视频失败: {str(e)}'}
+
+    async def search_users(self, keyword: str, limit: int = 5) -> Dict:
+        """根据关键词搜索用户"""
+        try:
+            res = await search.search_by_type(
+                keyword,
+                search_type=search.SearchObjectType.USER,
+                page_size=limit
+            )
+            result_list = []
+            for item in res.get('result', []):
+                result_list.append({
+                    'mid': item.get('mid'),
+                    'name': item.get('uname').replace('<em class="keyword">', '').replace('</em>', ''),
+                    'face': 'https:' + item.get('upic') if item.get('upic', '').startswith('//') else item.get('upic'),
+                    'level': item.get('level'),
+                    'sign': item.get('usign')
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索用户失败: {str(e)}'}
+
+    async def search_articles(self, keyword: str, limit: int = 5) -> Dict:
+        """根据关键词搜索专栏/Opus"""
+        try:
+            res = await search.search_by_type(
+                keyword,
+                search_type=search.SearchObjectType.ARTICLE,
+                page_size=limit
+            )
+            result_list = []
+            for item in res.get('result', []):
+                result_list.append({
+                    'cvid': item.get('id'),
+                    'title': item.get('title').replace('<em class="keyword">', '').replace('</em>', ''),
+                    'author': item.get('author'),
+                    'pic': 'https:' + item.get('image_urls', [None])[0] if item.get('image_urls') else ''
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索专栏失败: {str(e)}'}
 
     async def get_article_content(self, cvid: int) -> Dict:
         """获取专栏文章内容 (CV)"""

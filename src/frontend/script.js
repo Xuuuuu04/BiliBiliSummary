@@ -562,7 +562,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/analyze/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
+            body: JSON.stringify({ 
+                url: url,
+                mode: currentMode // 告知后端搜索意图
+            })
         });
 
         if (!response.ok) {
@@ -628,7 +631,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update metadata and stepper as it arrives
         if (data.type === 'stage') {
-            if (data.stage === 'fetching_info') {
+            if (data.stage === 'searching') {
+                updateStepper('search', 'active');
+            } else if (data.stage === 'search_complete') {
+                updateStepper('search', 'completed');
+                updateStepper('info', 'active');
+            } else if (data.stage === 'fetching_info') {
                 updateStepper('info', 'active');
             } else if (data.stage === 'info_complete') {
                 updateStepper('info', 'completed');
@@ -1213,17 +1221,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modeSteps = {
         video: [
+            { id: 'search', text: '搜索相关视频' },
             { id: 'info', text: '获取视频信息' },
             { id: 'content', text: '拉取文本与互动数据' },
             { id: 'frames', text: '提取视觉关键帧' },
             { id: 'ai', text: 'AI 深度建模分析' }
         ],
         article: [
+            { id: 'search', text: '定位目标专栏' },
             { id: 'info', text: '拉取专栏元数据' },
             { id: 'content', text: '提取专栏核心文本' },
             { id: 'ai', text: '逻辑链路深度解析' }
         ],
         user: [
+            { id: 'search', text: '搜索匹配用户' },
             { id: 'info', text: '检索用户基本资料' },
             { id: 'content', text: '分析近期作品趋势' },
             { id: 'ai', text: '生成 AI 深度画像' }
