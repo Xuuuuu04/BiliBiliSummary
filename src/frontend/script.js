@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         streamingStatus: document.getElementById('streamingStatus'),
         streamingText: document.getElementById('streamingText'),
         chunkCounter: document.getElementById('chunkCounter'),
+        loadingStepper: document.getElementById('loadingStepper'),
 
         // Settings Drawer
         settingsBtn: document.getElementById('settingsBtn'),
@@ -383,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.resultArea.classList.add('hidden');
         resetProgress();
         resetMeta();
-        resetStepper();
+        initStepper(currentMode);
         
         // Reset Data
         currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [], articleData: null, userData: null };
@@ -425,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uid = input.match(/space\.bilibili\.com\/(\d+)/)[1];
         }
         
+        updateStepper('info', 'active');
         updateProgress(20, '正在获取UP主资料...');
         const res = await fetch('/api/user/portrait', {
             method: 'POST',
@@ -434,8 +436,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const json = await res.json();
         
         if (json.success) {
-            updateProgress(100, '分析完成');
+            updateStepper('info', 'completed');
+            updateStepper('content', 'active');
+            updateProgress(60, '分析作品趋势...');
+            
+            // Artificial delay for better UX feel
+            await new Promise(r => setTimeout(r, 800));
+            
+            updateStepper('content', 'completed');
+            updateStepper('ai', 'active');
+            updateProgress(90, '生成AI深度画像...');
+            
             renderUserPortrait(json.data);
+            updateStepper('ai', 'completed');
+            updateProgress(100, '分析完成');
             
             isAnalyzing = false;
             elements.analyzeBtn.disabled = false;
@@ -550,11 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.stage === 'streaming') {
                 // For streaming, use the dedicated badge to avoid flickering
                 elements.streamingStatus.classList.remove('hidden');
-                elements.loadingText.textContent = 'AI 正在深度分析内容...';
+                elements.loadingText.textContent = currentMode === 'article' ? 'AI 正在深度解析专栏...' : 'AI 正在深度分析内容...';
                 if (data.tokens_used) {
                     elements.chunkCounter.textContent = Math.floor(data.tokens_used / 10);
                 }
                 updateProgress(data.progress); // Only update bar
+                updateStepper('ai', 'active'); // Ensure AI step is active during streaming
             } else {
                 elements.streamingStatus.classList.add('hidden');
                 updateProgress(data.progress, data.message);
@@ -1060,6 +1075,40 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.chatContent.classList.add('active');
             elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
         }
+    }
+
+    const modeSteps = {
+        video: [
+            { id: 'info', text: '获取视频信息' },
+            { id: 'content', text: '拉取文本与互动数据' },
+            { id: 'frames', text: '提取视觉关键帧' },
+            { id: 'ai', text: 'AI 深度建模分析' }
+        ],
+        article: [
+            { id: 'info', text: '拉取专栏元数据' },
+            { id: 'content', text: '提取专栏核心文本' },
+            { id: 'ai', text: '逻辑链路深度解析' }
+        ],
+        user: [
+            { id: 'info', text: '检索用户基本资料' },
+            { id: 'content', text: '分析近期作品趋势' },
+            { id: 'ai', text: '生成 AI 深度画像' }
+        ]
+    };
+
+    function initStepper(mode) {
+        const steps = modeSteps[mode] || modeSteps.video;
+        elements.loadingStepper.innerHTML = '';
+        steps.forEach((step, index) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step';
+            stepDiv.id = `step-${step.id}`;
+            stepDiv.innerHTML = `
+                <div class="step-icon">${index + 1}</div>
+                <div class="step-text">${step.text}</div>
+            `;
+            elements.loadingStepper.appendChild(stepDiv);
+        });
     }
 
     function resetProgress() {
