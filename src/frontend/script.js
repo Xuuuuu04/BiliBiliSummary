@@ -1484,6 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let idValue = '';
             let metaText = '';
+            let displayTitle = item.title || item.name; // 优先使用 title，用户模式下回退到 name
             let thumbClass = 'result-thumb';
 
             if (currentMode === 'video') {
@@ -1491,6 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 metaText = `UP主: ${item.author} | 播放: ${formatNumber(item.play)}`;
             } else if (currentMode === 'user') {
                 idValue = item.mid;
+                displayTitle = item.name; // 用户模式强制使用 name
                 metaText = `等级: L${item.level} | 签名: ${item.sign || '无'}`;
                 thumbClass += ' user-face';
             } else if (currentMode === 'article') {
@@ -1501,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <img class="${thumbClass}" src="/api/image-proxy?url=${encodeURIComponent(item.pic || item.face)}">
                 <div class="result-info">
-                    <div class="result-title">${item.title}</div>
+                    <div class="result-title">${displayTitle}</div>
                     <div class="result-meta">${metaText}</div>
                 </div>
             `;
