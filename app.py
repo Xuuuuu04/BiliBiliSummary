@@ -656,9 +656,9 @@ def logout_bilibili():
 
 @app.route('/api/bilibili/login/check', methods=['GET'])
 def check_current_login():
-    """检查当前登录状态"""
+    """检查当前登录状态并返回用户资料"""
     try:
-        # 检查是否配置了核心登录凭据（BUVID3不是必需的）
+        # 检查是否配置了核心登录凭据
         has_credentials = all([
             Config.BILIBILI_SESSDATA,
             Config.BILIBILI_BILI_JCT,
@@ -666,16 +666,33 @@ def check_current_login():
         ])
 
         if has_credentials:
-            # 进一步验证凭据有效性
-            bilibili_service = BilibiliService()
+            # 验证凭据有效性并获取用户信息
+            # 这里的 bilibili_service 已经初始化了凭据
             is_valid = run_async(bilibili_service.check_credential_valid())
+
+            if is_valid:
+                # 获取当前登录用户的详细资料
+                # 注意：DedeUserID 就是用户的 MID
+                user_info_res = run_async(bilibili_service.get_user_info(int(Config.BILIBILI_DEDEUSERID)))
+                
+                if user_info_res['success']:
+                    return jsonify({
+                        'success': True,
+                        'data': {
+                            'is_logged_in': True,
+                            'user_id': Config.BILIBILI_DEDEUSERID,
+                            'name': user_info_res['data']['name'],
+                            'face': user_info_res['data']['face'],
+                            'message': '已登录'
+                        }
+                    })
 
             return jsonify({
                 'success': True,
                 'data': {
                     'is_logged_in': is_valid,
                     'user_id': Config.BILIBILI_DEDEUSERID[:10] + '***' if Config.BILIBILI_DEDEUSERID else None,
-                    'message': '已登录' if is_valid else '凭据已失效，请重新登录'
+                    'message': '凭据已失效，请重新登录' if not is_valid else '获取用户信息失败'
                 }
             })
         else:

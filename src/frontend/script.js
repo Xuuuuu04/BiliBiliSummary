@@ -974,15 +974,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success && result.data.is_logged_in) {
-                const userId = result.data.user_id || '';
+                const user = result.data;
+                const faceUrl = user.face ? `/api/image-proxy?url=${encodeURIComponent(user.face)}` : '';
+                
                 elements.loginBtn.innerHTML = `
-                    <div class="user-avatar-placeholder">
+                    <div class="user-avatar-placeholder" style="overflow: hidden;">
+                        ${user.face ? `<img src="${faceUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
+                        </svg>`}
                     </div>
-                    <span>UID: ${userId}</span>
+                    <span>${user.name || '已登录'}</span>
                 `;
                 elements.loginBtn.classList.add('logged-in');
                 elements.loginBtn.onclick = () => {
