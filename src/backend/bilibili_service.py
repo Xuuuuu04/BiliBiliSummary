@@ -3,7 +3,7 @@ import re
 import os
 import base64
 import tempfile
-from bilibili_api import video, Credential
+from bilibili_api import video, user, search, article, dynamic, Credential
 from typing import Dict, List, Optional
 import aiohttp
 import cv2
@@ -115,6 +115,23 @@ class BilibiliService:
             if match:
                 bvid = match.group(1) if len(match.groups()) > 0 else match.group(0)
                 if bvid.startswith('BV'): return bvid
+        return None
+
+    @staticmethod
+    def extract_article_id(url: str) -> Optional[Dict]:
+        """从B站链接中提取专栏CV号或Opus动态号"""
+        # 传统专栏 CV
+        cv_match = re.search(r'cv(\d+)|read/cv(\d+)', url)
+        if cv_match:
+            cvid = cv_match.group(1) or cv_match.group(2)
+            return {'type': 'cv', 'id': int(cvid)}
+        
+        # 新版 Opus / 动态
+        opus_match = re.search(r'opus/(\d+)|dynamic/(\d+)', url)
+        if opus_match:
+            oid = opus_match.group(1) or opus_match.group(2)
+            return {'type': 'opus', 'id': int(oid)}
+            
         return None
 
     async def get_video_info(self, bvid: str) -> Dict:
@@ -404,6 +421,212 @@ class BilibiliService:
         except Exception as e:
             print(f"[警告] 获取热门视频失败: {e}")
             return {'success': False, 'error': str(e)}
+
+    # --- 新增功能：用户、搜索、专栏 ---
+
+    async def get_user_info(self, uid: int) -> Dict:
+        """获取用户基本信息"""
+        try:
+            u = user.User(uid=uid, credential=self.credential)
+            info = await u.get_user_info()
+            # 获取粉丝数等关系数据
+            rel = await u.get_relation_info()
+            return {
+                'success': True,
+                'data': {
+                    'mid': info.get('mid'),
+                    'name': info.get('name'),
+                    'face': info.get('face'),
+                    'sign': info.get('sign'),
+                    'level': info.get('level'),
+                    'follower': rel.get('follower', 0),
+                    'official': info.get('official', {}).get('title')
+                }
+            }
+        except Exception as e:
+            return {'success': False, 'error': f'获取用户信息失败: {str(e)}'}
+
+    async def get_user_recent_videos(self, uid: int, limit: int = 10) -> Dict:
+        """获取用户最近投稿"""
+        try:
+            u = user.User(uid=uid, credential=self.credential)
+            # get_videos 返回的是一个生成器或者分页对象，通常直接调用拿到第一页
+            # 注意：bilibili-api 的 user.get_videos 接口行为可能随版本变动，这里假设它返回标准结构
+            res = await u.get_videos(ps=limit)
+            v_list = res.get('list', {}).get('vlist', [])
+            
+            processed = []
+            for v in v_list:
+                processed.append({
+                    'bvid': v.get('bvid'),
+                    'title': v.get('title'),
+                    'pic': v.get('pic'),
+                    'play': v.get('play'),
+                    'length': v.get('length')
+                })
+            return {'success': True, 'data': processed}
+        except Exception as e:
+            return {'success': False, 'error': f'获取用户投稿失败: {str(e)}'}
+
+    async def search_videos(self, keyword: str, limit: int = 20) -> Dict:
+        """搜索视频"""
+        try:
+            # search.search_by_type 返回搜索结果
+            res = await search.search_by_type(
+                keyword, 
+                search_type=search.SearchObjectType.VIDEO, 
+                order_type=search.OrderVideo.TOTALRANK, # 综合排序
+                page_size=limit
+            )
+            
+            result_list = []
+            for item in res.get('result', []):
+                # 过滤掉非视频项（有时候会有广告）
+                if item.get('type') != 'video': continue
+                result_list.append({
+                    'bvid': item.get('bvid'),
+                    'title': item.get('title').replace('<em class="keyword">', '').replace('</em>', ''), # 清理高亮标签
+                    'author': item.get('author'),
+                    'pic': 'https:' + item.get('pic') if item.get('pic', '').startswith('//') else item.get('pic'),
+                    'play': item.get('play'),
+                    'duration': item.get('duration')
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索视频失败: {str(e)}'}
+
+    async def search_users(self, keyword: str, limit: int = 5) -> Dict:
+        """根据关键词搜索用户"""
+        try:
+            res = await search.search_by_type(
+                keyword,
+                search_type=search.SearchObjectType.USER,
+                page_size=limit
+            )
+            result_list = []
+            for item in res.get('result', []):
+                result_list.append({
+                    'mid': item.get('mid'),
+                    'name': item.get('uname').replace('<em class="keyword">', '').replace('</em>', ''),
+                    'face': 'https:' + item.get('upic') if item.get('upic', '').startswith('//') else item.get('upic'),
+                    'level': item.get('level'),
+                    'sign': item.get('usign')
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索用户失败: {str(e)}'}
+
+    async def search_articles(self, keyword: str, limit: int = 5) -> Dict:
+        """根据关键词搜索专栏/Opus"""
+        try:
+            res = await search.search_by_type(
+                keyword,
+                search_type=search.SearchObjectType.ARTICLE,
+                page_size=limit
+            )
+            result_list = []
+            for item in res.get('result', []):
+                result_list.append({
+                    'cvid': item.get('id'),
+                    'title': item.get('title').replace('<em class="keyword">', '').replace('</em>', ''),
+                    'author': item.get('author'),
+                    'pic': 'https:' + item.get('image_urls', [None])[0] if item.get('image_urls') else ''
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索专栏失败: {str(e)}'}
+
+    async def get_article_content(self, cvid: int) -> Dict:
+        """获取专栏文章内容 (CV)"""
+        try:
+            art = article.Article(cvid, credential=self.credential)
+            info = await art.get_info()
+            html_content = info.get('content', '')
+            clean_text = re.sub(r'<[^>]+>', '', html_content).strip()
+            return {
+                'success': True,
+                'data': {
+                    'title': info.get('title'),
+                    'author': info.get('author_name'),
+                    'view': info.get('stats', {}).get('view'),
+                    'like': info.get('stats', {}).get('like'),
+                    'content': clean_text,
+                    'html_content': html_content,
+                    'banner_url': info.get('banner_url')
+                }
+            }
+        except Exception as e:
+            return {'success': False, 'error': f'获取专栏失败: {str(e)}'}
+
+    async def get_opus_content(self, opus_id: int) -> Dict:
+        """获取新版 Opus 动态/专栏内容 (加固版)"""
+        try:
+            dyn = dynamic.Dynamic(opus_id, credential=self.credential)
+            raw_info = await dyn.get_info()
+            
+            # 兼容性处理：有时候返回带 item，有时候直接是内容
+            info = raw_info.get('item', raw_info)
+            modules = info.get('modules', {})
+            module_dynamic = modules.get('module_dynamic', {})
+            module_author = modules.get('module_author', {})
+            
+            # 提取作者
+            author = module_author.get('name', '未知作者')
+            face = module_author.get('face', '')
+            
+            # 提取正文
+            content = ""
+            title = "动态内容"
+            
+            major = module_dynamic.get('major', {})
+            if major:
+                # 专栏类型 (Opus)
+                opus_data = major.get('opus', {})
+                if opus_data:
+                    title = opus_data.get('title', title)
+                    # 优先取 summary.text，这通常是完整的或大部分内容
+                    content = opus_data.get('summary', {}).get('text', '')
+                    
+                    # 尝试从跳转链接中发现 CV 号，如果发现，可以考虑二次抓取
+                    jump_url = opus_data.get('jump_url', '')
+                    if 'cv' in jump_url:
+                        cv_id_match = re.search(r'cv(\d+)', jump_url)
+                        if cv_id_match:
+                            # 如果动态内容太短，尝试抓取原专栏
+                            if len(content) < 500:
+                                art_res = await self.get_article_content(int(cv_id_match.group(1)))
+                                if art_res['success']:
+                                    return art_res
+                
+                # 图文类型
+                draw_data = major.get('draw', {})
+                if not content and draw_data:
+                    items = draw_data.get('items', [])
+                    content = "【图文动态】\n" + "\n".join([item.get('description', '') for item in items])
+            
+            # 备选方案：取动态描述
+            if not content:
+                desc = module_dynamic.get('desc', {})
+                if desc: content = desc.get('text', '')
+
+            stat = modules.get('module_stat', {})
+
+            return {
+                'success': True,
+                'data': {
+                    'title': title,
+                    'author': author,
+                    'face': face,
+                    'view': stat.get('view', {}).get('count', 0),
+                    'like': stat.get('like', {}).get('count', 0),
+                    'content': content,
+                    'banner_url': major.get('draw', {}).get('items', [{}])[0].get('src', '') if major.get('draw') else ''
+                }
+            }
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'error': f'获取Opus内容失败: {str(e)}'}
 
     async def _get_cid(self, bvid: str) -> Optional[int]:
         """获取视频CID"""
