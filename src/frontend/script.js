@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If locked by manual click, skip auto-detect
         if (manualModeLock) return;
 
-        if (val.includes('cv') || val.includes('read/')) {
+        if (val.includes('cv') || val.includes('read/') || val.includes('opus/')) {
             switchMode('article');
         } else if (val.includes('space.bilibili.com') || (val.match(/^\d+$/) && val.length > 5)) {
             switchMode('user');

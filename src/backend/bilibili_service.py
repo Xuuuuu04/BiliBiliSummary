@@ -3,7 +3,7 @@ import re
 import os
 import base64
 import tempfile
-from bilibili_api import video, user, search, article, Credential
+from bilibili_api import video, user, search, article, dynamic, Credential
 from typing import Dict, List, Optional
 import aiohttp
 import cv2
@@ -118,13 +118,20 @@ class BilibiliService:
         return None
 
     @staticmethod
-    def extract_cvid(url: str) -> Optional[int]:
-        """从B站链接中提取专栏CV号"""
-        patterns = [r'cv(\d+)', r'read/cv(\d+)', r'read/mobile/(\d+)']
-        for pattern in patterns:
-            match = re.search(pattern, url)
-            if match:
-                return int(match.group(1))
+    def extract_article_id(url: str) -> Optional[Dict]:
+        """从B站链接中提取专栏CV号或Opus动态号"""
+        # 传统专栏 CV
+        cv_match = re.search(r'cv(\d+)|read/cv(\d+)', url)
+        if cv_match:
+            cvid = cv_match.group(1) or cv_match.group(2)
+            return {'type': 'cv', 'id': int(cvid)}
+        
+        # 新版 Opus / 动态
+        opus_match = re.search(r'opus/(\d+)|dynamic/(\d+)', url)
+        if opus_match:
+            oid = opus_match.group(1) or opus_match.group(2)
+            return {'type': 'opus', 'id': int(oid)}
+            
         return None
 
     async def get_video_info(self, bvid: str) -> Dict:
@@ -489,22 +496,12 @@ class BilibiliService:
             return {'success': False, 'error': f'搜索失败: {str(e)}'}
 
     async def get_article_content(self, cvid: int) -> Dict:
-        """获取专栏文章内容"""
+        """获取专栏文章内容 (CV)"""
         try:
-            # article.Article 类用于操作专栏
-            # 注意：cvid 是不带 'cv' 前缀的数字
             art = article.Article(cvid, credential=self.credential)
             info = await art.get_info()
-            
-            # 尝试获取文本内容，通常在 content 或类似字段，或者需要解析 HTML
-            # bilibili-api 的 article 可能不直接提供纯文本，可能需要解析 read_info
-            # 这里简单返回标题和部分元数据，具体内容可能需要进一步解析
-            # 实际上 get_info 返回包含 content (html)
-            
-            # 使用简单的正则去除 HTML 标签获取纯文本预览
             html_content = info.get('content', '')
             clean_text = re.sub(r'<[^>]+>', '', html_content).strip()
-            
             return {
                 'success': True,
                 'data': {
@@ -513,12 +510,82 @@ class BilibiliService:
                     'view': info.get('stats', {}).get('view'),
                     'like': info.get('stats', {}).get('like'),
                     'content': clean_text,
-                    'html_content': html_content, # 保留 HTML 以备后用
+                    'html_content': html_content,
                     'banner_url': info.get('banner_url')
                 }
             }
         except Exception as e:
             return {'success': False, 'error': f'获取专栏失败: {str(e)}'}
+
+    async def get_opus_content(self, opus_id: int) -> Dict:
+        """获取新版 Opus 动态/专栏内容 (加固版)"""
+        try:
+            dyn = dynamic.Dynamic(opus_id, credential=self.credential)
+            raw_info = await dyn.get_info()
+            
+            # 兼容性处理：有时候返回带 item，有时候直接是内容
+            info = raw_info.get('item', raw_info)
+            modules = info.get('modules', {})
+            module_dynamic = modules.get('module_dynamic', {})
+            module_author = modules.get('module_author', {})
+            
+            # 提取作者
+            author = module_author.get('name', '未知作者')
+            face = module_author.get('face', '')
+            
+            # 提取正文
+            content = ""
+            title = "动态内容"
+            
+            major = module_dynamic.get('major', {})
+            if major:
+                # 专栏类型 (Opus)
+                opus_data = major.get('opus', {})
+                if opus_data:
+                    title = opus_data.get('title', title)
+                    # 优先取 summary.text，这通常是完整的或大部分内容
+                    content = opus_data.get('summary', {}).get('text', '')
+                    
+                    # 尝试从跳转链接中发现 CV 号，如果发现，可以考虑二次抓取
+                    jump_url = opus_data.get('jump_url', '')
+                    if 'cv' in jump_url:
+                        cv_id_match = re.search(r'cv(\d+)', jump_url)
+                        if cv_id_match:
+                            # 如果动态内容太短，尝试抓取原专栏
+                            if len(content) < 500:
+                                art_res = await self.get_article_content(int(cv_id_match.group(1)))
+                                if art_res['success']:
+                                    return art_res
+                
+                # 图文类型
+                draw_data = major.get('draw', {})
+                if not content and draw_data:
+                    items = draw_data.get('items', [])
+                    content = "【图文动态】\n" + "\n".join([item.get('description', '') for item in items])
+            
+            # 备选方案：取动态描述
+            if not content:
+                desc = module_dynamic.get('desc', {})
+                if desc: content = desc.get('text', '')
+
+            stat = modules.get('module_stat', {})
+
+            return {
+                'success': True,
+                'data': {
+                    'title': title,
+                    'author': author,
+                    'face': face,
+                    'view': stat.get('view', {}).get('count', 0),
+                    'like': stat.get('like', {}).get('count', 0),
+                    'content': content,
+                    'banner_url': major.get('draw', {}).get('items', [{}])[0].get('src', '') if major.get('draw') else ''
+                }
+            }
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'error': f'获取Opus内容失败: {str(e)}'}
 
     async def _get_cid(self, bvid: str) -> Optional[int]:
         """获取视频CID"""

@@ -238,7 +238,7 @@ def analyze_video():
 
 @app.route('/api/analyze/stream', methods=['POST'])
 def analyze_video_stream():
-    """流式分析接口，支持视频 (BV) 和 专栏 (CV)"""
+    """流式分析接口，支持视频 (BV)、专栏 (CV) 及动态 (Opus)"""
     try:
         data = request.get_json()
         url = data.get('url', '')
@@ -246,29 +246,37 @@ def analyze_video_stream():
         if not url:
             return jsonify({'success': False, 'error': '请提供B站视频或专栏链接'}), 400
 
-        # 尝试提取 BVID 或 CVID
+        # 尝试提取各种 ID
         bvid = BilibiliService.extract_bvid(url)
-        cvid = BilibiliService.extract_cvid(url)
+        article_meta = BilibiliService.extract_article_id(url)
 
-        if not bvid and not cvid:
+        if not bvid and not article_meta:
             return jsonify({'success': False, 'error': '无效的B站链接'}), 400
 
         def generate_stream():
             try:
                 import json
-                # --- 专栏分析逻辑 ---
-                if cvid:
-                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'fetching_info', 'message': '获取专栏信息...', 'progress': 10})}\n\n"
-                    art_res = run_async(bilibili_service.get_article_content(cvid))
-                    if not art_res['success']:
-                        yield f"data: {json.dumps({'type': 'error', 'error': art_res['error']})}\n\n"
+                # --- 专栏 / Opus 分析逻辑 ---
+                if article_meta:
+                    a_type = article_meta['type']
+                    a_id = article_meta['id']
+                    
+                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'fetching_info', 'message': f'获取{a_type}信息...', 'progress': 10})}\n\n"
+                    
+                    if a_type == 'cv':
+                        res = run_async(bilibili_service.get_article_content(a_id))
+                    else:
+                        res = run_async(bilibili_service.get_opus_content(a_id))
+                        
+                    if not res['success']:
+                        yield f"data: {json.dumps({'type': 'error', 'error': res['error']})}\n\n"
                         return
                     
                     # 发送基本信息
-                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取专栏: {art_res['data']['title']}', 'progress': 20, 'info': art_res['data']})}\n\n"
+                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取内容: {res['data']['title']}', 'progress': 20, 'info': res['data']})}\n\n"
                     
-                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析专栏...', 'progress': 40})}\n\n"
-                    for chunk in ai_service.generate_article_analysis_stream(art_res['data'], art_res['data']['content']):
+                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析内容...', 'progress': 40})}\n\n"
+                    for chunk in ai_service.generate_article_analysis_stream(res['data'], res['data']['content']):
                         yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
                     return
 
