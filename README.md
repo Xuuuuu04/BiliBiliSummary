@@ -1,5 +1,10 @@
 # BiliBili Summarize | AI 视频深度分析助手
 
+<div align="center">
+  <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
+  <h3>掌握视频，深挖价值</h3>
+</div>
+
 **一键提取 B 站视频字幕、弹幕、评论及关键帧画面，通过 AI 多模态大模型生成深度总结、思维导图及舆情分析报告。**
 
 <div align="center">
@@ -15,7 +20,7 @@
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
-[快速开始](#🚀-快速开始) • [功能特性](#✨-功能特性) • [技术栈](#🛠️-技术栈) • [致谢](#🙏-致谢)
+[快速开始](#🚀-快速开始) • [功能特性](#✨-功能特性) • [项目截图](#🖼️-项目截图) • [技术栈](#🛠️-技术栈) • [致谢](#🙏-致谢)
 
 </div>
 
@@ -29,6 +34,26 @@
 - **🎭 UP 主深度画像**：基于近期作品分析创作者的调性与价值。
 - **🔐 B 站登录支持**：支持扫码登录以获取更高质量的评论与互动数据。
 - **🎨 现代艺术化 UI**：极致流畅的响应式设计，支持深色模式。
+
+## 🖼️ 项目截图
+
+### 🏠 主页预览
+![主页截图](assets/主页截图.png)
+
+### ⚙️ 分析过程
+![分析中](assets/分析中.png)
+
+### 📊 深度分析结果
+| 视频总结 | 互动舆情 |
+| :---: | :---: |
+| ![分析结果1](assets/分析结果1.png) | ![分析结果2](assets/分析结果2.png) |
+
+| 评论深度解析 | 专栏文章解析 |
+| :---: | :---: |
+| ![分析结果3](assets/分析结果3.png) | ![分析结果4](assets/分析结果4.png) |
+
+### 🎭 UP 主深度画像
+![分析结果5](assets/分析结果5.png)
 
 ## 🚀 快速开始
 

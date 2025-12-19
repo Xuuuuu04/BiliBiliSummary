@@ -1,5 +1,10 @@
 # BiliBili Summarize | AI-Powered In-depth Video Analysis Assistant
 
+<div align="center">
+  <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
+  <h3>Master the Content, Deep Dive into Value</h3>
+</div>
+
 **One-click extraction of Bilibili video subtitles, danmaku, comments, and keyframes. Generates deep summaries, mind maps, and sentiment analysis reports using AI multimodal large language models.**
 
 <div align="center">
@@ -15,7 +20,7 @@
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
-[Quick Start](#🚀-quick-start) • [Features](#✨-features) • [Tech Stack](#🛠️-tech-stack) • [Acknowledgements](#🙏-acknowledgements)
+[Quick Start](#🚀-quick-start) • [Features](#✨-features) • [Screenshots](#🖼️-screenshots) • [Tech Stack](#🛠️-tech-stack) • [Acknowledgements](#🙏-acknowledgements)
 
 </div>
 
@@ -29,6 +34,26 @@
 - **🎭 UP Creator Portrait**: Analyze creator style and value based on recent works.
 - **🔐 Bilibili Login Support**: Scan QR code to login for higher-quality comments and interaction data.
 - **🎨 Modern Artistic UI**: Ultra-smooth responsive design with Dark Mode support.
+
+## 🖼️ Screenshots
+
+### 🏠 Homepage Preview
+![Homepage](assets/主页截图.png)
+
+### ⚙️ Analysis Process
+![Analysis Processing](assets/分析中.png)
+
+### 📊 Deep Analysis Results
+| Video Summary | Sentiment Analysis |
+| :---: | :---: |
+| ![Result 1](assets/分析结果1.png) | ![Result 2](assets/分析结果2.png) |
+
+| Comment Analysis | Article Analysis |
+| :---: | :---: |
+| ![Result 3](assets/分析结果3.png) | ![Result 4](assets/分析结果4.png) |
+
+### 🎭 Creator Portrait
+![Result 5](assets/分析结果5.png)
 
 ## 🚀 Quick Start
 

@@ -1,5 +1,10 @@
 # BiliBili Summarize | AI 動画高度分析アシスタント
 
+<div align="center">
+  <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
+  <h3>動画を掌握し、価値を深掘りする</h3>
+</div>
+
 **Bilibili 動画の字幕、弾幕、コメント、キーフレームを一クリックで抽出。AI マルチモーダルモデルを活用し、詳細な要約、マインドマップ、世論分析レポートを生成します。**
 
 <div align="center">
@@ -15,7 +20,7 @@
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
-[クイックスタート](#🚀-クイックスタート) • [機能特徴](#✨-機能特性) • [技術スタック](#🛠️-技術スタック) • [謝辞](#🙏-謝辞)
+[クイックスタート](#🚀-クイックスタート) • [機能特徴](#✨-機能特性) • [スクリーンショット](#🖼️-スクリーンショット) • [技術スタック](#🛠️-技術スタック) • [謝辞](#🙏-謝辞)
 
 </div>
 
@@ -29,6 +34,26 @@
 - **🎭 UP主スタイル分析**: 直近の作品からクリエイターの調性や価値をプロファイリング。
 - **🔐 Bilibili ログイン対応**: QRコードログインで、より高品質なデータ取得が可能。
 - **🎨 モダンな芸術的 UI**: ダークモード対応の、美しくスムーズなレスポンシブデザイン。
+
+## 🖼️ スクリーンショット
+
+### 🏠 ホームプレビュー
+![Homepage](assets/主页截图.png)
+
+### ⚙️ 分析プロセス
+![Processing](assets/分析中.png)
+
+### 📊 詳細分析結果
+| 動画要約 | 世論分析 |
+| :---: | :---: |
+| ![Result 1](assets/分析结果1.png) | ![Result 2](assets/分析结果2.png) |
+
+| コメント分析 | コラム解析 |
+| :---: | :---: |
+| ![Result 3](assets/分析结果3.png) | ![Result 4](assets/分析结果4.png) |
+
+### 🎭 UP主プロファイリング
+![Result 5](assets/分析结果5.png)
 
 ## 🚀 クイックスタート
 
