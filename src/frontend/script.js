@@ -417,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetProgress();
         resetMeta();
         initStepper(currentMode);
+        updateSidebarUI(); // 在此处真正切换功能入口
         
         // Reset Data
         currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [], articleData: null, userData: null };
@@ -1118,7 +1119,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBox.className = `search-box mode-${mode}`;
         
         elements.analyzeBtn.className = `btn-primary mode-${mode}`;
-        const btnIcon = elements.analyzeBtn.querySelector('svg');
         const btnText = elements.analyzeBtn.lastChild;
 
         if (mode === 'video') {
@@ -1132,8 +1132,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.textContent = ' 生成画像';
         }
 
+        // --- 注意：此处不再调用 updateSidebarUI，保留当前展示的面板 ---
         initAnalysisMeta(mode);
-        updateSidebarUI();
     }
 
     function updateSidebarUI() {
