@@ -27,6 +27,10 @@ class AIService:
             history: 对话历史
         """
         try:
+            # 安全检查：确保 video_info 不为 None
+            if video_info is None:
+                video_info = {}
+                
             system_prompt = f"""你是一个基于B站视频分析结果的问答助手。
 
 【核心指令】
@@ -510,6 +514,121 @@ UP主: {video_info.get('author', '未知')}
                 'message': f'分析失败: {str(e)}',
                 'error_type': type(e).__name__,
                 'timestamp': time.time()
+            }
+
+    def generate_article_analysis_stream(self, article_info: Dict, content: str) -> Generator[Dict, None, None]:
+        """专栏文章深度分析"""
+        try:
+            if article_info is None:
+                article_info = {}
+            prompt = f"""你是一位专业的深度报道评论员。请为以下B站专栏文章生成一份详尽的分析报告。
+
+【文章信息】
+标题：{article_info.get('title', '未知')}
+作者：{article_info.get('author', '未知')}
+
+【文章完整内容】
+{content[:Config.MAX_SUBTITLE_LENGTH]}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+请严格按照以下结构提供分析报告：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 📋 文章深度解析
+- **核心论点**：用一句话概括文章想要表达的最核心观点。
+- **内容精要**：系统性地总结文章的分点论述，逻辑清晰，内容充实。
+- **深度点评**：分析文章的写作风格、专业深度以及对行业/读者的启发意义。
+
+## 💡 知识图谱
+- 提取并解释文章中提到的专业术语或背景知识。
+
+## 🚀 阅读建议
+- 适合哪类人群深度阅读？
+- 相关的延伸阅读方向。
+"""
+            messages = [
+                {"role": "system", "content": "你是一位资深的B站专栏分析专家，擅长逻辑分析与深度总结。"},
+                {"role": "user", "content": prompt}
+            ]
+
+            stream = self.client.chat.completions.create(
+                model=self.qa_model, # 使用逻辑更强的QA模型进行文章分析
+                messages=messages,
+                temperature=0.3,
+                stream=True
+            )
+
+            full_content = ""
+            for chunk in stream:
+                if chunk.choices and len(chunk.choices) > 0:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, 'content') and delta.content:
+                        full_content += delta.content
+                        yield {'type': 'content', 'content': delta.content}
+            
+            # 解析文章内容
+            sections = {'summary': full_content, 'danmaku': '专栏文章暂无弹幕分析', 'comments': '专栏文章暂无评论分析'}
+            yield {'type': 'final', 'parsed': sections, 'full_analysis': full_content}
+
+        except Exception as e:
+            yield {'type': 'error', 'error': str(e)}
+
+    def generate_user_analysis(self, user_info: Dict, recent_videos: List[Dict]) -> Dict:
+        """生成UP主深度画像（同步返回字典）"""
+        try:
+            videos_text = "\n".join([f"- {v['title']} (播放: {v['play']}, 时长: {v['length']})" for v in recent_videos])
+            prompt = f"""你是一位资深的自媒体行业分析师。请根据以下UP主的公开信息和近期作品数据，生成一份**深度、专业且具有洞察力**的UP主画像报告。
+
+【UP主基础信息】
+- 昵称：{user_info.get('name')}
+- 签名：{user_info.get('sign')}
+- 等级：L{user_info.get('level')}
+- 认证信息：{user_info.get('official') or '普通用户'}
+
+【近期作品数据（采样）】
+{videos_text}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+请按以下结构输出深度分析（使用 Markdown 格式，多用 Emoji）：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### 🎭 创作者标签
+- 用 3-5 个关键词精准定义该 UP 主（如：硬核技术流、极简主义者、高产赛母猪等）。
+
+### 📈 内容风格与调性
+- 分析其视频的标题风格、选题偏好及内容深度。
+- 观察其作品的生命力（从播放量与选题的关联度分析）。
+
+### 💎 核心价值主张
+- 该 UP 主为粉丝提供了什么独特价值？（是知识获取、情绪价值还是审美共鸣？）
+
+### 🚀 发展潜力评估
+- 基于近期作品的表现，分析其内容的垂直度及未来增长空间。
+
+### 💡 合作/关注建议
+- 给想关注该 UP 主或与其合作的品牌方提供一条诚恳的建议。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+请保持专业、客观且富有文学色彩的笔触，字数在 300-500 字左右。"""
+            
+            response = self.client.chat.completions.create(
+                model=self.qa_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.6,
+                max_tokens=1000
+            )
+            
+            content = self._extract_content(response)
+            tokens = self._extract_tokens(response)
+            
+            return {
+                'portrait': content,
+                'tokens_used': tokens
+            }
+        except Exception as e:
+            return {
+                'portrait': f"暂时无法生成UP主画像: {str(e)}",
+                'tokens_used': 0
             }
     
     def _build_summary_prompt(self, video_info: Dict, content: str) -> str:
