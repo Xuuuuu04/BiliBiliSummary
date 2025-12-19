@@ -1582,6 +1582,77 @@ button {
     80%, 100% { content: '...'; }
 }
 
+/* UP Portrait Card */
+.up-portrait-card {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--nav-hover-bg) 100%);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+}
+
+.up-portrait-card:hover {
+    box-shadow: var(--hover-shadow);
+    border-color: var(--bili-blue);
+}
+
+.portrait-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.up-face {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid var(--bili-pink);
+    padding: 2px;
+}
+
+.up-meta h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.up-sign {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 4px;
+}
+
+.up-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--bili-blue);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.portrait-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-main);
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+}
+
+.dark-theme .portrait-body {
+    background: rgba(0, 0, 0, 0.2);
+}
+
 /* Word Cloud Styles */
 .word-cloud-wrapper {
     background: var(--input-bg);

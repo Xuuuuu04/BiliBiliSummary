@@ -3,7 +3,7 @@ import re
 import os
 import base64
 import tempfile
-from bilibili_api import video, Credential
+from bilibili_api import video, user, search, article, Credential
 from typing import Dict, List, Optional
 import aiohttp
 import cv2
@@ -115,6 +115,16 @@ class BilibiliService:
             if match:
                 bvid = match.group(1) if len(match.groups()) > 0 else match.group(0)
                 if bvid.startswith('BV'): return bvid
+        return None
+
+    @staticmethod
+    def extract_cvid(url: str) -> Optional[int]:
+        """从B站链接中提取专栏CV号"""
+        patterns = [r'cv(\d+)', r'read/cv(\d+)', r'read/mobile/(\d+)']
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match:
+                return int(match.group(1))
         return None
 
     async def get_video_info(self, bvid: str) -> Dict:
@@ -404,6 +414,108 @@ class BilibiliService:
         except Exception as e:
             print(f"[警告] 获取热门视频失败: {e}")
             return {'success': False, 'error': str(e)}
+
+    # --- 新增功能：用户、搜索、专栏 ---
+
+    async def get_user_info(self, uid: int) -> Dict:
+        """获取用户基本信息"""
+        try:
+            u = user.User(uid=uid, credential=self.credential)
+            info = await u.get_user_info()
+            return {
+                'success': True,
+                'data': {
+                    'mid': info.get('mid'),
+                    'name': info.get('name'),
+                    'face': info.get('face'),
+                    'sign': info.get('sign'),
+                    'level': info.get('level'),
+                    'official': info.get('official', {}).get('title')
+                }
+            }
+        except Exception as e:
+            return {'success': False, 'error': f'获取用户信息失败: {str(e)}'}
+
+    async def get_user_recent_videos(self, uid: int, limit: int = 10) -> Dict:
+        """获取用户最近投稿"""
+        try:
+            u = user.User(uid=uid, credential=self.credential)
+            # get_videos 返回的是一个生成器或者分页对象，通常直接调用拿到第一页
+            # 注意：bilibili-api 的 user.get_videos 接口行为可能随版本变动，这里假设它返回标准结构
+            res = await u.get_videos(ps=limit)
+            v_list = res.get('list', {}).get('vlist', [])
+            
+            processed = []
+            for v in v_list:
+                processed.append({
+                    'bvid': v.get('bvid'),
+                    'title': v.get('title'),
+                    'pic': v.get('pic'),
+                    'play': v.get('play'),
+                    'length': v.get('length')
+                })
+            return {'success': True, 'data': processed}
+        except Exception as e:
+            return {'success': False, 'error': f'获取用户投稿失败: {str(e)}'}
+
+    async def search_videos(self, keyword: str, limit: int = 20) -> Dict:
+        """搜索视频"""
+        try:
+            # search.search_by_type 返回搜索结果
+            res = await search.search_by_type(
+                keyword, 
+                search_type=search.SearchObjectType.VIDEO, 
+                order_type=search.OrderVideo.TOTALRANK, # 综合排序
+                page_size=limit
+            )
+            
+            result_list = []
+            for item in res.get('result', []):
+                # 过滤掉非视频项（有时候会有广告）
+                if item.get('type') != 'video': continue
+                result_list.append({
+                    'bvid': item.get('bvid'),
+                    'title': item.get('title').replace('<em class="keyword">', '').replace('</em>', ''), # 清理高亮标签
+                    'author': item.get('author'),
+                    'pic': 'https:' + item.get('pic') if item.get('pic', '').startswith('//') else item.get('pic'),
+                    'play': item.get('play'),
+                    'duration': item.get('duration')
+                })
+            return {'success': True, 'data': result_list}
+        except Exception as e:
+            return {'success': False, 'error': f'搜索失败: {str(e)}'}
+
+    async def get_article_content(self, cvid: int) -> Dict:
+        """获取专栏文章内容"""
+        try:
+            # article.Article 类用于操作专栏
+            # 注意：cvid 是不带 'cv' 前缀的数字
+            art = article.Article(cvid, credential=self.credential)
+            info = await art.get_info()
+            
+            # 尝试获取文本内容，通常在 content 或类似字段，或者需要解析 HTML
+            # bilibili-api 的 article 可能不直接提供纯文本，可能需要解析 read_info
+            # 这里简单返回标题和部分元数据，具体内容可能需要进一步解析
+            # 实际上 get_info 返回包含 content (html)
+            
+            # 使用简单的正则去除 HTML 标签获取纯文本预览
+            html_content = info.get('content', '')
+            clean_text = re.sub(r'<[^>]+>', '', html_content).strip()
+            
+            return {
+                'success': True,
+                'data': {
+                    'title': info.get('title'),
+                    'author': info.get('author_name'),
+                    'view': info.get('stats', {}).get('view'),
+                    'like': info.get('stats', {}).get('like'),
+                    'content': clean_text,
+                    'html_content': html_content, # 保留 HTML 以备后用
+                    'banner_url': info.get('banner_url')
+                }
+            }
+        except Exception as e:
+            return {'success': False, 'error': f'获取专栏失败: {str(e)}'}
 
     async def _get_cid(self, bvid: str) -> Optional[int]:
         """获取视频CID"""

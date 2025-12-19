@@ -83,7 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Hints
         loginHint: document.getElementById('loginHint'),
-        hintLoginBtn: document.getElementById('hintLoginBtn')
+        hintLoginBtn: document.getElementById('hintLoginBtn'),
+
+        // UP Portrait
+        upPortraitCard: document.getElementById('upPortraitCard'),
+        upFace: document.getElementById('upFace'),
+        upNameDetail: document.getElementById('upNameDetail'),
+        upSign: document.getElementById('upSign'),
+        upPortraitContent: document.getElementById('upPortraitContent')
     };
 
     // State
@@ -351,6 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.topCommentsList.innerHTML = '';
         elements.commentsAnalysisResult.innerHTML = '<div class="empty-state"><p>正在分析评论...</p></div>';
         elements.rawSubtitleText.textContent = '获取中...';
+        elements.upPortraitCard.classList.add('hidden');
+        elements.upPortraitContent.innerHTML = '';
 
         try {
             await processStreamAnalysis(url);
@@ -437,7 +446,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.stage === 'info_complete') {
                 updateStepper('info', 'completed');
                 updateStepper('content', 'active');
-                fetchVideoInfo(elements.videoUrl.value);
+                fetchVideoInfo(elements.videoUrl.value).then(res => {
+                    if (res && res.owner && res.owner.mid) {
+                        loadUpPortrait(res.owner.mid);
+                    }
+                });
             } else if (data.stage === 'content_ready') {
                 updateStepper('content', 'completed');
                 updateStepper('frames', 'active');
@@ -524,9 +537,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (json.related) {
                     renderRelatedVideos(json.related);
                 }
+                return json.data;
             }
         } catch (e) {
             console.error('Info fetch error', e);
+        }
+        return null;
+    }
+
+    async function loadUpPortrait(mid) {
+        elements.upPortraitCard.classList.remove('hidden');
+        elements.upPortraitContent.innerHTML = '<div class="loading-dots">正在生成深度画像</div>';
+        
+        try {
+            const res = await fetch('/api/user/portrait', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid: mid })
+            });
+            const json = await res.json();
+            if (json.success) {
+                elements.upNameDetail.textContent = json.data.info.name;
+                elements.upSign.textContent = json.data.info.sign;
+                elements.upFace.src = `/api/image-proxy?url=${encodeURIComponent(json.data.info.face)}`;
+                elements.upPortraitContent.innerHTML = marked.parse(json.data.portrait);
+            }
+        } catch (e) {
+            elements.upPortraitContent.textContent = '画像分析失败';
         }
     }
 
