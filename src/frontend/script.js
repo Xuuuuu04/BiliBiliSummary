@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         articleAnalysisContent: document.getElementById('articleAnalysisContent'),
         articleOriginalContent: document.getElementById('articleOriginalContent'),
         userPortraitContentPane: document.getElementById('userPortraitContentPane'),
+        userWorksContent: document.getElementById('userWorksContent'),
         userWorksList: document.getElementById('userWorksList')
     };
 
@@ -435,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderUserPortrait(data) {
         currentData.userData = data;
         currentData.fullMarkdown = data.portrait; // For chat
+        currentData.videoInfo = { title: data.info.name, author: data.info.name }; // Mock for chat
         
         // Update Meta/Card (Reusing video card area for basic user info)
         elements.videoTitle.textContent = data.info.name;
@@ -552,11 +554,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.stage === 'info_complete') {
                 updateStepper('info', 'completed');
                 updateStepper('content', 'active');
-                fetchVideoInfo(elements.videoUrl.value).then(res => {
-                    if (res && res.owner && res.owner.mid) {
-                        loadUpPortrait(res.owner.mid);
-                    }
-                });
+                
+                if (currentMode === 'article' && data.info) {
+                    currentData.videoInfo = data.info;
+                    updateVideoCard(data.info);
+                } else if (currentMode === 'video') {
+                    fetchVideoInfo(elements.videoUrl.value).then(res => {
+                        if (res && res.owner && res.owner.mid) {
+                            loadUpPortrait(res.owner.mid);
+                        }
+                    });
+                }
             } else if (data.stage === 'content_ready') {
                 updateStepper('content', 'completed');
                 updateStepper('frames', 'active');
@@ -978,12 +986,23 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.videoTitle.textContent = info.title;
         elements.upName.textContent = info.author;
         elements.viewCount.textContent = formatNumber(info.view);
-        elements.danmakuCount.textContent = formatNumber(info.danmaku);
-        elements.likeCount.textContent = formatNumber(info.like);
-        elements.commentCount.textContent = formatNumber(info.reply);
-        elements.videoDuration.textContent = info.duration_str || info.duration;
-        elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(info.cover)}`;
-        elements.watchBiliBtn.href = `https://www.bilibili.com/video/${info.bvid}`;
+        elements.danmakuCount.textContent = info.danmaku !== undefined ? formatNumber(info.danmaku) : '-';
+        elements.likeCount.textContent = info.like !== undefined ? formatNumber(info.like) : '-';
+        elements.commentCount.textContent = info.reply !== undefined ? formatNumber(info.reply) : '-';
+        elements.videoDuration.textContent = info.duration_str || info.duration || '';
+        
+        const coverUrl = info.cover || info.banner_url || info.pic || '';
+        if (coverUrl) {
+            elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(coverUrl)}`;
+        }
+        
+        if (info.bvid) {
+            elements.watchBiliBtn.href = `https://www.bilibili.com/video/${info.bvid}`;
+        } else if (currentMode === 'article') {
+            // If we have cvid, link to article
+            const cvidMatch = elements.videoUrl.value.match(/cv(\d+)/);
+            if (cvidMatch) elements.watchBiliBtn.href = `https://www.bilibili.com/read/cv${cvidMatch[1]}`;
+        }
     }
 
     function switchTab(tabName) {

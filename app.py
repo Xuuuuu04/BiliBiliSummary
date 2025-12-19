@@ -264,6 +264,9 @@ def analyze_video_stream():
                         yield f"data: {json.dumps({'type': 'error', 'error': art_res['error']})}\n\n"
                         return
                     
+                    # 发送基本信息
+                    yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取专栏: {art_res['data']['title']}', 'progress': 20, 'info': art_res['data']})}\n\n"
+                    
                     yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析专栏...', 'progress': 40})}\n\n"
                     for chunk in ai_service.generate_article_analysis_stream(art_res['data'], art_res['data']['content']):
                         yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"

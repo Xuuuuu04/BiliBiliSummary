@@ -27,6 +27,10 @@ class AIService:
             history: 对话历史
         """
         try:
+            # 安全检查：确保 video_info 不为 None
+            if video_info is None:
+                video_info = {}
+                
             system_prompt = f"""你是一个基于B站视频分析结果的问答助手。
 
 【核心指令】
