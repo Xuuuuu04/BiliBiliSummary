@@ -1658,22 +1658,27 @@ button {
     display: flex;
     background: var(--input-bg);
     padding: 4px;
-    border-radius: 12px;
-    margin-bottom: 8px;
+    border-radius: 14px;
+    margin-bottom: 12px;
     align-self: flex-start;
+    position: relative;
+    z-index: 1;
+    border: 1px solid var(--border-color);
 }
 
 .mode-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-secondary);
     background: transparent;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
 }
 
 .mode-btn:hover {
@@ -1681,14 +1686,33 @@ button {
 }
 
 .mode-btn.active {
-    background: var(--white);
     color: var(--bili-pink);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: var(--white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dark-theme .mode-btn.active {
     background: #2D1E22;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 搜索框动态边框 */
+.search-box.mode-video { border-color: var(--bili-pink); }
+.search-box.mode-article { border-color: #9b51e0; }
+.search-box.mode-user { border-color: var(--bili-blue); }
+
+.btn-primary.mode-article { background: linear-gradient(135deg, #9b51e0 0%, #bb6bd9 100%); box-shadow: 0 8px 20px rgba(155, 81, 224, 0.3); }
+.btn-primary.mode-user { background: linear-gradient(135deg, var(--bili-blue) 0%, #3EBAD5 100%); box-shadow: 0 8px 20px rgba(35, 173, 229, 0.3); }
+
+/* 内容区切换动效 */
+.tab-pane {
+    display: none;
+    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.98) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* User Works Grid */

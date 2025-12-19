@@ -104,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let currentMode = 'video'; // video, article, user
+    let manualModeLock = false; // Prevent auto-switch if user manually clicked
     let currentData = {
         summary: '',
         danmaku: '',
@@ -124,15 +125,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mode Switcher
     elements.modeBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        btn.addEventListener('click', () => {
+            manualModeLock = true;
+            switchMode(btn.dataset.mode);
+            // Reset lock after 15s or when input is cleared
+            setTimeout(() => { manualModeLock = false; }, 15000);
+        });
     });
 
     // Auto detect link type
     elements.videoUrl.addEventListener('input', (e) => {
         const val = e.target.value.trim();
+        if (!val) {
+            manualModeLock = false;
+            return;
+        }
+        
+        // If locked by manual click, skip auto-detect
+        if (manualModeLock) return;
+
         if (val.includes('cv') || val.includes('read/')) {
             switchMode('article');
-        } else if (val.match(/^\d+$/) || val.includes('space.bilibili.com')) {
+        } else if (val.includes('space.bilibili.com') || (val.match(/^\d+$/) && val.length > 5)) {
             switchMode('user');
         } else if (val.includes('BV') || val.includes('video/') || val.includes('b23.tv')) {
             switchMode('video');
@@ -956,10 +970,24 @@ document.addEventListener('DOMContentLoaded', () => {
             else btn.classList.remove('active');
         });
 
-        // Update placeholder
-        if (mode === 'video') elements.videoUrl.placeholder = '粘贴 Bilibili 视频链接或 BV 号...';
-        else if (mode === 'article') elements.videoUrl.placeholder = '粘贴专栏链接或 CV 号...';
-        else if (mode === 'user') elements.videoUrl.placeholder = '输入用户 UID 或 空间链接...';
+        // UI Feedback: Update Search Box and Button
+        const searchBox = document.querySelector('.search-box');
+        searchBox.className = `search-box mode-${mode}`;
+        
+        elements.analyzeBtn.className = `btn-primary mode-${mode}`;
+        const btnIcon = elements.analyzeBtn.querySelector('svg');
+        const btnText = elements.analyzeBtn.lastChild;
+
+        if (mode === 'video') {
+            elements.videoUrl.placeholder = '粘贴 Bilibili 视频链接或 BV 号...';
+            btnText.textContent = ' 视频分析';
+        } else if (mode === 'article') {
+            elements.videoUrl.placeholder = '粘贴专栏链接或 CV 号...';
+            btnText.textContent = ' 专栏解析';
+        } else if (mode === 'user') {
+            elements.videoUrl.placeholder = '输入用户 UID 或 空间链接...';
+            btnText.textContent = ' 生成画像';
+        }
 
         updateSidebarUI();
     }
