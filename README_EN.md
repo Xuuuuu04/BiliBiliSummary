@@ -1,6 +1,5 @@
-# BiliBili Summarize | AI-Powered In-depth Video Analysis Assistant
-
 <div align="center">
+  <h1>BiliBili Summarize | AI-Powered In-depth Video Analysis Assistant</h1>
   <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
   <h3>Master the Content, Deep Dive into Value</h3>
 </div>
@@ -46,14 +45,19 @@
 ### 📊 Deep Analysis Results
 | Video Summary | Sentiment Analysis |
 | :---: | :---: |
-| ![Result 1](assets/分析结果1.png) | ![Result 2](assets/分析结果2.png) |
+| ![Video Summary](assets/视频总结.png) | ![Danmaku Analysis](assets/弹幕分析.png) |
 
-| Comment Analysis | Article Analysis |
+| Comment Analysis | Video Text Extraction |
 | :---: | :---: |
-| ![Result 3](assets/分析结果3.png) | ![Result 4](assets/分析结果4.png) |
+| ![Comment Analysis](assets/评论分析.png) | ![Video Text Extraction](assets/视频文本提取.png) |
+
+### 📝 Articles & Dialogue
+| Opus Analysis | AI Dialogue |
+| :---: | :---: |
+| ![Opus Analysis](assets/专题文档解析.png) | ![AI Dialogue](assets/分析后AI对话.png) |
 
 ### 🎭 Creator Portrait
-![Result 5](assets/分析结果5.png)
+![Creator Portrait](assets/UP主画像.png)
 
 ## 🚀 Quick Start
 

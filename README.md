@@ -1,6 +1,5 @@
-# BiliBili Summarize | AI 视频深度分析助手
-
 <div align="center">
+  <h1>BiliBili Summarize | AI 视频深度分析助手</h1>
   <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
   <h3>掌握视频，深挖价值</h3>
 </div>
@@ -46,14 +45,19 @@
 ### 📊 深度分析结果
 | 视频总结 | 互动舆情 |
 | :---: | :---: |
-| ![分析结果1](assets/分析结果1.png) | ![分析结果2](assets/分析结果2.png) |
+| ![视频总结](assets/视频总结.png) | ![弹幕分析](assets/弹幕分析.png) |
 
-| 评论深度解析 | 专栏文章解析 |
+| 评论深度解析 | 视频文本提取 |
 | :---: | :---: |
-| ![分析结果3](assets/分析结果3.png) | ![分析结果4](assets/分析结果4.png) |
+| ![评论分析](assets/评论分析.png) | ![视频文本提取](assets/视频文本提取.png) |
+
+### 📝 专栏与对话
+| 专题文档解析 | 分析后AI对话 |
+| :---: | :---: |
+| ![专题文档解析](assets/专题文档解析.png) | ![分析后AI对话](assets/分析后AI对话.png) |
 
 ### 🎭 UP 主深度画像
-![分析结果5](assets/分析结果5.png)
+![UP主画像](assets/UP主画像.png)
 
 ## 🚀 快速开始
 
@@ -102,7 +106,7 @@ Bilibili_Analysis_Helper/
 
 ## 💖 赞助与支持
 
-如果您觉得这个项目对您有所帮助，欢迎请作者喝杯咖啡 ☕。您的支持是我持续维护和开发新功能的动力！
+如果您觉得这个项目对您有所帮助，欢迎请作者喝杯咖啡 ☕。您的支持是我持续维护 and 开发新功能的动力！
 
 <div align="center">
 

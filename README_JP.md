@@ -1,6 +1,5 @@
-# BiliBili Summarize | AI 動画高度分析アシスタント
-
 <div align="center">
+  <h1>BiliBili Summarize | AI 動画高度分析アシスタント</h1>
   <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
   <h3>動画を掌握し、価値を深掘りする</h3>
 </div>
@@ -46,14 +45,19 @@
 ### 📊 詳細分析結果
 | 動画要約 | 世論分析 |
 | :---: | :---: |
-| ![Result 1](assets/分析结果1.png) | ![Result 2](assets/分析结果2.png) |
+| ![Video Summary](assets/视频总结.png) | ![Danmaku Analysis](assets/弹幕分析.png) |
 
-| コメント分析 | コラム解析 |
+| コメント分析 | 動画テキスト抽出 |
 | :---: | :---: |
-| ![Result 3](assets/分析结果3.png) | ![Result 4](assets/分析结果4.png) |
+| ![Comment Analysis](assets/评论分析.png) | ![Video Text Extraction](assets/视频文本提取.png) |
+
+### 📝 コラム & ダイアログ
+| Opus 解析 | AI ダイアログ |
+| :---: | :---: |
+| ![Opus Analysis](assets/专题文档解析.png) | ![AI Dialogue](assets/分析后AI对话.png) |
 
 ### 🎭 UP主プロファイリング
-![Result 5](assets/分析结果5.png)
+![Creator Portrait](assets/UP主画像.png)
 
 ## 🚀 クイックスタート
 
