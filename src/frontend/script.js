@@ -439,31 +439,43 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Meta/Card (Reusing video card area for basic user info)
         elements.videoTitle.textContent = data.info.name;
         elements.upName.textContent = data.info.official || '个人UP主';
-        elements.viewCount.textContent = 'L' + data.info.level;
+        elements.viewCount.textContent = '粉丝: ' + formatNumber(data.info.follower || 0);
+        elements.danmakuCount.textContent = '-';
+        elements.likeCount.textContent = '-';
+        elements.commentCount.textContent = '-';
+        elements.videoDuration.textContent = 'UID: ' + data.info.mid;
         elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(data.info.face)}`;
         
-        // Update Portrait Tab
-        elements.userPortraitContentPane.innerHTML = marked.parse(data.portrait);
+        // Update both the Portrait Card and the Tab Pane
+        const portraitHTML = marked.parse(data.portrait);
+        if (elements.upPortraitContent) elements.upPortraitContent.innerHTML = portraitHTML;
+        if (elements.userPortraitContentPane) elements.userPortraitContentPane.innerHTML = portraitHTML;
         
         // Update Works Tab
         elements.userWorksList.innerHTML = '';
-        data.recent_videos.forEach(v => {
-            const card = document.createElement('div');
-            card.className = 'user-work-card';
-            card.innerHTML = `
-                <img class="user-work-cover" src="/api/image-proxy?url=${encodeURIComponent(v.pic)}">
-                <div class="user-work-info">
-                    <div class="user-work-title">${v.title}</div>
-                    <div class="user-work-meta">播放: ${formatNumber(v.play)} | 时长: ${v.length}</div>
-                </div>
-            `;
-            card.onclick = () => {
-                elements.videoUrl.value = v.bvid;
-                switchMode('video');
-                startAnalysis();
-            };
-            elements.userWorksList.appendChild(card);
-        });
+        if (data.recent_videos && data.recent_videos.length > 0) {
+            data.recent_videos.forEach(v => {
+                const card = document.createElement('div');
+                card.className = 'user-work-card';
+                // Ensure pic URL is absolute
+                const picUrl = v.pic.startsWith('//') ? 'https:' + v.pic : v.pic;
+                card.innerHTML = `
+                    <img class="user-work-cover" src="/api/image-proxy?url=${encodeURIComponent(picUrl)}" loading="lazy">
+                    <div class="user-work-info">
+                        <div class="user-work-title" title="${v.title}">${v.title}</div>
+                        <div class="user-work-meta">播放: ${formatNumber(v.play)} | 时长: ${v.length}</div>
+                    </div>
+                `;
+                card.onclick = () => {
+                    elements.videoUrl.value = v.bvid;
+                    switchMode('video');
+                    startAnalysis();
+                };
+                elements.userWorksList.appendChild(card);
+            });
+        } else {
+            elements.userWorksList.innerHTML = '<div class="empty-state"><p>暂无近期公开作品</p></div>';
+        }
     }
 
     async function processStreamAnalysis(url) {

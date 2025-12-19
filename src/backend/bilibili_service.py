@@ -422,6 +422,8 @@ class BilibiliService:
         try:
             u = user.User(uid=uid, credential=self.credential)
             info = await u.get_user_info()
+            # 获取粉丝数等关系数据
+            rel = await u.get_relation_info()
             return {
                 'success': True,
                 'data': {
@@ -430,6 +432,7 @@ class BilibiliService:
                     'face': info.get('face'),
                     'sign': info.get('sign'),
                     'level': info.get('level'),
+                    'follower': rel.get('follower', 0),
                     'official': info.get('official', {}).get('title')
                 }
             }
