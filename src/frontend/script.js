@@ -461,10 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (currentMode === 'user') {
                 // User mode: not streaming, direct API
-                await startUserAnalysis(url);
+                await startUserAnalysis(input);
             } else {
                 // Video/Article mode: streaming API
-                await processStreamAnalysis(url);
+                await processStreamAnalysis(input);
             }
         } catch (error) {
             console.error('Analysis failed:', error);
@@ -1514,6 +1514,8 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.resultsList.appendChild(div);
         });
     }
+
+    function formatNumber(num) {
         if (!num) return '0';
         if (num > 10000) return (num / 10000).toFixed(1) + '万';
         return num;

@@ -787,9 +787,10 @@ def get_user_portrait():
 
         # 获取用户信息和最近视频
         user_info_res = run_async(bilibili_service.get_user_info(target_uid))
-        recent_videos_res = run_async(bilibili_service.get_user_recent_videos(int(uid)))
-        
-        if not user_info_res['success']: return jsonify(user_info_res), 400
+        if not user_info_res['success']:
+            return jsonify(user_info_res), 404
+
+        recent_videos_res = run_async(bilibili_service.get_user_recent_videos(target_uid))
         
         # AI生成画像
         portrait_data = ai_service.generate_user_analysis(user_info_res['data'], recent_videos_res.get('data', []))

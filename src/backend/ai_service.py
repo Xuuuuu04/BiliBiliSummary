@@ -519,6 +519,8 @@ UP主: {video_info.get('author', '未知')}
     def generate_article_analysis_stream(self, article_info: Dict, content: str) -> Generator[Dict, None, None]:
         """专栏文章深度分析"""
         try:
+            if article_info is None:
+                article_info = {}
             prompt = f"""你是一位专业的深度报道评论员。请为以下B站专栏文章生成一份详尽的分析报告。
 
 【文章信息】
