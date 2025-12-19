@@ -43,11 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tools & Meta
         tokenCount: document.getElementById('tokenCount'),
-        metaDuration: document.getElementById('metaDuration'),
-        metaSubtitle: document.getElementById('metaSubtitle'),
-        metaFrames: document.getElementById('metaFrames'),
-        metaComments: document.getElementById('metaComments'),
-        metaDanmaku: document.getElementById('metaDanmaku'),
+        analysisMeta: document.getElementById('analysisMeta'),
         copyBtn: document.getElementById('copyBtn'),
         downloadBtn: document.getElementById('downloadBtn'),
         
@@ -348,6 +344,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const modeMeta = {
+        video: [
+            { id: 'metaDuration', title: '视频时长', icon: '⏱️', default: '--:--' },
+            { id: 'metaSubtitle', title: '字幕状态', icon: '📝', default: '无字幕' },
+            { id: 'metaFrames', title: '分析帧数', icon: '🖼️', default: '0 帧' },
+            { id: 'metaDanmaku', title: '分析弹幕', icon: '💬', default: '0 弹' }
+        ],
+        article: [
+            { id: 'metaWordCount', title: '文章字数', icon: '📄', default: '0 字' },
+            { id: 'metaViews', title: '阅读量', icon: '👁️', default: '0' },
+            { id: 'metaLikes', title: '点赞数', icon: '👍', default: '0' }
+        ],
+        user: [
+            { id: 'metaUserLevel', title: '用户等级', icon: '⭐', default: 'L--' },
+            { id: 'metaFollowers', title: '粉丝数', icon: '👥', default: '0' },
+            { id: 'metaWorksCount', title: '作品数', icon: '📁', default: '0' }
+        ]
+    };
+
+    function initAnalysisMeta(mode) {
+        const metas = modeMeta[mode] || modeMeta.video;
+        elements.analysisMeta.innerHTML = '';
+        metas.forEach(meta => {
+            const span = document.createElement('span');
+            span.id = meta.id;
+            span.title = meta.title;
+            span.innerHTML = `${meta.icon} ${meta.default}`;
+            elements.analysisMeta.appendChild(span);
+        });
+    }
+
+    function updateMetaValue(id, value, prefix = '') {
+        const el = document.getElementById(id);
+        if (el) {
+            // Find the icon (it's at the start of innerHTML)
+            const icon = el.innerHTML.split(' ')[0];
+            el.innerHTML = `${icon} ${prefix}${value}`;
+        }
+    }
+
     function toggleDarkMode(isDark) {
         if (isDark) {
             document.body.classList.add('dark-theme');
@@ -360,11 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetMeta() {
         elements.tokenCount.textContent = '0';
-        elements.metaDuration.textContent = '--:--';
-        elements.metaSubtitle.textContent = '检测中...';
-        elements.metaFrames.textContent = '0 帧';
-        elements.metaComments.textContent = '0 评';
-        elements.metaDanmaku.textContent = '0 弹';
+        initAnalysisMeta(currentMode);
     }
 
     async function startAnalysis() {
@@ -480,6 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const portraitHTML = marked.parse(data.portrait);
         if (elements.upPortraitContent) elements.upPortraitContent.innerHTML = portraitHTML;
         if (elements.userPortraitContentPane) elements.userPortraitContentPane.innerHTML = portraitHTML;
+        
+        // Update Meta for User
+        updateMetaValue('metaUserLevel', 'L' + data.info.level);
+        updateMetaValue('metaFollowers', formatNumber(data.info.follower || 0));
+        updateMetaValue('metaWorksCount', data.recent_videos ? data.recent_videos.length : 0);
         
         // Update Works Tab
         elements.userWorksList.innerHTML = '';
@@ -597,11 +634,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.stage === 'content_ready') {
                 updateStepper('content', 'completed');
                 updateStepper('frames', 'active');
-                elements.metaSubtitle.textContent = data.text_source === "字幕" ? '有字幕' : '视频文案';
+                if (currentMode === 'video') {
+                    updateMetaValue('metaSubtitle', data.text_source === "字幕" ? '有字幕' : '视频文案');
+                } else if (currentMode === 'article') {
+                    updateMetaValue('metaWordCount', (data.content || '').length, '');
+                }
             } else if (data.stage === 'frames_ready') {
                 updateStepper('frames', 'completed');
                 updateStepper('ai', 'active');
-                elements.metaFrames.textContent = `${data.frame_count || (data.has_frames ? '已提取' : '0')} 帧`;
+                if (currentMode === 'video') {
+                    updateMetaValue('metaFrames', data.frame_count || (data.has_frames ? '已提取' : '0'), '');
+                }
             }
             
             if (data.content) {
@@ -654,13 +697,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Final metadata update
                 if (data.type === 'final') {
-                    if (currentData.videoInfo) {
-                        elements.metaDuration.textContent = currentData.videoInfo.duration_str || currentData.videoInfo.duration;
+                    if (currentMode === 'video' && currentData.videoInfo) {
+                        updateMetaValue('metaDuration', currentData.videoInfo.duration_str || currentData.videoInfo.duration);
+                        if (data.frame_count !== undefined) updateMetaValue('metaFrames', data.frame_count, '');
+                        if (data.danmaku_count !== undefined) updateMetaValue('metaDanmaku', data.danmaku_count, '');
+                    } else if (currentMode === 'article' && data.info) {
+                        updateMetaValue('metaViews', formatNumber(data.info.view));
+                        updateMetaValue('metaLikes', formatNumber(data.info.like));
+                        updateMetaValue('metaWordCount', (data.content || '').length, '');
                     }
-                    // Extract counts from data if available
-                    if (data.frame_count !== undefined) elements.metaFrames.textContent = `${data.frame_count} 帧`;
-                    if (data.comments_count !== undefined) elements.metaComments.textContent = `${data.comments_count} 评`;
-                    if (data.danmaku_count !== undefined) elements.metaDanmaku.textContent = `${data.danmaku_count} 弹`;
                 }
 
                 if (data.content) {
@@ -1006,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.textContent = ' 生成画像';
         }
 
+        initAnalysisMeta(mode);
         updateSidebarUI();
     }
 
