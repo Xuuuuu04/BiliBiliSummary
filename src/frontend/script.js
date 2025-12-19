@@ -532,10 +532,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ensure pic URL is absolute
                 const picUrl = v.pic.startsWith('//') ? 'https:' + v.pic : v.pic;
                 card.innerHTML = `
-                    <img class="user-work-cover" src="/api/image-proxy?url=${encodeURIComponent(picUrl)}" loading="lazy">
+                    <div class="user-work-cover-wrapper">
+                        <img class="user-work-cover" src="/api/image-proxy?url=${encodeURIComponent(picUrl)}" loading="lazy">
+                        <span class="user-work-duration">${v.length}</span>
+                    </div>
                     <div class="user-work-info">
                         <div class="user-work-title" title="${v.title}">${v.title}</div>
-                        <div class="user-work-meta">播放: ${formatNumber(v.play)} | 时长: ${v.length}</div>
+                        <div class="user-work-meta">播放: ${formatNumber(v.play)}</div>
+                        <div class="user-work-actions">
+                            <button class="btn-mini btn-primary-mini" onclick="event.stopPropagation(); window.analyzeBvid('${v.bvid}')">智能分析</button>
+                            <a href="https://www.bilibili.com/video/${v.bvid}" target="_blank" class="btn-mini btn-outline-mini" onclick="event.stopPropagation()">跳转观看</a>
+                        </div>
                     </div>
                 `;
                 card.onclick = () => {
