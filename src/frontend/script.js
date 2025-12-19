@@ -90,10 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
         upFace: document.getElementById('upFace'),
         upNameDetail: document.getElementById('upNameDetail'),
         upSign: document.getElementById('upSign'),
-        upPortraitContent: document.getElementById('upPortraitContent')
+        upPortraitContent: document.getElementById('upPortraitContent'),
+
+        // New Mode Elements
+        modeBtns: document.querySelectorAll('.mode-btn'),
+        sidebarNav: document.getElementById('sidebarNav'),
+        articleAnalysisContent: document.getElementById('articleAnalysisContent'),
+        articleOriginalContent: document.getElementById('articleOriginalContent'),
+        userPortraitContentPane: document.getElementById('userPortraitContentPane'),
+        userWorksList: document.getElementById('userWorksList')
     };
 
     // State
+    let currentMode = 'video'; // video, article, user
     let currentData = {
         summary: '',
         danmaku: '',
@@ -101,7 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
         rawContent: '',
         fullMarkdown: '',
         videoInfo: null,
-        danmakuPreview: []
+        danmakuPreview: [],
+        articleData: null,
+        userData: null
     };
     let isAnalyzing = false;
     let isChatting = false;
@@ -109,6 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginPollInterval = null;
 
     // --- Event Listeners ---
+
+    // Mode Switcher
+    elements.modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+    });
+
+    // Auto detect link type
+    elements.videoUrl.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val.includes('cv') || val.includes('read/')) {
+            switchMode('article');
+        } else if (val.match(/^\d+$/) || val.includes('space.bilibili.com')) {
+            switchMode('user');
+        } else if (val.includes('BV') || val.includes('video/') || val.includes('b23.tv')) {
+            switchMode('video');
+        }
+    });
 
     // Chat
     elements.sendMsgBtn.addEventListener('click', sendMessage);
@@ -328,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const url = elements.videoUrl.value.trim();
         if (!url) {
-            showToast('请输入B站视频链接');
+            showToast('请输入B站链接');
             return;
         }
 
@@ -343,26 +371,29 @@ document.addEventListener('DOMContentLoaded', () => {
         resetStepper();
         
         // Reset Data
-        currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [] };
+        currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [], articleData: null, userData: null };
         chatHistory = [];
         elements.chatMessages.innerHTML = `
             <div class="message assistant">
-                <div class="message-content">
-                    你好！我是你的视频助手。我已经阅读了视频分析报告，你可以问我关于视频内容的任何问题。
-                </div>
+                <div class="message-content">你好！我是你的智能分析助手。我已经阅读了分析报告，你可以随时问我细节问题。</div>
             </div>
         `;
-        elements.summaryContent.innerHTML = '<div class="empty-state"><p>正在生成分析...</p></div>';
-        elements.danmakuWordCloudContainer.classList.add('hidden');
+        
+        // Reset contents
+        elements.summaryContent.innerHTML = '<div class="empty-state"><p>正在生成视频分析...</p></div>';
         elements.danmakuAnalysisResult.innerHTML = '<div class="empty-state"><p>正在分析弹幕...</p></div>';
-        elements.topCommentsList.innerHTML = '';
         elements.commentsAnalysisResult.innerHTML = '<div class="empty-state"><p>正在分析评论...</p></div>';
-        elements.rawSubtitleText.textContent = '获取中...';
-        elements.upPortraitCard.classList.add('hidden');
-        elements.upPortraitContent.innerHTML = '';
+        elements.articleAnalysisContent.innerHTML = '<div class="empty-state"><p>正在生成专栏分析...</p></div>';
+        elements.userPortraitContentPane.innerHTML = '<div class="empty-state"><p>正在分析UP主风格画像...</p></div>';
 
         try {
-            await processStreamAnalysis(url);
+            if (currentMode === 'user') {
+                // User mode: not streaming, direct API
+                await startUserAnalysis(url);
+            } else {
+                // Video/Article mode: streaming API
+                await processStreamAnalysis(url);
+            }
         } catch (error) {
             console.error('Analysis failed:', error);
             showToast('分析失败: ' + error.message);
@@ -370,6 +401,69 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
         }
+    }
+
+    async function startUserAnalysis(input) {
+        // Extract UID
+        let uid = input;
+        if (input.includes('space.bilibili.com/')) {
+            uid = input.match(/space\.bilibili\.com\/(\d+)/)[1];
+        }
+        
+        updateProgress(20, '正在获取UP主资料...');
+        const res = await fetch('/api/user/portrait', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: uid })
+        });
+        const json = await res.json();
+        
+        if (json.success) {
+            updateProgress(100, '分析完成');
+            renderUserPortrait(json.data);
+            
+            isAnalyzing = false;
+            elements.analyzeBtn.disabled = false;
+            elements.loadingState.classList.add('hidden');
+            elements.resultArea.classList.remove('hidden');
+            showToast('分析完成！✨');
+        } else {
+            throw new Error(json.error);
+        }
+    }
+
+    function renderUserPortrait(data) {
+        currentData.userData = data;
+        currentData.fullMarkdown = data.portrait; // For chat
+        
+        // Update Meta/Card (Reusing video card area for basic user info)
+        elements.videoTitle.textContent = data.info.name;
+        elements.upName.textContent = data.info.official || '个人UP主';
+        elements.viewCount.textContent = 'L' + data.info.level;
+        elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(data.info.face)}`;
+        
+        // Update Portrait Tab
+        elements.userPortraitContentPane.innerHTML = marked.parse(data.portrait);
+        
+        // Update Works Tab
+        elements.userWorksList.innerHTML = '';
+        data.recent_videos.forEach(v => {
+            const card = document.createElement('div');
+            card.className = 'user-work-card';
+            card.innerHTML = `
+                <img class="user-work-cover" src="/api/image-proxy?url=${encodeURIComponent(v.pic)}">
+                <div class="user-work-info">
+                    <div class="user-work-title">${v.title}</div>
+                    <div class="user-work-meta">播放: ${formatNumber(v.play)} | 时长: ${v.length}</div>
+                </div>
+            `;
+            card.onclick = () => {
+                elements.videoUrl.value = v.bvid;
+                switchMode('video');
+                startAnalysis();
+            };
+            elements.userWorksList.appendChild(card);
+        });
     }
 
     async function processStreamAnalysis(url) {
@@ -478,9 +572,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentData.summary = data.parsed.summary || '';
                     currentData.danmaku = data.parsed.danmaku || '';
                     currentData.comments = data.parsed.comments || '';
-                    renderMarkdown(elements.summaryContent, currentData.summary || '暂无内容总结');
-                    renderMarkdown(elements.danmakuAnalysisResult, currentData.danmaku || '暂无弹幕分析');
-                    renderMarkdown(elements.commentsAnalysisResult, currentData.comments || '暂无评论解析');
+                    
+                    if (currentMode === 'video') {
+                        renderMarkdown(elements.summaryContent, currentData.summary || '暂无内容总结');
+                        renderMarkdown(elements.danmakuAnalysisResult, currentData.danmaku || '暂无弹幕分析');
+                        renderMarkdown(elements.commentsAnalysisResult, currentData.comments || '暂无评论解析');
+                    } else if (currentMode === 'article') {
+                        renderMarkdown(elements.articleAnalysisContent, currentData.summary || '暂无文章分析');
+                    }
+                }
+                
+                if (data.type === 'final' && currentMode === 'article') {
+                    elements.articleOriginalContent.textContent = data.content || '无法获取专栏原文';
                 }
                 
                 // If we have danmaku data, generate word cloud
@@ -816,14 +919,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function logout() {
+    function logout() {
         try {
-            await fetch('/api/bilibili/login/logout', { method: 'POST' });
+            fetch('/api/bilibili/login/logout', { method: 'POST' });
             showToast('已退出登录');
             window.location.assign('/');
         } catch (error) {
             showToast('退出失败');
         }
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        elements.modeBtns.forEach(btn => {
+            if (btn.dataset.mode === mode) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        // Update placeholder
+        if (mode === 'video') elements.videoUrl.placeholder = '粘贴 Bilibili 视频链接或 BV 号...';
+        else if (mode === 'article') elements.videoUrl.placeholder = '粘贴专栏链接或 CV 号...';
+        else if (mode === 'user') elements.videoUrl.placeholder = '输入用户 UID 或 空间链接...';
+
+        updateSidebarUI();
+    }
+
+    function updateSidebarUI() {
+        const navBtns = elements.sidebarNav.querySelectorAll('.nav-btn');
+        let firstVisibleTab = '';
+
+        navBtns.forEach(btn => {
+            const showOn = btn.dataset.showOn;
+            if (!showOn || showOn === currentMode) {
+                btn.classList.remove('hidden');
+                if (!firstVisibleTab) firstVisibleTab = btn.dataset.tab;
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+
+        // Auto switch to first available tab
+        if (firstVisibleTab) switchTab(firstVisibleTab);
     }
 
     function updateVideoCard(info) {
@@ -846,16 +982,21 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.tabContents.forEach(pane => {
             pane.classList.remove('active');
         });
+        
+        // Show target pane
         if (tabName === 'summary') elements.summaryContent.classList.add('active');
         else if (tabName === 'danmaku') {
             elements.danmakuContent.classList.add('active');
-            // Re-render word cloud after a short delay to ensure DOM is visible
             if (currentData.danmakuPreview && currentData.danmakuPreview.length > 0) {
                 setTimeout(() => generateWordCloud(currentData.danmakuPreview), 50);
             }
         }
         else if (tabName === 'comments') elements.commentsContent.classList.add('active');
         else if (tabName === 'subtitle') elements.subtitleContent.classList.add('active');
+        else if (tabName === 'article_analysis') elements.articleAnalysisContent.classList.add('active');
+        else if (tabName === 'article_content') elements.articleOriginalContent.classList.add('active');
+        else if (tabName === 'user_portrait') elements.userPortraitContentPane.classList.add('active');
+        else if (tabName === 'user_works') elements.userWorksContent.classList.add('active');
         else if (tabName === 'chat') {
             elements.chatContent.classList.add('active');
             elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;

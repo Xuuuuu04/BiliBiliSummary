@@ -1653,6 +1653,93 @@ button {
     background: rgba(0, 0, 0, 0.2);
 }
 
+/* Analysis Mode Switcher */
+.analysis-mode-switcher {
+    display: flex;
+    background: var(--input-bg);
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+}
+
+.mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    transition: var(--transition);
+}
+
+.mode-btn:hover {
+    color: var(--bili-pink);
+}
+
+.mode-btn.active {
+    background: var(--white);
+    color: var(--bili-pink);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark-theme .mode-btn.active {
+    background: #2D1E22;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* User Works Grid */
+.user-works-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.user-work-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.user-work-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+    border-color: var(--bili-pink);
+}
+
+.user-work-cover {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}
+
+.user-work-info {
+    padding: 12px;
+}
+
+.user-work-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.user-work-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
 /* Word Cloud Styles */
 .word-cloud-wrapper {
     background: var(--input-bg);
