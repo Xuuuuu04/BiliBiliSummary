@@ -571,8 +571,8 @@ UP主: {video_info.get('author', '未知')}
         except Exception as e:
             yield {'type': 'error', 'error': str(e)}
 
-    def generate_user_analysis(self, user_info: Dict, recent_videos: List[Dict]) -> str:
-        """生成UP主深度画像（同步返回字符串）"""
+    def generate_user_analysis(self, user_info: Dict, recent_videos: List[Dict]) -> Dict:
+        """生成UP主深度画像（同步返回字典）"""
         try:
             videos_text = "\n".join([f"- {v['title']} (播放: {v['play']}, 时长: {v['length']})" for v in recent_videos])
             prompt = f"""你是一位资深的自媒体行业分析师。请根据以下UP主的公开信息和近期作品数据，生成一份**深度、专业且具有洞察力**的UP主画像报告。
@@ -615,9 +615,19 @@ UP主: {video_info.get('author', '未知')}
                 temperature=0.6,
                 max_tokens=1000
             )
-            return self._extract_content(response)
+            
+            content = self._extract_content(response)
+            tokens = self._extract_tokens(response)
+            
+            return {
+                'portrait': content,
+                'tokens_used': tokens
+            }
         except Exception as e:
-            return f"暂时无法生成UP主画像: {str(e)}"
+            return {
+                'portrait': f"暂时无法生成UP主画像: {str(e)}",
+                'tokens_used': 0
+            }
     
     def _build_summary_prompt(self, video_info: Dict, content: str) -> str:
         """构建总结提示词"""

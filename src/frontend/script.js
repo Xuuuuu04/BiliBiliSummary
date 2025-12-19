@@ -498,6 +498,11 @@ document.addEventListener('DOMContentLoaded', () => {
         currentData.fullMarkdown = data.portrait; // For chat
         currentData.videoInfo = { title: data.info.name, author: data.info.name }; // Mock for chat
         
+        // Update Token Count
+        if (data.tokens_used) {
+            elements.tokenCount.textContent = data.tokens_used;
+        }
+
         // Update Meta/Card (Reusing video card area for basic user info)
         elements.videoTitle.textContent = data.info.name;
         elements.upName.textContent = data.info.official || '个人UP主';

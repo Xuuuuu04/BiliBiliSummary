@@ -726,13 +726,14 @@ def get_user_portrait():
         if not user_info_res['success']: return jsonify(user_info_res), 400
         
         # AI生成画像
-        portrait = ai_service.generate_user_analysis(user_info_res['data'], recent_videos_res.get('data', []))
+        portrait_data = ai_service.generate_user_analysis(user_info_res['data'], recent_videos_res.get('data', []))
         
         return jsonify({
             'success': True,
             'data': {
                 'info': user_info_res['data'],
-                'portrait': portrait,
+                'portrait': portrait_data['portrait'],
+                'tokens_used': portrait_data['tokens_used'],
                 'recent_videos': recent_videos_res.get('data', [])
             }
         })
