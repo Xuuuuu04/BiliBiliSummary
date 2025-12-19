@@ -1925,6 +1925,87 @@ button {
 
 .btn-icon-small:hover { color: var(--bili-pink); }
 
+/* Guide Modal Styles */
+.guide-modal-content {
+    max-width: 700px;
+    max-height: 85vh;
+    border-top: 5px solid var(--bili-pink);
+    display: flex;
+    flex-direction: column;
+}
+
+.guide-header {
+    background: linear-gradient(135deg, var(--nav-active-bg) 0%, var(--card-bg) 100%);
+    padding: 20px 25px;
+}
+
+.guide-title-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.guide-icon {
+    color: var(--bili-pink);
+}
+
+.guide-body {
+    padding: 25px;
+    overflow-y: auto;
+    font-size: 0.95rem;
+}
+
+.guide-body h3 {
+    margin-top: 1.5rem;
+    color: var(--bili-blue);
+    border-left: 4px solid var(--bili-pink);
+    padding-left: 10px;
+}
+
+.guide-footer {
+    padding: 15px 25px;
+    background: var(--nav-hover-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+.support-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.support-btns {
+    display: flex;
+    gap: 10px;
+}
+
+/* Donate Modal */
+.donate-modal-content {
+    max-width: 350px;
+    text-align: center;
+}
+
+.donate-body {
+    padding: 20px;
+}
+
+.donate-qr {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.dark-theme .guide-header {
+    background: linear-gradient(135deg, #2D1E22 0%, #18191C 100%);
+}
+
+.dark-theme .donate-qr {
+    filter: brightness(0.9);
+}
+
 /* Word Cloud Styles */
 .word-cloud-wrapper {
     background: var(--input-bg);

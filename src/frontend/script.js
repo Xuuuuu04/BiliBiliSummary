@@ -102,7 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
         searchResultsPanel: document.getElementById('searchResultsPanel'),
         resultsList: document.getElementById('resultsList'),
         resultsCount: document.getElementById('resultsCount'),
-        closeResultsBtn: document.getElementById('closeResultsBtn')
+        closeResultsBtn: document.getElementById('closeResultsBtn'),
+
+        // Guide & Donate
+        guideBtn: document.getElementById('guideBtn'),
+        guideModal: document.getElementById('guideModal'),
+        guideContent: document.getElementById('guideContent'),
+        closeGuideBtn: document.querySelector('.guide-close'),
+        guideDonateBtn: document.getElementById('guideDonateBtn'),
+        donateModal: document.getElementById('donateModal'),
+        closeDonateBtn: document.getElementById('closeDonateBtn')
     };
 
     // State
@@ -175,6 +184,65 @@ document.addEventListener('DOMContentLoaded', () => {
     // Analyze Button
     elements.analyzeBtn.addEventListener('click', startAnalysis);
     
+    // Guide Modal
+    const guideMarkdown = `
+### 🚀 快速开始
+欢迎使用 BiliBili Summarize！这是一个强大的 AI 驱动内容分析工具。
+
+#### 1. 视频分析
+- **格式**：支持直接粘贴视频 URL (bilibili.com/video/BV...) 或 BV 号。
+- **功能**：自动总结全文、分析弹幕舆情、解析评论热点、提取视觉关键帧。
+
+#### 2. 专栏/图文解析
+- **格式**：支持 cv 号或专栏 URL。支持最新的 **Opus (动态图文)** 类型。
+- **功能**：深度解析文章脉络，提取核心论点。
+
+#### 3. UP 主画像
+- **格式**：支持输入 UID 或 个人空间链接。
+- **功能**：基于近期作品分析 UP 主的内容风格、创作调性及核心价值。
+
+#### 4. 智能搜索 (模糊匹配)
+- **技巧**：直接在输入框中输入 **中文关键词** (如 "黑神话悟空" 或 "老番茄")，系统会自动为您提供搜索列表供选择。
+
+---
+
+### 🛡️ 隐私与信息收集
+- **凭据处理**：若您选择登录 B 站，您的 Cookie 仅保存在本地 \`.env\` 文件中，仅用于访问高清视频、提取弹幕等必要操作。
+- **数据流向**：分析过程中的文本/画面信息将通过您的 **自定义 AI 渠道** 处理，我们不存储任何分析内容。
+
+---
+
+### ⚖️ 免责声明
+- **内容准确性**：分析结果由 AI 生成，可能存在“幻觉”或不准确之处，**请仅供参考**，不代表项目作者观点。
+- **责任边界**：本工具仅供学习交流使用，严禁用于任何商业用途。请尊重 Bilibili 平台及原作者的版权。
+
+---
+
+### ❤️ 支持项目
+如果您觉得本工具对您有帮助：
+1. 请前往 [GitCode 仓库](https://gitcode.com/mumu_xsy/Bilibili_Analysis_Helper) 点个 **Star**。
+2. 欢迎点击下方按钮进行打赏，您的支持是维护服务器和更新代码的动力！
+`;
+
+    elements.guideBtn.onclick = () => {
+        elements.guideContent.innerHTML = marked.parse(guideMarkdown);
+        elements.guideModal.classList.remove('hidden');
+    };
+
+    elements.closeGuideBtn.onclick = () => elements.guideModal.classList.add('hidden');
+    
+    elements.guideDonateBtn.onclick = () => {
+        elements.guideModal.classList.add('hidden');
+        elements.donateModal.classList.remove('hidden');
+    };
+
+    elements.closeDonateBtn.onclick = () => elements.donateModal.classList.add('hidden');
+
+    window.addEventListener('click', (e) => {
+        if (e.target === elements.guideModal) elements.guideModal.classList.add('hidden');
+        if (e.target === elements.donateModal) elements.donateModal.classList.add('hidden');
+    });
+
     // Enter Key
     elements.videoUrl.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') startAnalysis();

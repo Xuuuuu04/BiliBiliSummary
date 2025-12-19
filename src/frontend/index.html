@@ -39,6 +39,13 @@
                 </svg>
                 登录B站
             </button>
+            <button id="guideBtn" class="btn-icon" title="使用指南">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </button>
             <button id="settingsBtn" class="btn-icon" title="全局设置">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -559,5 +566,46 @@
     </div>
 
     <script src="script.js"></script>
+    <!-- 使用指南模态框 -->
+    <div id="guideModal" class="modal hidden">
+        <div class="modal-content guide-modal-content">
+            <div class="modal-header guide-header">
+                <div class="guide-title-area">
+                    <svg class="guide-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <h2>使用指南 & 声明</h2>
+                </div>
+                <button class="close-modal guide-close">&times;</button>
+            </div>
+            <div id="guideContent" class="modal-body guide-body markdown-body">
+                <!-- 由脚本渲染 -->
+            </div>
+            <div class="modal-footer guide-footer">
+                <div class="support-area">
+                    <span>觉得好用？去点个 Star 吧 ⭐</span>
+                    <div class="support-btns">
+                        <a href="https://gitcode.com/mumu_xsy/Bilibili_Analysis_Helper" target="_blank" class="btn-mini btn-primary-mini">GitCode 仓库</a>
+                        <button id="guideDonateBtn" class="btn-mini btn-outline-mini">❤️ 赞助支持</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 捐赠二维码弹窗 (复用或新建) -->
+    <div id="donateModal" class="modal hidden">
+        <div class="modal-content donate-modal-content">
+            <div class="modal-header">
+                <h2>❤️ 感谢你的支持</h2>
+                <button id="closeDonateBtn" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body donate-body">
+                <img src="assets/donate.jpg" alt="捐赠二维码" class="donate-qr">
+                <p>你的打赏是项目持续更新的最大动力！</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
