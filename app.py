@@ -276,8 +276,23 @@ def analyze_video_stream():
                     yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取内容: {res['data']['title']}', 'progress': 20, 'info': res['data']})}\n\n"
                     
                     yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析内容...', 'progress': 40})}\n\n"
+                    
+                    # 存储内容以便最后发送
+                    article_full_content = res['data']['content']
+                    article_res_data = res['data']
+
                     for chunk in ai_service.generate_article_analysis_stream(res['data'], res['data']['content']):
                         yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+                    
+                    # 补充发送 final 阶段数据，确保原文和元数据到位
+                    yield f"data: {json.dumps({
+                        'type': 'final', 
+                        'stage': 'completed', 
+                        'message': '专栏分析完成！', 
+                        'progress': 100, 
+                        'content': article_full_content,
+                        'info': article_res_data
+                    }, ensure_ascii=False)}\n\n"
                     return
 
                 # --- 视频分析逻辑 (保持原样并增强) ---

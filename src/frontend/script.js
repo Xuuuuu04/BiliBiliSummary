@@ -633,6 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.type === 'final' && currentMode === 'article') {
                     elements.articleOriginalContent.textContent = data.content || '无法获取专栏原文';
+                    // 再强制更新一次卡片，因为 final 可能带了更全的数据
+                    if (data.info) updateVideoCard(data.info);
                 }
                 
                 // If we have danmaku data, generate word cloud
@@ -1029,12 +1031,16 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.videoTitle.textContent = info.title;
         elements.upName.textContent = info.author;
         elements.viewCount.textContent = formatNumber(info.view);
-        elements.danmakuCount.textContent = info.danmaku !== undefined ? formatNumber(info.danmaku) : '-';
-        elements.likeCount.textContent = info.like !== undefined ? formatNumber(info.like) : '-';
-        elements.commentCount.textContent = info.reply !== undefined ? formatNumber(info.reply) : '-';
-        elements.videoDuration.textContent = info.duration_str || info.duration || '';
         
-        const coverUrl = info.cover || info.banner_url || info.pic || '';
+        // 适配视频/专栏不同的点赞/弹幕字段
+        elements.danmakuCount.textContent = (info.danmaku !== undefined) ? formatNumber(info.danmaku) : '-';
+        elements.likeCount.textContent = (info.like !== undefined) ? formatNumber(info.like) : (info.stats ? formatNumber(info.stats.like) : '-');
+        elements.commentCount.textContent = (info.reply !== undefined) ? formatNumber(info.reply) : (info.stats ? formatNumber(info.stats.reply) : '-');
+        
+        elements.videoDuration.textContent = info.duration_str || info.duration || (currentMode === 'article' ? '专栏文章' : '');
+        
+        // 封面图适配：pic, cover, banner_url, face
+        const coverUrl = info.cover || info.banner_url || info.pic || info.face || '';
         if (coverUrl) {
             elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(coverUrl)}`;
         }
@@ -1042,9 +1048,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (info.bvid) {
             elements.watchBiliBtn.href = `https://www.bilibili.com/video/${info.bvid}`;
         } else if (currentMode === 'article') {
-            // If we have cvid, link to article
+            // 如果是 cvid
             const cvidMatch = elements.videoUrl.value.match(/cv(\d+)/);
+            const opusMatch = elements.videoUrl.value.match(/opus\/(\d+)/);
             if (cvidMatch) elements.watchBiliBtn.href = `https://www.bilibili.com/read/cv${cvidMatch[1]}`;
+            else if (opusMatch) elements.watchBiliBtn.href = `https://www.bilibili.com/opus/${opusMatch[1]}`;
         }
     }
 
