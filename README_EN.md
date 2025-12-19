@@ -1,0 +1,92 @@
+# BiliBili Summarize | AI-Powered In-depth Video Analysis Assistant
+
+**One-click extraction of Bilibili video subtitles, danmaku, comments, and keyframes. Generates deep summaries, mind maps, and sentiment analysis reports using AI multimodal large language models.**
+
+<div align="center">
+
+[简体中文](README.md) | [English](README_EN.md) | [日本語](README_JP.md)
+
+</div>
+
+<div align="center">
+
+![BiliBili Logo](https://img.shields.io/badge/BiliBili-FF6699?style=for-the-badge&logo=bilibili&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
+![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
+
+[Quick Start](#🚀-quick-start) • [Features](#✨-features) • [Tech Stack](#🛠️-tech-stack) • [Acknowledgements](#🙏-acknowledgements)
+
+</div>
+
+## ✨ Features
+
+- **📋 Deep Content Summary**: Extract video chapters and core knowledge in seconds.
+- **🖼️ Multimodal Visual Analysis**: Combines video keyframes so no visual detail is missed.
+- **💬 Public Sentiment Mining**: Insight into danmaku memes and top-voted comments.
+- **🤖 Intelligent Q&A**: Deeply interact with the video content through AI-powered chat.
+- **📝 Article & Opus Analysis**: Support for logical deconstruction of Bilibili articles and "Opus" dynamic posts.
+- **🎭 UP Creator Portrait**: Analyze creator style and value based on recent works.
+- **🔐 Bilibili Login Support**: Scan QR code to login for higher-quality comments and interaction data.
+- **🎨 Modern Artistic UI**: Ultra-smooth responsive design with Dark Mode support.
+
+## 🚀 Quick Start
+
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Environment**
+   Copy `.env.example` to `.env` and fill in your API Key.
+   Alternatively, configure it via the settings button in the UI after launching.
+
+3. **Launch Application**
+   ```bash
+   python app.py
+   ```
+   Visit `http://localhost:5000` to start analyzing.
+
+## 🏗️ Project Structure
+
+```text
+Bilibili_Analysis_Helper/
+├── app.py              # Main entry point
+├── requirements.txt    # Core dependencies
+├── .env.example        # Environment variable template
+├── README.md           # Project documentation
+└── src/                # Source code
+    ├── backend/        # Backend logic (Bilibili & AI services)
+    ├── frontend/       # Frontend assets (HTML, CSS, JS)
+    └── config.py       # Global configuration
+```
+
+## 🛠️ Tech Stack
+
+- **Backend**: Python (Flask), `bilibili-api-python`, `aiohttp`
+- **Frontend**: Vanilla HTML/JS/CSS3, `Marked.js` (Markdown rendering)
+- **AI Engine**: Supports all OpenAI-compatible vision multimodal models (Recommended: SiliconCloud, Qwen)
+
+## 🙏 Acknowledgements
+
+- [bilibili-api-python](https://github.com/Nemo2011/bilibili-api) - Powerful Bilibili API wrapper.
+- [SiliconCloud](https://cloud.siliconflow.cn/) - High-speed computing power support.
+- [LobeHub Icons](https://github.com/lobehub/lobe-icons) - Beautiful vendor icons.
+
+---
+
+## 💖 Sponsorship & Support
+
+If you find this project helpful, feel free to buy the author a coffee ☕. Your support is the driving force for continuous maintenance and new features!
+
+<div align="center">
+
+![Sponsor QR Code](assets/donate.jpg)
+
+*Scan to donate*
+
+</div>
+
+---
+
+Created by [mumu_xsy](https://gitcode.com/mumu_xsy) | [Repository](https://gitcode.com/mumu_xsy/Bilibili_Analysis_Helper)

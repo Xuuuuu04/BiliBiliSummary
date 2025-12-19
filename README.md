@@ -4,6 +4,12 @@
 
 <div align="center">
 
+[简体中文](README.md) | [English](README_EN.md) | [日本語](README_JP.md)
+
+</div>
+
+<div align="center">
+
 ![BiliBili Logo](https://img.shields.io/badge/BiliBili-FF6699?style=for-the-badge&logo=bilibili&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
@@ -19,6 +25,8 @@
 - **🖼️ 多模态视觉分析**：结合视频关键帧，画面细节不遗漏。
 - **💬 舆情价值深挖**：看透弹幕热梗与评论区高赞观点。
 - **🤖 智能对话问答**：针对视频内容进行深度互动追问。
+- **📝 专栏与 Opus 解析**：支持 B 站文章及动态图文的深度逻辑拆解。
+- **🎭 UP 主深度画像**：基于近期作品分析创作者的调性与价值。
 - **🔐 B 站登录支持**：支持扫码登录以获取更高质量的评论与互动数据。
 - **🎨 现代艺术化 UI**：极致流畅的响应式设计，支持深色模式。
 
@@ -30,8 +38,8 @@
    ```
 
 2. **配置环境**
-   复制 `.env.example` 为 `.env` 并填写您的硅基流动的key即可。
-   或者直接进入面板后，通过右上角设置按钮，点击配置硅基流动的key，即可立即开始使用。
+   复制 `.env.example` 为 `.env` 并填写您的 API Key。
+   或者直接进入面板后，通过右上角设置按钮进行配置。
 
 3. **启动应用**
    ```bash
@@ -61,19 +69,11 @@ Bilibili_Analysis_Helper/
 
 ## 🙏 致谢
 
-
-
 - [bilibili-api-python](https://github.com/Nemo2011/bilibili-api) - 强大的 B 站 API 封装库。
-
 - [SiliconCloud](https://cloud.siliconflow.cn/) - 提供极速算力支持。
-
 - [LobeHub Icons](https://github.com/lobehub/lobe-icons) - 精美的厂商图标支持。
 
-
-
 ---
-
-
 
 ## 💖 赞助与支持
 
@@ -86,8 +86,6 @@ Bilibili_Analysis_Helper/
 *扫码赞赏，备注“B站总结”*
 
 </div>
-
-
 
 ---
 
