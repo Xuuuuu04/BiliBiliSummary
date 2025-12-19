@@ -467,6 +467,48 @@ button {
     background: #2D1E22;
 }
 
+.user-badge-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-face-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--nav-active-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1.5px solid transparent;
+}
+
+.user-face-circle:hover {
+    transform: scale(1.1);
+    border-color: var(--bili-pink);
+    box-shadow: 0 0 10px rgba(251, 114, 153, 0.4);
+}
+
+.user-face-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-name-text {
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-name-text:hover {
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
 .btn-secondary:hover {
     border-color: var(--bili-blue);
     color: var(--bili-blue);

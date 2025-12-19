@@ -973,29 +973,95 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/bilibili/login/check');
             const result = await response.json();
 
-            if (result.success && result.data.is_logged_in) {
-                const user = result.data;
-                const faceUrl = user.face ? `/api/image-proxy?url=${encodeURIComponent(user.face)}` : '';
-                
-                elements.loginBtn.innerHTML = `
-                    <div class="user-avatar-placeholder" style="overflow: hidden;">
-                        ${user.face ? `<img src="${faceUrl}" style="width: 100%; height: 100%; object-fit: cover;">` : `
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>`}
-                    </div>
-                    <span>${user.name || '已登录'}</span>
-                `;
-                elements.loginBtn.classList.add('logged-in');
-                elements.loginBtn.onclick = () => {
-                    if(confirm('确定要退出登录吗？')) {
-                        logout();
-                    }
-                };
-                // Hide hint if logged in
-                elements.loginHint.classList.add('hidden');
-            } else {
+                        if (result.success && result.data.is_logged_in) {
+
+                            const user = result.data;
+
+                            const faceUrl = user.face ? `/api/image-proxy?url=${encodeURIComponent(user.face)}` : '';
+
+                            
+
+                            elements.loginBtn.innerHTML = `
+
+                                <div class="user-badge-container">
+
+                                    <div class="user-face-circle" id="analyzeMeBtn" title="点击分析我的UP主画像">
+
+                                        ${user.face ? `<img src="${faceUrl}">` : `
+
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+
+                                            <circle cx="12" cy="7" r="4"></circle>
+
+                                        </svg>`}
+
+                                    </div>
+
+                                    <span class="user-name-text" id="logoutUserBtn" title="点击退出登录">${user.name || '已登录'}</span>
+
+                                </div>
+
+                            `;
+
+                            elements.loginBtn.classList.add('logged-in');
+
+                            elements.loginBtn.onclick = null; // 清除旧的全局点击
+
+            
+
+                            // 绑定“分析我”逻辑
+
+                            const analyzeMeBtn = document.getElementById('analyzeMeBtn');
+
+                            if (analyzeMeBtn) {
+
+                                analyzeMeBtn.onclick = (e) => {
+
+                                    e.stopPropagation();
+
+                                    elements.videoUrl.value = user.user_id;
+
+                                    switchMode('user');
+
+                                    startAnalysis();
+
+                                };
+
+                            }
+
+            
+
+                            // 绑定“退出”逻辑
+
+                            const logoutUserBtn = document.getElementById('logoutUserBtn');
+
+                            if (logoutUserBtn) {
+
+                                logoutUserBtn.onclick = (e) => {
+
+                                    e.stopPropagation();
+
+                                    if(confirm('确定要退出登录吗？')) {
+
+                                        logout();
+
+                                    }
+
+                                };
+
+                            }
+
+                            
+
+                            // Hide hint if logged in
+
+                            elements.loginHint.classList.add('hidden');
+
+                        }
+
+             else {
                 elements.loginBtn.innerHTML = `
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
