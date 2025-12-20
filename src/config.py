@@ -9,14 +9,19 @@ class Config:
     # OpenAI API配置
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     _api_base = os.getenv('OPENAI_API_BASE')
-    # 自动添加 /v1 后缀（如果没有的话）
-    if _api_base and not _api_base.endswith('/v1'):
-        OPENAI_API_BASE = _api_base.rstrip('/') + '/v1'
+    # 自动处理 API Base：确保不以斜杠结尾，并根据需要添加 /v1
+    if _api_base:
+        _api_base = _api_base.rstrip('/')
+        if not _api_base.endswith('/v1') and 'openai.com' in _api_base:
+            OPENAI_API_BASE = _api_base + '/v1'
+        else:
+            OPENAI_API_BASE = _api_base
     else:
-        OPENAI_API_BASE = _api_base
+        OPENAI_API_BASE = None
     OPENAI_MODEL = os.getenv('model')
     QA_MODEL = os.getenv('QA_MODEL', 'Qwen/Qwen2.5-72B-Instruct')
     DEEP_RESEARCH_MODEL = os.getenv('DEEP_RESEARCH_MODEL', 'moonshotai/Kimi-K2-Thinking')
+    EXA_API_KEY = os.getenv('EXA_API_KEY')
     
     # Flask配置
     FLASK_PORT = int(os.getenv('FLASK_PORT', 5000))

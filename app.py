@@ -3,6 +3,7 @@ from flask_cors import CORS
 import asyncio
 import os
 import aiohttp
+import json
 from src.config import Config
 from src.backend.bilibili_service import BilibiliService, run_async
 from src.backend.ai_service import AIService
@@ -31,6 +32,7 @@ def get_settings():
             'model': os.getenv('model'),
             'qa_model': os.getenv('QA_MODEL'),
             'deep_research_model': os.getenv('DEEP_RESEARCH_MODEL', 'moonshotai/Kimi-K2-Thinking'),
+            'exa_api_key': os.getenv('EXA_API_KEY') or '',
             'dark_mode': os.getenv('DARK_MODE', 'false').lower() == 'true'
         }
     })
@@ -45,9 +47,12 @@ def update_settings():
         # 更新 .env 文件和当前环境变量
         if 'openai_api_base' in data:
             base_url = data['openai_api_base']
-            # 自动添加 /v1 后缀（如果没有的话）
-            if base_url and not base_url.endswith('/v1'):
-                base_url = base_url.rstrip('/') + '/v1'
+            if base_url:
+                base_url = base_url.rstrip('/')
+                # 仅对 openai.com 的域名尝试补全 /v1，其他国内中转通常不需要或已有完整路径
+                if not base_url.endswith('/v1') and 'openai.com' in base_url:
+                    base_url = base_url + '/v1'
+            
             set_key(env_path, 'OPENAI_API_BASE', base_url)
             os.environ['OPENAI_API_BASE'] = base_url
             Config.OPENAI_API_BASE = base_url
@@ -71,6 +76,11 @@ def update_settings():
             set_key(env_path, 'DEEP_RESEARCH_MODEL', data['deep_research_model'])
             os.environ['DEEP_RESEARCH_MODEL'] = data['deep_research_model']
             Config.DEEP_RESEARCH_MODEL = data['deep_research_model']
+
+        if 'exa_api_key' in data:
+            set_key(env_path, 'EXA_API_KEY', data['exa_api_key'])
+            os.environ['EXA_API_KEY'] = data['exa_api_key']
+            Config.EXA_API_KEY = data['exa_api_key']
 
         if 'dark_mode' in data:
             set_key(env_path, 'DARK_MODE', str(data['dark_mode']).lower())  
@@ -103,8 +113,24 @@ def start_deep_research():
             return jsonify({'success': False, 'error': '请输入研究课题'}), 400
 
         def generate():
-            import json
             for chunk in ai_service.deep_research_stream(topic, bilibili_service):
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+
+        return Response(generate(), mimetype='text/event-stream')
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/smart_up/stream', methods=['POST'])
+def smart_up_stream():
+    """智能小UP 快速问答流"""
+    try:
+        data = request.json
+        question = data.get('question')
+        if not question:
+            return jsonify({'success': False, 'error': '问题不能为空'}), 400
+
+        def generate():
+            for chunk in ai_service.smart_up_stream(question, bilibili_service):
                 yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
         return Response(generate(), mimetype='text/event-stream')
@@ -210,7 +236,6 @@ def chat_video_stream():
             return jsonify({'success': False, 'error': '缺少必要参数'}), 400
 
         def generate():
-            import json
             for chunk in ai_service.chat_stream(question, context, video_info, history):
                 yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
@@ -391,8 +416,6 @@ def analyze_video_stream():
 
         def generate_stream():
             try:
-                import json
-                
                 nonlocal bvid, article_meta # 允许在内部修改 ID
                 
                 # --- 智能搜索逻辑：如果输入的不是 ID，则视为关键词搜索 ---

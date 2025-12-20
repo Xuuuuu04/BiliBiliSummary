@@ -232,7 +232,7 @@ class BilibiliService:
         except Exception as e:
             return {'success': False, 'error': f'获取弹幕失败: {str(e)}'}
 
-    async def get_video_comments(self, bvid: str, max_pages: int = 30, target_count: int = 500) -> Dict:
+    async def get_video_comments(self, bvid: str, max_pages: int = 10, target_count: int = 100) -> Dict:
         """获取视频评论 (极致加固版：适配新版分页结构)"""
         try:
             from bilibili_api import comment
@@ -242,14 +242,14 @@ class BilibiliService:
             if not aid: return {'success': False, 'error': '无法获取视频aid'}
 
             has_credential = await self.check_credential_valid()
-            actual_max_pages = max_pages if has_credential else 5
-            actual_target = target_count if has_credential else 100
+            # 深度研究模式下不建议开启地毯式抓取，见好就收
+            actual_max_pages = max_pages if has_credential else 3
+            actual_target = target_count if has_credential else 50
 
             all_comments_list = []
             seen_rpids = set()
 
-            # 抓取逻辑：优先尝试热门，然后暴力补全
-            # 兼容新旧结构的 offset 提取函数
+            # 抓取逻辑：优先尝试热门，不再暴力补全
             def get_next_offset(res):
                 cursor = res.get('cursor', {})
                 # 新版结构在 pagination_reply 内部
@@ -272,57 +272,24 @@ class BilibiliService:
                         seen_rpids.add(r.get('rpid'))
                         all_comments_list.append(r)
                 
-                # 如果热门还有下一页，多抓一两页热门
+                # 如果热门还有下一页，多抓几页热门
                 curr_pag = get_next_offset(res_hot)
-                if curr_pag and len(all_comments_list) < 100:
-                    for _ in range(2):
-                        res_hot = await comment.get_comments_lazy(aid, comment.CommentResourceType.VIDEO, offset=curr_pag, order=comment.OrderType.LIKE, credential=self.credential)
-                        replies = res_hot.get('replies') or []
-                        for r in replies:
-                            if r and r.get('rpid') not in seen_rpids:
-                                seen_rpids.add(r.get('rpid'))
-                                all_comments_list.append(r)
-                        curr_pag = get_next_offset(res_hot)
-                        if not curr_pag: break
+                page_count = 1
+                while curr_pag and page_count < actual_max_pages and len(all_comments_list) < actual_target:
+                    res_hot = await comment.get_comments_lazy(aid, comment.CommentResourceType.VIDEO, offset=curr_pag, order=comment.OrderType.LIKE, credential=self.credential)
+                    replies = res_hot.get('replies') or []
+                    if not replies: break
+                    for r in replies:
+                        if r and r.get('rpid') not in seen_rpids:
+                            seen_rpids.add(r.get('rpid'))
+                            all_comments_list.append(r)
+                    curr_pag = get_next_offset(res_hot)
+                    page_count += 1
             except Exception as e:
                 print(f"[警告] 抓取热门评论失败: {e}")
 
-            # --- 阶段 2：如果还没凑够，切换到时间轴模式进行“地毯式”搜索 ---
-            if len(all_comments_list) < actual_target:
-                print(f"[信息] 评论数仍不足，切换到时间流模式继续抓取...")
-                pag_time = ""
-                page_count = 0
-                while page_count < actual_max_pages:
-                    try:
-                        res = await comment.get_comments_lazy(
-                            aid, 
-                            comment.CommentResourceType.VIDEO, 
-                            offset=pag_time, 
-                            order=comment.OrderType.TIME,
-                            credential=self.credential
-                        )
-                        
-                        replies = res.get('replies') or []
-                        # 核心修复：使用新的提取逻辑
-                        pag_time = get_next_offset(res)
-                        
-                        count_before = len(all_comments_list)
-                        for r in replies:
-                            if r and r.get('rpid') not in seen_rpids:
-                                seen_rpids.add(r.get('rpid'))
-                                all_comments_list.append(r)
-                        
-                        page_count += 1
-                        print(f"  - 页面 {page_count}: 抓取 {len(replies)} 条, 总数 {len(all_comments_list)}")
-
-                        if len(all_comments_list) >= actual_target or not pag_time:
-                            break
-                    except Exception as e:
-                        print(f"  - [错误] 时间流翻页异常: {e}")
-                        break
-
-            # 智能采样
-            sampled_comments = self._smart_sample_comments(all_comments_list, actual_target)
+            # 采样与处理
+            sampled_comments = all_comments_list[:actual_target]
             processed_comments = []
             for cmt in sampled_comments:
                 member = cmt.get('member', {})
@@ -338,7 +305,7 @@ class BilibiliService:
                     'avatar': member.get('avatar', '')
                 })
 
-            print(f"[信息] 评论抓取任务完成: 共计搜寻到 {len(all_comments_list)} 条原始素材")
+            print(f"[信息] 评论抓取完成: 实际获取 {len(processed_comments)} 条")
 
             return {
                 'success': True,

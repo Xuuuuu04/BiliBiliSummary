@@ -14,7 +14,7 @@
 <body>
     <!-- 顶部导航栏 -->
     <header class="main-header">
-        <div class="logo-area">
+        <div class="logo-area" onclick="goHome()">
             <svg class="bili-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="8" fill="white"/>
                 <!-- 修正后的天线，画在头顶外部 -->
@@ -32,12 +32,18 @@
             </div>
         </div>
         <div class="header-actions">
-            <button id="loginBtn" class="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div id="loginBtn" class="login-badge" title="B站账号登录状态">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                登录B站
+                <span>登录B站</span>
+            </div>
+            <button id="homeBtn" class="btn-icon hidden" title="返回主页" onclick="goHome()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
             </button>
             <button id="guideBtn" class="btn-icon" title="使用指南">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -67,21 +73,25 @@
                 <div class="search-box-container">
                     <!-- 模式切换器 -->
                     <div class="analysis-mode-switcher">
-                        <button class="mode-btn active" data-mode="video">
+                        <button class="mode-btn active" data-mode="smart_up">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="9" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle><path d="M12 13a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2z"></path></svg>
+                            智能小UP
+                        </button>
+                        <button class="mode-btn" data-mode="research">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            深度研究
+                        </button>
+                        <button class="mode-btn" data-mode="video">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M10 8l6 4-6 4V8z"></path></svg>
                             视频分析
                         </button>
                         <button class="mode-btn" data-mode="article">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            专栏解析
+                            专题解析
                         </button>
                         <button class="mode-btn" data-mode="user">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            UP主画像
-                        </button>
-                        <button class="mode-btn" data-mode="research">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                            深度研究
+                            用户画像
                         </button>
                     </div>
                     
@@ -282,7 +292,7 @@
                             </button>
 
                             <!-- 通用按钮 -->
-                            <button class="nav-btn" data-tab="chat">
+                            <button class="nav-btn" data-tab="chat" data-show-on="video article user">
                                 <span class="icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
                                 智能问答
                             </button>
@@ -443,7 +453,41 @@
                             </div>
 
                             <!-- 深度研究专用 -->
-            <div id="researchReportContent" class="tab-pane active markdown-body">
+            <div id="smartUpChatContent" class="tab-pane chat-pane">
+                <div class="chat-container compact-chat">
+                    <div class="chat-header">
+                        <div class="chat-header-title">智能小UP 对话</div>
+                        <div class="chat-header-actions">
+                            <button id="toggleSmartUpFullscreen" class="btn-icon-small" title="切换全屏">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                                </svg>
+                            </button>
+                            <button id="clearChatBtn" class="btn-icon-small" title="清空聊天记录">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="smartUpMessages" class="chat-messages">
+                        <div class="message assistant">
+                            <div class="message-content">你好！我是你的智能小UP。有什么我可以帮你的吗？我会自适应问题复杂度，快速检索B站视频和全网资讯为您提供精准回答。</div>
+                        </div>
+                    </div>
+                    <div id="smartUpProgress" class="chat-progress-container hidden">
+                        <!-- 动态展示 AI 思考与工具调用进度 -->
+                    </div>
+                    <div class="chat-input-area">
+                        <textarea id="smartUpInput" placeholder="输入您的问题，我会为您检索视频并作答..."></textarea>
+                        <button id="smartUpSendBtn" class="btn-primary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="researchReportContent" class="tab-pane markdown-body">
                 <div class="empty-state">
                     <p>等待深度研究开始...</p>
                     <button class="history-btn" onclick="showResearchHistory()">
@@ -458,43 +502,28 @@
                 </div>
             </div>
 
-            <!-- 历史研究报告弹窗 -->
-            <div id="historyModal" class="modal-overlay hidden">
-                <div class="modal-content history-modal">
-                    <div class="modal-header">
-                        <h3>历史研究报告</h3>
-                        <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="historyList" class="history-list">
-                            <!-- 动态加载历史列表 -->
+            <!-- 通用 -->
+            <div id="chatContent" class="tab-pane chat-pane">
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="message assistant">
+                            <div class="message-content">你好！我是你的视频助手。我已经阅读了视频分析报告，你可以问我关于视频内容的任何问题。</div>
                         </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <textarea id="chatInput" placeholder="输入关于视频内容的问题..."></textarea>
+                        <button id="sendMsgBtn" class="btn-primary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
-
-                            <!-- 通用 -->
-                            <div id="chatContent" class="tab-pane chat-pane">
-                                <div class="chat-container">
-                                    <div id="chatMessages" class="chat-messages">
-                                        <div class="message assistant">
-                                            <div class="message-content">你好！我是你的视频助手。我已经阅读了视频分析报告，你可以问我关于视频内容的任何问题。</div>
-                                        </div>
-                                    </div>
-                                    <div class="chat-input-area">
-                                        <textarea id="chatInput" placeholder="输入关于视频内容的问题..."></textarea>
-                                        <button id="sendMsgBtn" class="btn-primary">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+        </div>
+    </section>
+</div>
             </div>
         </main>
 
@@ -578,6 +607,21 @@
         </div>
     </div>
 
+    <!-- 历史研究报告弹窗 -->
+    <div id="historyModal" class="modal-overlay hidden">
+        <div class="modal-content history-modal">
+            <div class="modal-header">
+                <h3>历史研究报告</h3>
+                <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list">
+                    <!-- 动态加载历史列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 提示框 -->
     <div id="toast" class="toast hidden">提示信息</div>
 
@@ -612,6 +656,13 @@
                     <div class="setting-item">
                         <label>深度研究模型 (Reasoning/Thinking)</label>
                         <input type="text" id="deepResearchModelInput" placeholder="例如: moonshotai/Kimi-K2-Thinking">
+                    </div>
+                    <div class="setting-item">
+                        <label>Exa Search API Key (用于深度联网搜索)</label>
+                        <input type="password" id="exaApiKeyInput" placeholder="exa-...">
+                        <p class="setting-hint">
+                            💡 提示：前往 <a href="https://dashboard.exa.ai/" target="_blank" style="color: var(--bili-blue); font-weight: bold; text-decoration: underline;">Exa.ai 官网</a> <strong>免费注册</strong> 即可获得每月免费额度的 API Key，让 Agent 具备全网深度搜索与实时资讯获取能力。
+                        </p>
                     </div>
                 </div>
                 <div class="settings-group">
