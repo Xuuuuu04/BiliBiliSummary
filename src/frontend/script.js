@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isChatting = false;
     let chatHistory = [];
     let smartUpHistory = []; // 智能小UP 专用上下文记忆
+    let popularVideosCache = null; // 缓存热门视频数据
     let loginPollInterval = null;
 
     // --- Event Listeners ---
@@ -357,9 +358,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchPopularVideos() {
         try {
+            // 如果已有缓存，直接渲染
+            if (popularVideosCache) {
+                renderInitRecommendations(popularVideosCache);
+                setupHorizontalScroll();
+                return;
+            }
+
             const response = await fetch('/api/video/popular');
             const result = await response.json();
             if (result.success) {
+                popularVideosCache = result.data; // 存入缓存
                 renderInitRecommendations(result.data);
                 setupHorizontalScroll();
             }
@@ -379,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderInitRecommendations(videos) {
-        if (!videos || !elements.initRelatedList) return;
+        if (!videos || videos.length === 0 || !elements.initRelatedList) return;
         elements.initRelatedList.innerHTML = '';
         videos.forEach((video, index) => {
             const card = document.createElement('div');
@@ -1794,6 +1803,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const searchBox = document.querySelector('.search-box');
         searchBox.className = `search-box mode-${mode}`;
         
+        const modeDesc = document.getElementById('modeDescription');
+        if (modeDesc) {
+            const descriptions = {
+                'smart_up': '智连全网，自适应你的每一个好奇。',
+                'research': '多维拆解，在海量信息中捕捉深度洞见。',
+                'video': '瞬息提炼，让每一帧光影都有迹可循。',
+                'article': '结构重组，深度转译专栏背后的文字灵魂。',
+                'user': '风格画像，全景式洞察创作背后的灵魂印记。'
+            };
+            modeDesc.textContent = descriptions[mode] || '';
+            modeDesc.className = `mode-description mode-${mode} animate-fade-in`;
+        }
+        
         elements.analyzeBtn.className = `btn-primary mode-${mode}`;
         const btnText = elements.analyzeBtn.lastChild;
 
@@ -1933,6 +1955,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // 清空输入框以便下次使用
         elements.videoUrl.value = '';
         manualModeLock = false;
+        
+        // 确保热门视频始终存在
+        if (elements.initRelatedList && elements.initRelatedList.children.length === 0) {
+            fetchPopularVideos();
+        }
         
         // 重置模式
         switchMode(targetMode);
@@ -2585,6 +2612,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (data.tool === 'search_videos') { icon = '🔍'; name = '检索 B 站视频'; }
                         else if (data.tool === 'web_search') { icon = '🌐'; name = '全网深度搜索'; }
                         else if (data.tool === 'analyze_video') { icon = '📽️'; name = '视频深度解析'; }
+                        else if (data.tool === 'search_users') { icon = '👤'; name = '搜索 B 站 UP 主'; }
+                        else if (data.tool === 'get_user_recent_videos') { icon = '🎞️'; name = '获取 UP 主作品集'; }
 
                         const currentStep = {
                             type: 'tool',
