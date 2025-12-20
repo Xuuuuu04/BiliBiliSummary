@@ -2519,16 +2519,16 @@ input:checked + .slider:before {
     flex-direction: column;
     gap: 0;
     padding: 20px;
-    padding-right: 340px; /* 为右侧幻影预览留出空间 */
+    padding-right: 20px; /* 恢复正常 padding，气泡将占满宽度 */
     overflow-y: auto;
-    overflow-x: visible; /* 允许右侧内容溢出 */
+    overflow-x: hidden; /* 深度研究内部不再需要溢出 */
     max-height: 750px;
     position: relative;
 }
 
 @media (max-width: 1400px) {
     .research-timeline {
-        padding-right: 20px; /* 窄屏时恢复正常padding */
+        padding-right: 20px;
     }
 }
 
@@ -2594,6 +2594,8 @@ input:checked + .slider:before {
     padding: 16px 20px;
     border: 1px solid var(--border-color);
     transition: var(--transition);
+    width: 100%; /* 确保气泡占满剩余宽度 */
+    box-sizing: border-box;
 }
 
 .timeline-item.type-thinking .timeline-content-box {
@@ -2813,95 +2815,94 @@ input:checked + .slider:before {
 /* 工具调用美化 */
 .tool-call-card {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 16px;
+    padding-right: 320px; /* 为内部右侧预览留出空间 */
     margin-top: 8px;
     position: relative;
+    min-height: 120px;
+    overflow: hidden; /* 确保内部预览不溢出 */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 1200px) {
+    .tool-call-card {
+        padding-right: 16px;
+    }
+    .ghost-content {
+        display: none;
+    }
 }
 
 .tool-call-card .tool-name {
     font-weight: 700;
     color: var(--bili-pink);
-    margin-bottom: 6px;
-    font-size: 13px;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
 .tool-call-card .search-keyword {
     display: inline-block;
     background: rgba(251, 114, 153, 0.1);
     color: var(--bili-pink);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 6px;
     font-size: 13px;
     border: 1px solid rgba(251, 114, 153, 0.2);
 }
 
-/* 幻影流式预览 - 右侧透明展示 */
+/* 幻影流式预览 - 气泡内右侧展示 */
 .ghost-content {
     position: absolute;
-    right: -320px;
+    right: 0;
     top: 0;
+    bottom: 0;
     width: 300px;
-    max-height: 450px;
-    overflow-y: auto; /* 允许上下滚动 */
+    overflow-y: auto;
     overflow-x: hidden;
-    padding: 20px;
-    padding-top: 32px; /* 为标签留空间 */
-    padding-bottom: 90px; /* 为底部渐变遮罩留空间 */
+    padding: 15px;
+    padding-top: 36px;
+    padding-bottom: 40px;
     font-size: 11px;
-    line-height: 1.8;
+    line-height: 1.7;
     color: var(--text-secondary);
-    background: linear-gradient(135deg, rgba(251, 114, 153, 0.02) 0%, rgba(35, 173, 229, 0.02) 100%);
-    border-radius: 16px;
-    border: 1px dashed rgba(251, 114, 153, 0.15);
+    background: rgba(0, 0, 0, 0.15); /* 内部预览背景稍深 */
+    border-left: 1px dashed rgba(251, 114, 153, 0.2);
     opacity: 0;
-    transform: translateX(10px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: pre-wrap;
     word-break: break-word;
     font-family: 'Segoe UI', 'PingFang SC', system-ui, -apple-system, sans-serif;
-    box-shadow: 0 4px 20px rgba(251, 114, 153, 0.03);
-    backdrop-filter: blur(8px);
-    pointer-events: auto; /* 允许滚动交互 */
-    animation: ghostFadeIn 0.8s ease-out 0.3s forwards, ghostFloat 3s ease-in-out infinite;
-    /* 使用mask实现底部渐变淡出效果 */
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
+    backdrop-filter: blur(4px);
+    pointer-events: auto;
+    animation: ghostFadeIn 0.8s ease-out 0.3s forwards;
+    /* 使用mask实现上下边缘淡出效果 */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
 }
 
 @keyframes ghostFadeIn {
     from {
         opacity: 0;
-        transform: translateX(10px);
     }
     to {
-        opacity: 0.4;
-        transform: translateX(0);
-    }
-}
-
-@keyframes ghostFloat {
-    0%, 100% {
-        transform: translateY(0) translateX(0);
-    }
-    50% {
-        transform: translateY(-5px) translateX(0);
+        opacity: 0.6;
     }
 }
 
 /* 预览标签 */
 .ghost-content::before {
-    content: '🔮 预览';
+    content: '🔮 实时预览';
     position: absolute;
     top: 8px;
-    right: 12px;
-    font-size: 10px;
+    right: 8px;
+    font-size: 9px;
     color: var(--bili-pink);
-    background: rgba(251, 114, 153, 0.08);
-    padding: 2px 8px;
-    border-radius: 10px;
+    background: rgba(251, 114, 153, 0.12);
+    padding: 1px 6px;
+    border-radius: 8px;
     font-weight: 600;
-    opacity: 0.7;
+    z-index: 10;
 }
 
 /* 保留伪元素用于视觉提示 */

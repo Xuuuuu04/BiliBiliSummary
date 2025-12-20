@@ -126,11 +126,12 @@ def smart_up_stream():
     try:
         data = request.json
         question = data.get('question')
+        history = data.get('history', [])
         if not question:
             return jsonify({'success': False, 'error': '问题不能为空'}), 400
 
         def generate():
-            for chunk in ai_service.smart_up_stream(question, bilibili_service):
+            for chunk in ai_service.smart_up_stream(question, bilibili_service, history):
                 yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
         return Response(generate(), mimetype='text/event-stream')

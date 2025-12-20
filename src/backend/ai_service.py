@@ -18,7 +18,7 @@ class AIService:
         self.qa_model = Config.QA_MODEL
         self.research_model = Config.DEEP_RESEARCH_MODEL
 
-    def smart_up_stream(self, question: str, bilibili_service) -> Generator[Dict, None, None]:
+    def smart_up_stream(self, question: str, bilibili_service, history: list = None) -> Generator[Dict, None, None]:
         """智能小UP 逻辑：自适应快速 Q&A，深度复用工具"""
         try:
             from src.backend.bilibili_service import run_async
@@ -48,11 +48,14 @@ class AIService:
 - `search_videos`: 搜索 B 站视频素材。
 - `analyze_video`: 深度解析单个视频（字幕、弹幕、评论）。
 - `web_search`: 全网深度搜索（Exa Search），用于补充时效性信息或专业文档。
+- `search_users`: 根据关键词/昵称模糊搜索 B 站 UP 主。
+- `get_user_recent_videos`: 获取指定 UP 主的最近投稿视频列表，用于系统性研究该 UP 主的作品。
 
 【回答规范】
-- 语气：专业、博学、幽默，像在做一期高质量的“硬核视频”。
-- 格式：重点内容**加粗**。结论先行，逻辑分明。
-- 结尾：必须列出 3-5 个最有价值的推荐视频/网页链接。
+1. **记忆与关联**：你具有上下文记忆能力。如果用户的问题涉及到之前的对话，你应该结合历史信息进行回答。
+2. **语气**：专业、博学、幽默，像在做一期高质量的“硬核视频”。
+3. **格式**：重点内容**加粗**。结论先行，逻辑分明。
+4. **结尾**：必须列出 3-5 个最有价值的推荐视频/网页链接。
 
 用户的问题是：{question}
 """
@@ -99,13 +102,46 @@ class AIService:
                             "required": ["query"]
                         }
                     }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "search_users",
+                        "description": "根据关键词/昵称模糊搜索 B 站 UP 主",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "keyword": {"type": "string", "description": "UP 主昵称或相关关键词"}
+                            },
+                            "required": ["keyword"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_user_recent_videos",
+                        "description": "获取指定 UP 主的最近投稿视频列表",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "mid": {"type": "integer", "description": "UP 主的 UID (mid)"},
+                                "limit": {"type": "integer", "description": "获取视频的数量，默认 10", "default": 10}
+                            },
+                            "required": ["mid"]
+                        }
+                    }
                 }
             ]
 
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": question}
-            ]
+            # 组装消息列表，包含历史记录
+            messages = [{"role": "system", "content": system_prompt}]
+            if history:
+                messages.extend(history)
+            
+            # 如果最后一项不是当前问题，则添加
+            if not messages or messages[-1].get('content') != question:
+                messages.append({"role": "user", "content": question})
             
             max_rounds = 15 # 智能小UP限制 15 轮
             round_count = 0
@@ -256,6 +292,25 @@ class AIService:
                                 result = result_text
                                 yield {'type': 'tool_result', 'tool': func_name, 'result': {'bvid': bvid, 'title': v_title, 'summary': result}}
 
+                        elif func_name == "search_users":
+                            keyword = args.get("keyword")
+                            search_res = run_async(bilibili_service.search_users(keyword, limit=5))
+                            if search_res['success']:
+                                result = json.dumps(search_res['data'], ensure_ascii=False)
+                                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data']}
+                            else:
+                                result = f"搜索用户失败: {search_res['error']}"
+
+                        elif func_name == "get_user_recent_videos":
+                            mid = args.get("mid")
+                            limit = args.get("limit", 10)
+                            v_res = run_async(bilibili_service.get_user_recent_videos(mid, limit=limit))
+                            if v_res['success']:
+                                result = json.dumps(v_res['data'], ensure_ascii=False)
+                                yield {'type': 'tool_result', 'tool': func_name, 'result': v_res['data']}
+                            else:
+                                result = f"获取用户作品失败: {v_res['error']}"
+
                     except Exception as e:
                         result = f"执行工具出错: {str(e)}"
                         yield {'type': 'error', 'error': result}
@@ -292,37 +347,37 @@ class AIService:
 【核心原则：思维链 (COT) 与 思维树 (TOT)】
 1. **多路径探索**：在每一轮决策前，请先内部模拟 2-3 种不同的调研路径（TOT），选择信息增益最大的路径。
 2. **深度推理**：在调用工具前，必须详细说明你的推理逻辑（COT），解释为什么这个特定的视频或搜索词能够填补当前的信息缺口。
-3. **信息饱和度评估**：在决定是否结束研究前，请评估当前收集的信息是否已经达到“饱和”。如果新搜索到的视频无法提供显著的新观点或数据，则视为信息饱和。
+3. **信息饱和度评估**：在决定是否结束研究前，请评估当前收集的信息是否已经达到“饱和”。如果新搜索到的资料无法提供显著的新观点或数据，则视为信息饱和。
 
 【核心指令】
 1. **拆分研究方向**：首先将课题拆分为 3-5 个具体的、互补的研究维度。
-2. **主动补全信息缺口**：对于每个维度，通过搜索 B 站视频并分析其内容来获取一手信息和深度见解。
-3. **阅读量要求**：为了确保研究深度，你**必须**至少深入分析 5 个以上的 B 站视频。
-4. **引入多维视角**：除了视频内容本身，**必须** 结合视频下的“高赞评论”和“弹幕热梗”来分析大众对该课题的普遍看法和舆情趋势。
-5. **综合联网搜索**：你可以使用 `web_search` (Exa Search) 来补充背景知识、最新新闻、技术文档或 B 站以外的深度分析，确保研究报告的专业性和完整性。但请注意，**必须以 B 站视频内容为主**，网络搜索仅作为辅助。
-6. **深度挖掘**：不要只看视频标题，要深入分析内容。寻找潜在的关联、矛盾点以及未被充分讨论的细节。
-7. **工具使用**：
+2. **全网联动调研**：你可以自由、灵活地结合 B 站视频搜索与 Exa 全网搜索。不要拘泥于先后顺序，应根据信息需求交叉验证。例如，可以先搜索 B 站视频了解概况，再通过 WebSearch 查找专业文档，或者反之。
+3. **深入分析 B 站生态**：
+    - **阅读量要求**：你**必须**至少深入分析 5 个以上的 B 站视频。
+    - **舆情洞察**：**必须** 结合视频下的“高赞评论”和“弹幕热梗”来分析大众对该课题的普遍看法和舆情趋势。
+    - **UP 主深度挖掘**：如果你发现某个 UP 主是该领域的专家，可以使用 `search_users` 找到他，并用 `get_user_recent_videos` 查看他的更多相关作品，以便获取更系统、更具连贯性的专业信息。
+4. **综合联网搜索**：使用 `web_search` 来补充背景知识、最新新闻、技术文档或 B 站以外的深度分析。
+5. **严禁直接总结**：**绝对禁止** 在没有调用 `finish_research_and_write_report` 工具的情况下直接给出研究报告。只有调用该工具后，你才会正式进入“撰写报告”阶段。
+6. **工具使用说明**：
    - `search_videos`: 搜索与研究维度相关的 B 站视频。
-   - `analyze_video`: 对指定的 B 站视频进行深度 AI 内容分析。
-   - `web_search`: 使用 Exa AI 进行全网深度搜索，获取最新资讯或补充信息。
-   - `finish_research_and_write_report`: 仅在信息达到饱和、足以支撑一份高质量专业报告时调用。
+   - `analyze_video`: 对指定的 B 站视频进行深度 AI 内容分析（包含视觉、字幕、评论、弹幕）。
+   - `web_search`: 使用 Exa AI 进行全网深度搜索。
+   - `search_users`: 根据昵称模糊搜索 B 站 UP 主。
+   - `get_user_recent_videos`: 获取指定 UP 主（UID）的最近视频作品列表。
+   - `finish_research_and_write_report`: **必须调用**。仅在资料搜集完全充足时调用，调用后将撰写最终报告。
 
 【最终报告规范】
-1. **深度与篇幅**：每一章节必须达到一定的字数规模（建议每章至少 300-500 字）。严禁使用简短的列表（Bullet points）作为主体，必须使用连贯、专业的段落进行深度论述、多维度对比和逻辑拆解。
+1. **深度与篇幅**：每一章节必须达到一定的字数规模（建议每章至少 300-500 字）。严禁使用简短的列表（Bullet points）作为主体，必须使用连贯、专业的段落进行深度论述。
 2. **格式化要求 (极重要)**：
-    - **大量使用加粗**：对核心观点、关键数据、重要结论进行 **加粗处理**。加粗后的内容在报告中会以 B 站特色粉色高亮显示。
-    - **必须包含至少一个 Markdown 表格** 用于关键参数、优缺点或多维度横向对比，严禁只用文字。
-    - 适当使用引用（Blockquotes）来强调专家的核心结论或用户的典型评论。
+    - **大量使用加粗**：对核心观点、关键数据、重要结论进行 **加粗处理**。
+    - **必须包含至少一个 Markdown 表格** 用于多维度横向对比。
+    - 适当使用引用（Blockquotes）来强调专家结论或典型评论。
     - 确保层级分明，使用二级标题（##）和三级标题（###）。
 3. **结构化呈现**：
     - **研究摘要**：置于顶部，高度凝练核心发现。
     - **详细章节**：针对每个研究方向，进行详细讲解。
-    - **舆情洞察与用户观点**：**必须** 包含一个专门的板块，汇总分析 B 站用户在相关视频下的评论倾向、弹幕热词以及该课题在社区中的讨论热度。
-    - **参考来源列表 (核心要求)**：在报告末尾**必须**列出所有实际参考的视频链接（格式：`B站视频：[标题](链接)`）和网页链接（格式：`外部参考：[标题](链接)`）。确保每一个在报告中引用的重要事实都有源可循。
-4. **禁止项**：
-    - **绝对禁止**在最终报告中包含你的“研究计划”、“拆分方向”或“我现在开始写报告了”等任何元谈话内容。
-    - **禁止**生成简要大纲，必须是完整的文章。
-    - 最终报告应直接以标题或“研究摘要”开始。
+    - **舆情洞察与用户观点**：汇总分析 B 站用户在相关视频下的评论倾向、弹幕热词以及讨论热度。
+    - **参考来源列表**：末尾必须列出所有参考视频和网页链接。
 
 【研究课题】
 {topic}
@@ -340,6 +395,35 @@ class AIService:
                                 "keyword": {"type": "string", "description": "搜索关键词"}
                             },
                             "required": ["keyword"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "search_users",
+                        "description": "根据关键词/昵称模糊搜索 B 站 UP 主",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "keyword": {"type": "string", "description": "UP 主昵称或相关关键词"}
+                            },
+                            "required": ["keyword"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_user_recent_videos",
+                        "description": "获取指定 UP 主的最近投稿视频列表，用于系统性研究该 UP 主的专业内容",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "mid": {"type": "integer", "description": "UP 主的 UID (mid)"},
+                                "limit": {"type": "integer", "description": "获取视频的数量，默认 10", "default": 10}
+                            },
+                            "required": ["mid"]
                         }
                     }
                 },
@@ -365,7 +449,7 @@ class AIService:
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "query": {"type": "string", "description": "搜索查询语句，建议使用自然语言描述你想要找的内容"}
+                                "query": {"type": "string", "description": "搜索查询语句"}
                             },
                             "required": ["query"]
                         }
@@ -390,7 +474,7 @@ class AIService:
             messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": f"请针对以下课题开始深度研究：{topic}"}]
             
             # 最大轮次限制，防止无限循环
-            max_rounds = 15
+            max_rounds = 100 # 深度研究提升至 100 轮
             round_count = 0
             
             for _ in range(max_rounds):
@@ -439,6 +523,12 @@ class AIService:
 
                 # 如果没有工具调用，说明研究完成或模型直接给出了结论
                 if not tool_calls:
+                    # 核心修复：如果模型直接给出了内容但没有调用 finish 工具，我们强制它调用或者补一轮
+                    if not any(msg.get('role') == 'tool' and msg.get('name') == 'finish_research_and_write_report' for msg in messages):
+                         if round_count < max_rounds:
+                            messages.append({"role": "assistant", "content": full_content})
+                            messages.append({"role": "user", "content": "研究尚未结束。请继续使用工具（如搜索相关视频、分析视频、搜索UP主或作品集）进行深入调研。只有当你认为资料完全充足时，请【务必调用】`finish_research_and_write_report` 工具来启动正式报告的撰写。不要直接在对话中结束。"})
+                            continue
                     messages.append({"role": "assistant", "content": full_content})
                     break
 
@@ -591,6 +681,25 @@ class AIService:
                                     'tokens': current_analysis_tokens
                                 }
                         
+                        elif func_name == "search_users":
+                            keyword = args.get("keyword")
+                            search_res = run_async(bilibili_service.search_users(keyword, limit=5))
+                            if search_res['success']:
+                                result = json.dumps(search_res['data'], ensure_ascii=False)
+                                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data']}
+                            else:
+                                result = f"搜索用户失败: {search_res['error']}"
+
+                        elif func_name == "get_user_recent_videos":
+                            mid = args.get("mid")
+                            limit = args.get("limit", 10)
+                            v_res = run_async(bilibili_service.get_user_recent_videos(mid, limit=limit))
+                            if v_res['success']:
+                                result = json.dumps(v_res['data'], ensure_ascii=False)
+                                yield {'type': 'tool_result', 'tool': func_name, 'result': v_res['data']}
+                            else:
+                                result = f"获取用户作品失败: {v_res['error']}"
+
                         elif func_name == "finish_research_and_write_report":
                             result = "资料搜集阶段结束。请现在撰写全方位、深度的研究报告，并严格遵守参考来源标注规范。"
                             is_final_report_triggered = True

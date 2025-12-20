@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnalyzing = false;
     let isChatting = false;
     let chatHistory = [];
+    let smartUpHistory = []; // 智能小UP 专用上下文记忆
     let loginPollInterval = null;
 
     // --- Event Listeners ---
@@ -157,8 +158,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mode Switcher
     elements.modeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            const targetMode = btn.dataset.mode;
+            
+            // 如果点击的是当前模式，不触发切换提示
+            if (targetMode === currentMode && !elements.resultArea.classList.contains('hidden')) {
+                return;
+            }
+
+            // 如果当前已经在展示结果，提示用户回到主页
+            if (!elements.resultArea.classList.contains('hidden')) {
+                if (confirm('切换模式将回到主页并清空当前分析结果，确定吗？')) {
+                    goHome(targetMode);
+                }
+                return;
+            }
+
             manualModeLock = true;
-            switchMode(btn.dataset.mode);
+            switchMode(targetMode);
             // Reset lock after 15s or when input is cleared
             setTimeout(() => { manualModeLock = false; }, 15000);
         });
@@ -924,6 +940,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                         const oldItem = oldTitle.closest('.timeline-item');
                                         if (oldItem) oldItem.remove();
                                     }
+                                } else if (data.tool === 'search_users') {
+                                    title = '👤 搜索 B 站 UP 主';
+                                    data.args._status = 'searching_user';
+                                } else if (data.tool === 'get_user_recent_videos') {
+                                    title = `📽️ 获取 UP 主最近作品 (UID: ${data.args.mid})`;
+                                    data.args._status = 'fetching_works';
                                 } else if (data.tool === 'finish_research_and_write_report') {
                                     title = '✍️ 正在撰写深度研究报告';
                                     elements.downloadPdfBtn.classList.add('hidden');
@@ -958,6 +980,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                             item.classList.add('completed');
                                         }
                                     });
+                                } else if (data.tool === 'search_users') {
+                                    title = '✅ 用户搜索完成';
+                                } else if (data.tool === 'get_user_recent_videos') {
+                                    title = '✅ UP 主作品集获取成功';
                                 }
                                 else if (data.tool === 'analyze_video') {
                                     // 智能更新 UI：如果已经有这个视频的进度框，直接更新它，不要新建节点
@@ -1100,27 +1126,63 @@ document.addEventListener('DOMContentLoaded', () => {
                                 `).join('')}
                             </div>
                         </div>`;
-                    } else {
-                        // 视频搜索结果美化
+                    } else if (data.length > 0 && data[0].mid) {
+                        // 用户搜索结果美化
+                        detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
+                            <div class="tool-name" style="color: var(--bili-blue);">找到相关 UP 主 (${data.length} 位):</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                                ${data.map(u => `
+                                    <div style="display: flex; align-items: center; gap: 6px; background: rgba(35, 173, 229, 0.05); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(35, 173, 229, 0.1);">
+                                        <img src="/api/image-proxy?url=${encodeURIComponent(u.face)}" style="width: 20px; height: 20px; border-radius: 50%;">
+                                        <span style="font-size: 12px; font-weight: 600;">${u.name}</span>
+                                        <span style="font-size: 10px; color: var(--text-secondary);">UID:${u.mid}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                    } else if (data.length > 0 && data[0].bvid && !data[0].url) {
+                        // 视频列表/作品集美化
                         detailDiv.innerHTML = `<div class="tool-call-card">
-                            <div class="tool-name">发现 ${data.length} 条相关视频:</div>
-                            ${data.map(v => `<div style="margin-bottom:4px">📽️ [${v.bvid || 'ID未知'}] ${v.title}</div>`).join('')}
+                            <div class="tool-name">获取到 ${data.length} 条视频素材:</div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                                ${data.map(v => `<div style="font-size: 12px; color: var(--text-main); opacity: 0.9;">📽️ <span style="font-weight: 600; color: var(--bili-pink);">${v.bvid}</span> ${v.title}</div>`).join('')}
+                            </div>
+                        </div>`;
+                    } else {
+                        // 默认列表美化 (兜底)
+                        detailDiv.innerHTML = `<div class="tool-call-card">
+                            <div class="tool-name">发现 ${data.length} 条相关内容:</div>
+                            ${data.map(v => `<div style="margin-bottom:4px; font-size: 12px;">📄 ${v.title || JSON.stringify(v)}</div>`).join('')}
                         </div>`;
                     }
                 } else if (data.keyword) {
-                    // 搜索参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card">
-                        <div class="tool-name">发起视频搜索:</div>
+                    // 搜索参数美化 (视频 or 用户)
+                    const isUserSearch = data._status === 'searching_user';
+                    detailDiv.innerHTML = `<div class="tool-call-card" ${isUserSearch ? 'style="border-left-color: var(--bili-blue);"' : ''}>
+                        <div class="tool-name">${isUserSearch ? '发起 UP 主搜索:' : '发起视频搜索:'}</div>
                         <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword">${data.keyword}</span>
-                            ${data._status === 'loading' ? `
-                                <span class="search-status" style="font-size: 12px; color: var(--bili-pink); display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot"></span> ⏳ 正在检索 B 站数据...
+                            <span class="search-keyword" ${isUserSearch ? 'style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);"' : ''}>${data.keyword}</span>
+                            ${data._status ? `
+                                <span class="search-status" style="font-size: 12px; color: ${isUserSearch ? 'var(--bili-blue)' : 'var(--bili-pink)'}; display: flex; align-items: center; gap: 4px;">
+                                    <span class="pulse-dot" ${isUserSearch ? 'style="background-color: var(--bili-blue);"' : ''}></span> ⏳ ${isUserSearch ? '正在检索 B 站用户...' : '正在检索 B 站视频...'}
                                 </span>
                             ` : ''}
                         </div>
                     </div>`;
-                        } else if (data.bvid) {
+                } else if (data.mid) {
+                    // 获取作品集参数美化
+                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
+                        <div class="tool-name">发起作品集检索:</div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">UID: ${data.mid}</span>
+                            ${data._status === 'fetching_works' ? `
+                                <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
+                                    <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在抓取该 UP 主的近期稿件...
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>`;
+                } else if (data.bvid) {
                                 // 分析视频参数美化
                                 detailDiv.innerHTML = `<div class="tool-call-card">
                                     <div id="title-${data.bvid}" class="tool-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="正在深度分析视频内容">正在深度分析视频内容:</div>
@@ -1843,10 +1905,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.goHome = function() {
+    window.goHome = function(targetMode = 'smart_up') {
         if (isAnalyzing) {
             if (!confirm('分析正在进行中，现在返回主页将无法看到实时进度，确定吗？')) {
-                return;
+                return false;
             }
         }
         elements.resultArea.classList.add('hidden');
@@ -1865,12 +1927,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
         if (elements.chatContent) elements.chatContent.classList.remove('active');
         
+        // 重置上下文记忆
+        smartUpHistory = [];
+        
         // 清空输入框以便下次使用
         elements.videoUrl.value = '';
         manualModeLock = false;
         
-        // 重置模式到智能小UP
-        switchMode('smart_up');
+        // 重置模式
+        switchMode(targetMode);
+        return true;
     };
 
     function switchTab(tabName) {
@@ -2310,6 +2376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('clearChatBtn')) {
         document.getElementById('clearChatBtn').onclick = () => {
             if (confirm('确定要清空聊天记录吗？')) {
+                smartUpHistory = []; // 清空历史记录
                 elements.smartUpMessages.innerHTML = `
                     <div class="message assistant">
                         <div class="message-content">你好！我是你的智能小UP。有什么我可以帮你的吗？我会自适应问题复杂度，快速检索B站视频和全网资讯为您提供精准回答。</div>
@@ -2361,6 +2428,9 @@ document.addEventListener('DOMContentLoaded', () => {
         isAnalyzing = true;
         elements.smartUpSendBtn.disabled = true;
         
+        // 记录用户问题到历史
+        smartUpHistory.push({ role: 'user', content: question });
+        
         let currentTokens = 0;
         let roundCount = 0;
         let thinkingTokens = 0;
@@ -2371,7 +2441,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/smart_up/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+                body: JSON.stringify({ 
+                    question,
+                    history: smartUpHistory // 发送历史记录
+                })
             });
 
             if (!response.ok) throw new Error('请求失败');
@@ -2398,6 +2471,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             durationSpan.textContent = `响应时长: ${duration}s`;
                             footer.appendChild(durationSpan);
                         }
+                        // 记录助手回答到历史
+                        smartUpHistory.push({ role: 'assistant', content: fullContent });
                     }
                     break;
                 }
