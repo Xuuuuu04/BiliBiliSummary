@@ -1728,6 +1728,27 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.analyzeBtn.className = `btn-primary mode-${mode}`;
         const btnText = elements.analyzeBtn.lastChild;
 
+        // --- 关键修复：在离开智能小UP/全屏对话时恢复通用布局（视频/专栏/用户/深度研究） ---
+        // 之前 smart_up 会隐藏视频卡片并给 resultArea 加 smart-up-fullscreen，若不移除会导致
+        // “卡片消失、内容堆到底部/尾巴”的错乱布局。
+        if (mode !== 'smart_up') {
+            // 退出真正全屏
+            if (elements.resultArea.classList.contains('smart-up-true-fullscreen')) {
+                elements.resultArea.classList.remove('smart-up-true-fullscreen');
+            }
+            document.body.classList.remove('smart-up-full-overflow');
+
+            // 退出沉浸式宽屏
+            elements.resultArea.classList.remove('smart-up-fullscreen');
+
+            // 恢复视频/专栏/用户卡片显示
+            const videoCard = document.querySelector('.video-info-card');
+            if (videoCard) videoCard.classList.remove('hidden');
+
+            // 确保智能小UP面板不再占用 active
+            if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
+        }
+
         if (mode === 'video') {
             elements.videoUrl.placeholder = '粘贴 Bilibili 视频链接或 BV 号...';
             btnText.textContent = ' 视频分析';
@@ -1757,7 +1778,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.researchHistoryShortcut.classList.add('hidden');
                 }
 
-        // --- 注意：此处不再调用 updateSidebarUI 和 initAnalysisMeta，保留当前展示的面板和数据 ---
+        // 切换模式时应刷新侧边栏入口（否则可能保留上一模式的隐藏/显示状态）
+        updateSidebarUI();
     }
 
     function updateSidebarUI() {
