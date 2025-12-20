@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         apiKeyInput: document.getElementById('apiKeyInput'),
         modelInput: document.getElementById('modelInput'),
         qaModelInput: document.getElementById('qaModelInput'),
+        deepResearchModelInput: document.getElementById('deepResearchModelInput'),
         darkModeToggle: document.getElementById('darkModeToggle'),
         saveSettingsBtn: document.getElementById('saveSettingsBtn'),
 
@@ -103,6 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsList: document.getElementById('resultsList'),
         resultsCount: document.getElementById('resultsCount'),
         closeResultsBtn: document.getElementById('closeResultsBtn'),
+
+        // Research Elements
+        researchReportContent: document.getElementById('researchReportContent'),
+        researchProcessContent: document.getElementById('researchProcessContent'),
+        researchTimeline: document.getElementById('researchTimeline'),
+        historyModal: document.getElementById('historyModal'),
+        historyList: document.getElementById('historyList'),
+        downloadPdfBtn: document.getElementById('downloadPdfBtn'),
+        researchHistoryShortcut: document.getElementById('researchHistoryShortcut'),
 
         // Guide & Donate
         guideBtn: document.getElementById('guideBtn'),
@@ -372,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.apiKeyInput.type = 'text';
                 elements.modelInput.value = data.model || '';
                 elements.qaModelInput.value = data.qa_model || '';
+                elements.deepResearchModelInput.value = data.deep_research_model || '';
                 
                 // If backend says dark mode and local storage is empty, use backend
                 if (data.dark_mode && localStorage.getItem('darkMode') === null) {
@@ -390,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             openai_api_key: elements.apiKeyInput.value.trim(),
             model: elements.modelInput.value.trim(),
             qa_model: elements.qaModelInput.value.trim(),
+            deep_research_model: elements.deepResearchModelInput.value.trim(),
             dark_mode: elements.darkModeToggle.checked
         };
 
@@ -434,6 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'metaUserLevel', title: '用户等级', icon: '⭐', default: 'L--' },
             { id: 'metaFollowers', title: '粉丝数', icon: '👥', default: '0' },
             { id: 'metaWorksCount', title: '作品数', icon: '📁', default: '0' }
+        ],
+        research: [
+            { id: 'metaRounds', title: '研究轮次', icon: '🔄', default: '0 轮' },
+            { id: 'metaSearch', title: '搜索次数', icon: '🔍', default: '0 次' },
+            { id: 'metaAnalysis', title: '分析次数', icon: '📽️', default: '0 次' },
+            { id: 'metaTokens', title: '累计 Tokens', icon: '🪙', default: '0' }
         ]
     };
 
@@ -493,10 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCvid = input.includes('cv') || input.includes('read/') || input.includes('opus/');
         const isUid = input.includes('space.bilibili.com') || (input.match(/^\d+$/) && input.length > 5);
         
-        // If it's a keyword (not a link/ID), perform search first
-        if (!isBvid && !isCvid && !isUid && !input.startsWith('http')) {
-            await performSearch(input);
-            return;
+        // --- 核心修复：如果是深度研究模式，不要触发模糊搜索下拉框，直接开始研究任务 ---
+        if (currentMode !== 'research') {
+            // If it's a keyword (not a link/ID), perform search first
+            if (!isBvid && !isCvid && !isUid && !input.startsWith('http')) {
+                await performSearch(input);
+                return;
+            }
         }
 
         // --- Standard Analysis Flow ---
@@ -530,6 +551,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentMode === 'user') {
                 // User mode: not streaming, direct API
                 await startUserAnalysis(input);
+            } else if (currentMode === 'research') {
+                // Research mode: special streaming
+                await processResearchStream(input);
             } else {
                 // Video/Article mode: streaming API
                 await processStreamAnalysis(input);
@@ -647,6 +671,327 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             elements.userWorksList.innerHTML = '<div class="empty-state"><p>暂无近期公开作品</p></div>';
         }
+    }
+
+    async function processResearchStream(topic) {
+        const response = await fetch('/api/research', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: topic })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '深度研究请求失败');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        // Reset Research UI
+        elements.researchTimeline.innerHTML = '';
+        elements.researchReportContent.innerHTML = '<div class="empty-state"><p>AI 正在分析并搜集资料...</p></div>';
+        let fullReport = '';
+        let totalResearchTokens = 0;
+        let thinkingTokens = 0;
+
+        // 初始化工具栏元数据
+        initAnalysisMeta('research');
+        elements.tokenCount.textContent = '0';
+
+        // 更新大卡片显示课题
+        elements.videoTitle.textContent = `课题研究：${topic}`;
+        elements.upName.textContent = 'Deep Research Agent';
+        // 使用一个更合适的图标
+        elements.videoCover.src = 'https://www.bilibili.com/favicon.ico'; 
+        elements.videoDuration.textContent = '深度研究模式';
+        
+        // 更新大卡片统计
+        elements.viewCount.textContent = '轮次: 0';
+        elements.danmakuCount.textContent = '搜索: 0';
+        elements.likeCount.textContent = '分析: 0';
+        elements.commentCount.textContent = 'Tokens: 0';
+
+        let roundCount = 0;
+        let searchCount = 0;
+        let analysisCount = 0;
+
+        // 初始节点
+        addTimelineItem('tool_start', '初始化研究计划', '深度研究 Agent 已启动，正在拆解研究课题...');
+
+        updateStepper('ai', 'active');
+        updateProgress(50, '深度研究 Agent 启动中...');
+
+        setTimeout(() => {
+            elements.loadingState.classList.add('hidden');
+            elements.resultArea.classList.remove('hidden');
+            updateSidebarUI();
+            switchTab('research_process');
+        }, 500);
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const jsonStr = line.slice(6);
+                    let data;
+                    try {
+                        data = JSON.parse(jsonStr);
+                    } catch (e) { continue; }
+                    
+                            if (data.type === 'round_start') {
+                                roundCount = data.round;
+                                elements.viewCount.textContent = `轮次: ${roundCount}`;
+                                updateMetaValue('metaRounds', roundCount, '轮');
+                            } else if (data.type === 'report_start') {
+                                // 收到正式报告开始信号，清空之前的研究过程/计划文本，确保报告纯净
+                                fullReport = '';
+                                totalResearchTokens = 0;
+                                elements.researchReportContent.innerHTML = '';
+                            } else if (data.type === 'thinking') {
+                        thinkingTokens += data.content.length;
+                        const totalTokens = totalResearchTokens + thinkingTokens;
+                        updateStreamingBadge(totalTokens);
+                        elements.commentCount.textContent = `Tokens: ${totalTokens}`;
+                        elements.tokenCount.textContent = totalTokens;
+                        updateMetaValue('metaTokens', totalTokens);
+                        
+                        const lastItem = elements.researchTimeline.lastElementChild;
+                        if (lastItem && lastItem.classList.contains('type-thinking') && lastItem.classList.contains('active')) {
+                            const detail = lastItem.querySelector('.timeline-detail');
+                            detail.textContent += data.content;
+                        } else {
+                            addTimelineItem('thinking', 'Agent 思考中...', data.content);
+                        }
+                    } else if (data.type === 'content') {
+                        fullReport += data.content;
+                        totalResearchTokens += data.content.length;
+                        const totalTokens = totalResearchTokens + thinkingTokens;
+                        elements.commentCount.textContent = `Tokens: ${totalTokens}`;
+                        elements.tokenCount.textContent = totalTokens;
+                        updateMetaValue('metaTokens', totalTokens);
+                        
+                        renderMarkdown(elements.researchReportContent, fullReport);
+                        currentData.fullMarkdown = fullReport;
+                        
+                        const thinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
+                        thinkingItems.forEach(item => {
+                            item.classList.remove('active');
+                            item.classList.add('completed');
+                        });
+
+                        updateStreamingBadge(totalTokens);
+                            } else if (data.type === 'tool_progress') {
+                                if (data.tool === 'analyze_video') {
+                                    const msgEl = document.getElementById(`msg-${data.bvid}`);
+                                    const tokenEl = document.getElementById(`tokens-${data.bvid}`);
+                                    
+                                    if (msgEl && data.message) {
+                                        msgEl.textContent = data.message;
+                                    }
+                                    
+                                    if (tokenEl && data.tokens !== undefined) {
+                                        const currentTokens = data.tokens || 0;
+                                        tokenEl.textContent = `正在建模: ${currentTokens} Tokens`;
+                                        
+                                        // 同时更新顶部的总 Token 消耗预览（估算）
+                                        const totalSoFar = totalResearchTokens + thinkingTokens + currentTokens;
+                                        elements.commentCount.textContent = `Tokens: ${totalSoFar}`;
+                                        elements.tokenCount.textContent = totalSoFar;
+                                        updateMetaValue('metaTokens', totalSoFar);
+                                    }
+                                }
+                            } else if (data.type === 'tool_start') {
+                        let title = `执行工具: ${data.tool}`;
+                        if (data.tool === 'search_videos') {
+                            title = '🔍 搜索相关视频';
+                            searchCount++;
+                            elements.danmakuCount.textContent = `搜索: ${searchCount}`;
+                            updateMetaValue('metaSearch', searchCount, '次');
+                        } else if (data.tool === 'analyze_video') {
+                            title = `📽️ 分析视频: ${data.args.bvid}`;
+                            analysisCount++;
+                            elements.likeCount.textContent = `分析: ${analysisCount}`;
+                            updateMetaValue('metaAnalysis', analysisCount, '次');
+                        } else if (data.tool === 'finish_research_and_write_report') {
+                            title = '✨ 研究已饱和，正在撰写深度报告';
+                            // 隐藏 PDF 按钮，直到完成
+                            elements.downloadPdfBtn.classList.add('hidden');
+                        }
+                        
+                        addTimelineItem('tool_start', title, data.args);
+                    } else if (data.type === 'tool_result') {
+                        let title = `工具已完成: ${data.tool}`;
+                        if (data.tool === 'search_videos') title = '✅ 搜索完成';
+                        else if (data.tool === 'analyze_video') {
+                            title = `✅ 视频分析完成`;
+                            if (data.tokens) {
+                                totalResearchTokens += data.tokens;
+                                const totalTokens = totalResearchTokens + thinkingTokens;
+                                elements.commentCount.textContent = `Tokens: ${totalTokens}`;
+                                elements.tokenCount.textContent = totalTokens;
+                                updateMetaValue('metaTokens', totalTokens);
+                                
+                                // 更新具体视频卡片的 Token 显示，并移除正在建模的提示
+                                const msgEl = document.getElementById(`msg-${data.result.bvid}`);
+                                const tokenEl = document.getElementById(`tokens-${data.result.bvid}`);
+                                const containerEl = document.getElementById(`tokens-container-${data.result.bvid}`);
+                                
+                                if (msgEl) {
+                                    msgEl.textContent = '分析建模已完成';
+                                    msgEl.style.color = '#4CAF50';
+                                }
+                                
+                                if (tokenEl) {
+                                    tokenEl.textContent = `✨ 消耗: ${data.tokens} Tokens`;
+                                    tokenEl.style.color = '#4CAF50';
+                                    tokenEl.style.fontWeight = 'bold';
+                                }
+                                
+                                if (containerEl) {
+                                    const dot = containerEl.querySelector('.pulse-dot');
+                                    if (dot) dot.style.display = 'none'; // 停止动画
+                                }
+                            }
+                        }                         else if (data.tool === 'finish_research_and_write_report') {
+                            title = '✅ 报告大纲已就绪';
+                        }
+                        
+                        addTimelineItem('tool_result', title, data.result);
+                    } else if (data.type === 'error') {
+                        addTimelineItem('error', `出现错误: ${data.error}`);
+                    } else if (data.type === 'done') {
+                        showToast('深度研究已完成并持久化！');
+                        updateProgress(100, '研究完成');
+                        addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧“研究报告”查看。');
+                        
+                        // 尝试获取刚生成的文件ID以便立即下载 PDF
+                        fetch('/api/research/history')
+                            .then(res => res.json())
+                            .then(hist => {
+                                if (hist.success && hist.data.length > 0) {
+                                    currentData.researchFileId = hist.data[0].id;
+                                    elements.downloadPdfBtn.classList.remove('hidden');
+                                }
+                            });
+                    }
+                }
+            }
+        }
+        
+        isAnalyzing = false;
+        elements.analyzeBtn.disabled = false;
+        if (fullReport) {
+            switchTab('research_report');
+        }
+    }
+
+    function updateStreamingBadge(tokenCount) {
+        const lastItem = elements.researchTimeline.lastElementChild;
+        if (!lastItem) return;
+        
+        const titleArea = lastItem.querySelector('.timeline-title');
+        let badge = titleArea.querySelector('.streaming-data-badge');
+        
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'streaming-data-badge';
+            titleArea.appendChild(badge);
+        }
+        
+        badge.innerHTML = `<span class="pulse-dot"></span> 累计 Tokens: ${tokenCount}`;
+    }
+
+    function addTimelineItem(type, title, data = null) {
+        const item = document.createElement('div');
+        item.className = `timeline-item type-${type} active`;
+        
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        let contentHTML = `
+            <div class="timeline-time">${timeStr}</div>
+            <div class="timeline-content-box">
+                <div class="timeline-title">
+                    ${type === 'thinking' ? '<span class="thinking-badge">Think</span>' : ''}
+                    ${title}
+                </div>
+                <div class="timeline-detail"></div>
+            </div>
+        `;
+        
+        item.innerHTML = contentHTML;
+        const detailDiv = item.querySelector('.timeline-detail');
+        
+        if (data) {
+            if (typeof data === 'string') {
+                detailDiv.textContent = data;
+            } else {
+                if (Array.isArray(data)) {
+                    // 搜索结果美化
+                    detailDiv.innerHTML = `<div class="tool-call-card">
+                        <div class="tool-name">发现 ${data.length} 条相关视频:</div>
+                        ${data.map(v => `<div style="margin-bottom:4px">📽️ [${v.bvid}] ${v.title}</div>`).join('')}
+                    </div>`;
+                } else if (data.keyword) {
+                    // 搜索参数美化
+                    detailDiv.innerHTML = `<div class="tool-call-card">
+                        <div class="tool-name">搜索关键词:</div>
+                        <span class="search-keyword">${data.keyword}</span>
+                    </div>`;
+                        } else if (data.bvid) {
+                            // 分析视频参数美化
+                            detailDiv.innerHTML = `<div class="tool-call-card">
+                                <div class="tool-name">正在深度分析视频内容:</div>
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2); margin: 0;">${data.bvid}</span>
+                                        <span id="msg-${data.bvid}" style="font-size: 12px; color: var(--bili-pink); font-weight: 500;">准备中...</span>
+                                    </div>
+                                    <div id="tokens-container-${data.bvid}" style="font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; padding-left: 4px;">
+                                        <span class="pulse-dot"></span> <span id="tokens-${data.bvid}">等待响应...</span>
+                                    </div>
+                                </div>
+                            </div>`;
+                } else if (data.summary_of_findings) {
+                    // 撰写报告参数美化
+                    detailDiv.innerHTML = `<div class="tool-call-card">
+                        <div class="tool-name">研究成果概览:</div>
+                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.6; background: rgba(251, 114, 153, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid var(--bili-pink);">
+                            ${data.summary_of_findings}
+                        </div>
+                        <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
+                            ℹ️ 即将进入最后阶段，为您生成详尽的深度研究报告。
+                        </div>
+                    </div>`;
+                } else if (data.summary) {
+                    detailDiv.innerHTML = `<div class="tool-call-card">
+                        <div class="tool-name">AI 提取摘要:</div>
+                        <div style="font-style: italic; color: var(--text-secondary)">${data.summary.substring(0, 150)}...</div>
+                    </div>`;
+                } else {
+                    detailDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            }
+        }
+        
+        const prevActive = elements.researchTimeline.querySelectorAll('.timeline-item.active');
+        prevActive.forEach(node => {
+            if (node !== item && (type !== 'thinking' || !node.classList.contains('type-thinking'))) {
+                node.classList.remove('active');
+                node.classList.add('completed');
+            }
+        });
+        
+        elements.researchTimeline.appendChild(item);
+        elements.researchTimeline.scrollTop = elements.researchTimeline.scrollHeight;
     }
 
     async function processStreamAnalysis(url) {
@@ -1229,20 +1574,35 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (mode === 'user') {
             elements.videoUrl.placeholder = '输入用户 UID 或 空间链接...';
             btnText.textContent = ' 生成画像';
-        }
+                } else if (mode === 'research') {
+                    elements.videoUrl.placeholder = '输入你想要研究的课题 (如: 2025 AI 发展趋势)';
+                    btnText.textContent = ' 深度研究';
+                    
+                    // 深度研究模式显示历史入口
+                    elements.researchHistoryShortcut.classList.remove('hidden');
+                    
+                    if (elements.resultArea.classList.contains('hidden')) {
+                        showToast('💡 您可以点击输入框下方的按钮查看以往的研究报告');
+                    }
+                }
+                
+                // 非研究模式隐藏历史入口
+                if (mode !== 'research') {
+                    elements.researchHistoryShortcut.classList.add('hidden');
+                }
 
         // --- 注意：此处不再调用 updateSidebarUI 和 initAnalysisMeta，保留当前展示的面板和数据 ---
     }
 
     function updateSidebarUI() {
-        const navBtns = elements.sidebarNav.querySelectorAll('.nav-btn');
+        const navBtns = elements.sidebarNav.querySelectorAll('.nav-btn, .nav-btn-action');
         let firstVisibleTab = '';
 
         navBtns.forEach(btn => {
             const showOn = btn.dataset.showOn;
             if (!showOn || showOn === currentMode) {
                 btn.classList.remove('hidden');
-                if (!firstVisibleTab) firstVisibleTab = btn.dataset.tab;
+                if (!firstVisibleTab && btn.classList.contains('nav-btn')) firstVisibleTab = btn.dataset.tab;
             } else {
                 btn.classList.add('hidden');
             }
@@ -1282,6 +1642,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function switchTab(tabName) {
+        if (isAnalyzing && tabName === 'research_report' && currentMode === 'research') {
+            showToast('研究正在进行中，请在“思考过程”中查看进度，完成后将自动展示报告');
+            return;
+        }
+
         elements.navBtns.forEach(btn => {
             if (btn.dataset.tab === tabName) btn.classList.add('active');
             else btn.classList.remove('active');
@@ -1304,11 +1669,100 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (tabName === 'article_content') elements.articleOriginalContent.classList.add('active');
         else if (tabName === 'user_portrait') elements.userPortraitContentPane.classList.add('active');
         else if (tabName === 'user_works') elements.userWorksContent.classList.add('active');
+        else if (tabName === 'research_report') elements.researchReportContent.classList.add('active');
+        else if (tabName === 'research_process') elements.researchProcessContent.classList.add('active');
         else if (tabName === 'chat') {
             elements.chatContent.classList.add('active');
             elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
         }
     }
+
+    // --- 历史研究报告逻辑 ---
+    window.showResearchHistory = async function() {
+        elements.historyModal.classList.remove('hidden');
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '<div class="loading">正在加载历史报告...</div>';
+        
+        try {
+            const response = await fetch('/api/research/history');
+            const data = await response.json();
+            
+            if (data.success && data.data.length > 0) {
+                historyList.innerHTML = data.data.map(item => `
+                    <div class="history-item">
+                        <div class="history-item-info" onclick="loadReport('${item.id}.md')">
+                            <span class="topic">${item.topic}</span>
+                            <span class="time">${item.created_at}</span>
+                        </div>
+                        <div class="history-actions">
+                            ${item.has_pdf ? `<button class="btn-icon-small" title="下载 PDF" onclick="downloadFile('${item.id}', 'pdf')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}
+                            <button class="btn-icon-small" title="下载 Markdown" onclick="downloadFile('${item.id}', 'md')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                historyList.innerHTML = '<div class="empty-state">暂无历史研究报告</div>';
+            }
+        } catch (e) {
+            historyList.innerHTML = '<div class="error">加载失败，请稍后重试</div>';
+        }
+    };
+
+    window.downloadFile = function(fileId, format) {
+        window.open(`/api/research/download/${fileId}/${format}`);
+    };
+
+    window.closeHistoryModal = function() {
+        elements.historyModal.classList.add('hidden');
+    };
+
+    window.loadReport = async function(filename) {
+        closeHistoryModal();
+        try {
+            // 获取文件 ID 用于后续可能的 PDF 下载
+            const fileId = filename.replace('.md', '');
+            
+            const response = await fetch(`/api/research/report/${filename}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // 模拟一个切换到结果区域的状态
+                elements.loadingState.classList.add('hidden');
+                elements.resultArea.classList.remove('hidden');
+                currentMode = 'research';
+                updateSidebarUI();
+                
+                // 更新 UI
+                elements.videoTitle.textContent = `课题研究：${data.data.filename.split('_').slice(2).join('_').replace('.md', '')}`;
+                elements.upName.textContent = 'History Research Report';
+                
+                renderMarkdown(elements.researchReportContent, data.data.content);
+                currentData.fullMarkdown = data.data.content;
+                
+                // 设置当前文件 ID 用于顶部的 PDF 下载
+                currentData.researchFileId = fileId;
+                elements.downloadPdfBtn.classList.remove('hidden');
+                
+                switchTab('research_report');
+                showToast('已加载历史报告');
+            } else {
+                showToast('加载报告失败: ' + data.error);
+            }
+        } catch (e) {
+            showToast('请求报告失败');
+        }
+    };
+
+    // 绑定 PDF 下载按钮
+    elements.downloadPdfBtn.onclick = () => {
+        if (currentData.researchFileId) {
+            downloadFile(currentData.researchFileId, 'pdf');
+        } else {
+            // 如果是刚生成的，尝试根据当前状态寻找最新文件
+            showToast('正在为您从历史中寻找刚生成的 PDF...');
+            showResearchHistory();
+        }
+    };
 
     const modeSteps = {
         video: [
@@ -1329,6 +1783,9 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'info', text: '检索用户基本资料' },
             { id: 'content', text: '分析近期作品趋势' },
             { id: 'ai', text: '生成 AI 深度画像' }
+        ],
+        research: [
+            { id: 'ai', text: '深度研究 Agent 运行中' }
         ]
     };
 

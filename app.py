@@ -30,6 +30,7 @@ def get_settings():
             'openai_api_key': os.getenv('OPENAI_API_KEY') or '',
             'model': os.getenv('model'),
             'qa_model': os.getenv('QA_MODEL'),
+            'deep_research_model': os.getenv('DEEP_RESEARCH_MODEL', 'moonshotai/Kimi-K2-Thinking'),
             'dark_mode': os.getenv('DARK_MODE', 'false').lower() == 'true'
         }
     })
@@ -66,6 +67,11 @@ def update_settings():
             os.environ['QA_MODEL'] = data['qa_model']
             Config.QA_MODEL = data['qa_model']
 
+        if 'deep_research_model' in data:
+            set_key(env_path, 'DEEP_RESEARCH_MODEL', data['deep_research_model'])
+            os.environ['DEEP_RESEARCH_MODEL'] = data['deep_research_model']
+            Config.DEEP_RESEARCH_MODEL = data['deep_research_model']
+
         if 'dark_mode' in data:
             set_key(env_path, 'DARK_MODE', str(data['dark_mode']).lower())  
             os.environ['DARK_MODE'] = str(data['dark_mode']).lower()        
@@ -85,6 +91,110 @@ def update_settings():
             'success': False,
             'error': f'更新设置失败: {str(e)}'
         }), 500
+
+@app.route('/api/research', methods=['POST'])
+def start_deep_research():
+    """开始深度研究 Agent 任务"""
+    try:
+        data = request.get_json()
+        topic = data.get('topic', '')
+        
+        if not topic:
+            return jsonify({'success': False, 'error': '请输入研究课题'}), 400
+
+        def generate():
+            import json
+            for chunk in ai_service.deep_research_stream(topic, bilibili_service):
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+
+        return Response(generate(), mimetype='text/event-stream')
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/research/history', methods=['GET'])
+def list_research_history():
+    """获取历史研究报告列表"""
+    try:
+        import os
+        from datetime import datetime
+        report_dir = "research_reports"
+        if not os.path.exists(report_dir):
+            return jsonify({'success': True, 'data': []})
+            
+        reports_dict = {}
+        for filename in os.listdir(report_dir):
+            if filename.endswith(".md") or filename.endswith(".pdf"):
+                base = filename.rsplit('.', 1)[0]
+                ext = filename.rsplit('.', 1)[1]
+                
+                if base not in reports_dict:
+                    path = os.path.join(report_dir, filename)
+                    stats = os.stat(path)
+                    parts = base.split('_', 2)
+                    topic = parts[2] if len(parts) > 2 else base
+                    
+                    reports_dict[base] = {
+                        'id': base,
+                        'topic': topic,
+                        'created_at': datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                        'has_md': False,
+                        'has_pdf': False
+                    }
+                
+                if ext == 'md': reports_dict[base]['has_md'] = True
+                if ext == 'pdf': reports_dict[base]['has_pdf'] = True
+        
+        reports = list(reports_dict.values())
+        # 按时间倒序排序
+        reports.sort(key=lambda x: x['id'], reverse=True)
+        return jsonify({'success': True, 'data': reports})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/research/download/<file_id>/<format>', methods=['GET'])
+def download_research_report(file_id, format):
+    """下载研究报告"""
+    try:
+        import os
+        from flask import send_from_directory
+        
+        if format not in ['md', 'pdf']:
+            return jsonify({'success': False, 'error': '无效的格式'}), 400
+            
+        filename = f"{file_id}.{format}"
+        # 安全检查
+        if '..' in file_id or '/' in file_id or '\\' in file_id:
+            return jsonify({'success': False, 'error': '无效的文件ID'}), 400
+            
+        return send_from_directory("research_reports", filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/research/report/<filename>', methods=['GET'])
+def get_research_report(filename):
+    """读取指定的研究报告内容"""
+    try:
+        import os
+        # 安全检查，防止路径遍历
+        if '..' in filename or '/' in filename or '\\' in filename:
+            return jsonify({'success': False, 'error': '无效的文件名'}), 400
+            
+        filepath = os.path.join("research_reports", filename)
+        if not os.path.exists(filepath):
+            return jsonify({'success': False, 'error': '报告不存在'}), 404
+            
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        return jsonify({
+            'success': True,
+            'data': {
+                'content': content,
+                'filename': filename
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/chat/stream', methods=['POST'])
 def chat_video_stream():
@@ -815,10 +925,47 @@ def get_user_portrait():
 
 
 if __name__ == '__main__':
-    print(f"🚀 BiliBili视频总结系统启动中...")
-    print(f"📡 服务地址: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")
-    print(f"🤖 AI模型: {Config.OPENAI_MODEL}")
-    print(f"=" * 50)
+    # 终端颜色代码
+    PINK = '\033[38;5;213m'
+    BLUE = '\033[38;5;75m'
+    GOLD = '\033[38;5;220m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+
+    # 顶级 Bilibili 风格 ASCII LOGO
+    logo = f"""
+{PINK}   ██████╗ ██╗██╗     ██╗██████╗ ██╗██╗     ██╗
+   ██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║
+   ██████╔╝██║██║     ██║██████╔╝██║██║     ██║
+   ██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║
+   ██████╔╝██║███████╗██║██████╔╝██║███████╗██║
+   ╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝{RESET}
+
+{BLUE}   ███████╗██╗   ██╗███╗   ███╗███╗   ███╗ █████╗ ██████╗ ██╗███████╗███████╗
+   ██╔════╝██║   ██║████╗ ████║████╗ ████║██╔══██╗██╔══██╗██║╚══███╔╝██╔════╝
+   ███████╗██║   ██║██╔████╔██║██╔████╔██║███████║██████╔╝██║  ███╔╝ █████╗  
+   ╚════██║██║   ██║██║╚██╔╝██║██║╚██╔╝██║██╔══██║██╔══██╗██║ ███╔╝  ██╔════╝
+   ███████║╚██████╔╝██║ ╚═╝ ██║██║ ╚═╝ ██║██║  ██║██║  ██║██║███████╗███████╗
+   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝{RESET}
+    """
+    print(logo)
+    print(f"{BOLD}🚀 BiliBili视频总结系统正在启动...{RESET}")
+    print(f"{'='*60}")
+    print(f"{BOLD}📡 运行配置:{RESET}")
+    print(f"  > {BOLD}服务地址:{RESET} {BLUE}http://{Config.FLASK_HOST}:{Config.FLASK_PORT}{RESET}")
+    print(f"  > {BOLD}调试模式:{RESET} {GOLD}{Config.FLASK_DEBUG}{RESET}")
+    print(f"\n{BOLD}🤖 AI 引擎配置:{RESET}")
+    print(f"  > {BOLD}基础模型:{RESET} {BLUE}{Config.OPENAI_MODEL}{RESET}")
+    print(f"  > {BOLD}问答模型:{RESET} {BLUE}{Config.QA_MODEL}{RESET}")
+    print(f"  > {BOLD}深度研究:{RESET} {GOLD}{Config.DEEP_RESEARCH_MODEL}{RESET}")
+    print(f"  > {BOLD}API 代理:{RESET} {Config.OPENAI_API_BASE}")
+    
+    # 检查 API Key 状态（脱敏显示）
+    api_key = Config.OPENAI_API_KEY
+    key_status = f"{PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
+    print(f"  > {BOLD}API Key :{RESET} {key_status}")
+    
+    print(f"{'='*60}")
     
     app.run(
         host=Config.FLASK_HOST,

@@ -2516,6 +2516,354 @@ input:checked + .slider:before {
     background: #232526;
 }
 
+/* 深度研究专用样式 - 增强版线性时间轴 */
+.research-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 750px;
+    position: relative;
+}
+
+/* 时间轴垂直线 */
+.research-timeline::before {
+    content: '';
+    position: absolute;
+    left: 31px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: var(--border-color);
+    z-index: 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 0 0 32px 60px;
+    animation: timelineItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 节点圆圈 */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 3px solid var(--border-color);
+    z-index: 1;
+    transition: var(--transition);
+}
+
+.timeline-item.active::before {
+    border-color: var(--bili-pink);
+    box-shadow: 0 0 0 4px rgba(251, 114, 153, 0.2);
+    animation: pulse-pink 2s infinite;
+}
+
+.timeline-item.completed::before {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.timeline-time {
+    position: absolute;
+    left: -10px;
+    top: -20px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: 'Consolas', monospace;
+    background: var(--card-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.timeline-content-box {
+    background: var(--nav-hover-bg);
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.timeline-item.type-thinking .timeline-content-box {
+    border-left: 4px solid var(--bili-blue);
+    background: rgba(35, 173, 229, 0.03);
+}
+
+.timeline-item.type-tool_start .timeline-content-box {
+    border-left: 4px solid var(--bili-pink);
+}
+
+.timeline-item.type-tool_result .timeline-content-box {
+    border-left: 4px solid #4CAF50;
+}
+
+.timeline-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+}
+
+.timeline-detail {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* 思考过程专用装饰 */
+.thinking-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bili-blue);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.streaming-data-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--bili-pink);
+    background: rgba(251, 114, 153, 0.1);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+@keyframes timelineItemIn {
+    from { opacity: 0; transform: translateX(-15px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* 导航行为按钮 (不涉及 TAB 切换) */
+.nav-btn-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.nav-btn-action:hover {
+    background: var(--nav-hover-bg);
+    color: var(--bili-pink);
+}
+
+.nav-btn-action .icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--nav-hover-bg);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.nav-btn-action:hover .icon-box {
+    background: var(--bili-pink-soft);
+    color: var(--bili-pink);
+}
+
+/* 首页历史入口 */
+.research-history-shortcut {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    animation: fadeIn 0.5s ease;
+}
+
+.btn-text-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 20px;
+    transition: var(--transition);
+}
+
+.btn-text-link:hover {
+    color: var(--bili-blue);
+    background: rgba(0, 174, 236, 0.05);
+}
+
+/* 历史记录按钮 */
+.history-btn {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background: var(--nav-hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.history-btn:hover {
+    background: var(--border-color);
+    transform: translateY(-2px);
+}
+
+/* 弹窗通用样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.3s ease;
+}
+
+.modal-content.history-modal {
+    width: 90%;
+    max-width: 600px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.history-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 8px;
+}
+
+.history-item:hover {
+    background: var(--nav-hover-bg);
+}
+
+.history-item-info .topic {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.history-item-info .time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon-small {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-icon-small:hover {
+    background: var(--border-color);
+    color: var(--bili-pink);
+    transform: translateY(-1px);
+}
+
+/* 工具调用美化 */
+.tool-call-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.tool-call-card .tool-name {
+    font-weight: 700;
+    color: var(--bili-pink);
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.tool-call-card .search-keyword {
+    display: inline-block;
+    background: rgba(251, 114, 153, 0.1);
+    color: var(--bili-pink);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid rgba(251, 114, 153, 0.2);
+}
+
+/* 进度条动画 */
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--bili-pink);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    animation: pulse-pink 1.5s infinite;
+}
+
+/* 搜索框深度研究模式 */
+.search-box.mode-research { border-color: #FFB300; }
+.btn-primary.mode-research { background: linear-gradient(135deg, #FFB300 0%, #FFD54F 100%); box-shadow: 0 8px 20px rgba(255, 179, 0, 0.3); }
+
 /* Responsive */
 @media (max-width: 768px) {
     .content-wrapper {

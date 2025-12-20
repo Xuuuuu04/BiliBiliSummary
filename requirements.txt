@@ -24,3 +24,7 @@ qrcode>=7.4.0
 
 # Configuration
 python-dotenv>=1.0.0
+
+# PDF Generation
+xhtml2pdf>=0.2.11
+markdown2>=2.4.10

@@ -16,6 +16,7 @@ class Config:
         OPENAI_API_BASE = _api_base
     OPENAI_MODEL = os.getenv('model')
     QA_MODEL = os.getenv('QA_MODEL', 'Qwen/Qwen2.5-72B-Instruct')
+    DEEP_RESEARCH_MODEL = os.getenv('DEEP_RESEARCH_MODEL', 'moonshotai/Kimi-K2-Thinking')
     
     # Flask配置
     FLASK_PORT = int(os.getenv('FLASK_PORT', 5000))

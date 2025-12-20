@@ -16,7 +16,469 @@ class AIService:
         )
         self.model = Config.OPENAI_MODEL
         self.qa_model = Config.QA_MODEL
+        self.research_model = Config.DEEP_RESEARCH_MODEL
     
+    def deep_research_stream(self, topic: str, bilibili_service) -> Generator[Dict, None, None]:
+        """深度研究 Agent 逻辑"""
+        try:
+            from src.backend.bilibili_service import run_async
+            
+            system_prompt = f"""你是一个顶级的深度研究专家。你的任务是针对用户给出的课题进行全方位的深度调研，并撰写一份具有专业深度的研究报告。
+
+【核心原则：思维链 (COT) 与 思维树 (TOT)】
+1. **多路径探索**：在每一轮决策前，请先内部模拟 2-3 种不同的调研路径（TOT），选择信息增益最大的路径。
+2. **深度推理**：在调用工具前，必须详细说明你的推理逻辑（COT），解释为什么这个特定的视频或搜索词能够填补当前的信息缺口。
+3. **信息饱和度评估**：在决定是否结束研究前，请评估当前收集的信息是否已经达到“饱和”。如果新搜索到的视频无法提供显著的新观点或数据，则视为信息饱和。
+
+【核心指令】
+1. **拆分研究方向**：首先将课题拆分为 3-5 个具体的、互补的研究维度。
+2. **主动补全信息缺口**：对于每个维度，通过搜索 B 站视频并分析其内容来获取一手信息和深度见解。
+3. **深度挖掘**：不要只看视频标题，要深入分析内容。寻找潜在的关联、矛盾点以及未被充分讨论的细节。
+4. **工具使用**：
+   - `search_videos`: 搜索与研究维度相关的 B 站视频。
+   - `analyze_video`: 对搜索到的关键视频进行深度 AI 内容分析。
+   - `finish_research_and_write_report`: 仅在信息达到饱和、足以支撑一份高质量专业报告时调用。
+
+【最终报告规范】
+1. **深度与篇幅**：每一章节必须达到一定的字数规模（建议每章至少 300-500 字）。严禁使用简短的列表（Bullet points）作为主体，必须使用连贯、专业的段落进行深度论述、多维度对比和逻辑拆解。
+2. **格式化要求**：
+    - 使用 **加粗** 突出核心观点和关键结论。
+    - **必须包含至少一个 Markdown 表格** 用于关键参数、优缺点或多维度横向对比，严禁只用文字。
+    - 适当使用引用（Blockquotes）来强调专家的核心结论。
+    - 确保层级分明，使用二级标题（##）和三级标题（###）。
+3. **结构化呈现**：
+    - **研究摘要**：置于顶部，高度凝练核心发现。
+    - **详细章节**：针对每个研究方向，结合视频内容、用户评论和技术参数，进行“剥茧式”的详细讲解。
+    - **多维度论证**：如果在不同视频中发现矛盾观点，请在报告中予以呈现并进行中立分析。
+    - **参考来源列表**：在报告末尾列出所有实际参考的视频链接，格式为：[视频标题](https://www.bilibili.com/video/BVID)。
+4. **禁止项**：
+    - **绝对禁止**在最终报告中包含你的“研究计划”、“拆分方向”或“我现在开始写报告了”等任何元谈话内容。
+    - **禁止**生成简要大纲，必须是完整的文章。
+    - 最终报告应直接以标题或“研究摘要”开始。
+
+【研究课题】
+{topic}
+"""
+            
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "search_videos",
+                        "description": "搜索 B 站视频以获取相关研究素材",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "keyword": {"type": "string", "description": "搜索关键词"}
+                            },
+                            "required": ["keyword"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "analyze_video",
+                        "description": "对指定的 B 站视频进行深度 AI 内容分析",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "bvid": {"type": "string", "description": "视频的 BV 号"}
+                            },
+                            "required": ["bvid"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "finish_research_and_write_report",
+                        "description": "完成所有资料搜集，开始撰写最终详尽的研究报告",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "summary_of_findings": {"type": "string", "description": "对研究发现的简要概述"}
+                            },
+                            "required": ["summary_of_findings"]
+                        }
+                    }
+                }
+            ]
+
+            messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": f"请针对以下课题开始深度研究：{topic}"}]
+            
+            # 最大轮次限制，防止无限循环
+            max_rounds = 15
+            round_count = 0
+            
+            for _ in range(max_rounds):
+                round_count += 1
+                yield {'type': 'round_start', 'round': round_count}
+                
+                # 调优：使用研究模型开始推理
+                stream = self.client.chat.completions.create(
+                    model=self.research_model,
+                    messages=messages,
+                    tools=tools,
+                    tool_choice="auto",
+                    stream=True
+                )
+
+                tool_calls = []
+                full_content = ""
+                
+                # 发送开始思考信号
+                for chunk in stream:
+                    if not chunk.choices: continue
+                    delta = chunk.choices[0].delta
+                    
+                    # 处理思考过程
+                    if hasattr(delta, 'reasoning_content') and delta.reasoning_content:
+                        yield {'type': 'thinking', 'content': delta.reasoning_content}
+                    
+                    if delta.content:
+                        full_content += delta.content
+                        yield {'type': 'content', 'content': delta.content}
+                    
+                    if delta.tool_calls:
+                        for tool_call in delta.tool_calls:
+                            if len(tool_calls) <= tool_call.index:
+                                tool_calls.append({
+                                    "id": tool_call.id,
+                                    "type": "function",
+                                    "function": {"name": "", "arguments": ""}
+                                })
+                            if tool_call.id:
+                                tool_calls[tool_call.index]["id"] = tool_call.id
+                            if tool_call.function.name:
+                                tool_calls[tool_call.index]["function"]["name"] += tool_call.function.name
+                            if tool_call.function.arguments:
+                                tool_calls[tool_call.index]["function"]["arguments"] += tool_call.function.arguments
+
+                # 如果没有工具调用，说明研究完成或模型直接给出了结论
+                if not tool_calls:
+                    messages.append({"role": "assistant", "content": full_content})
+                    break
+
+                # 处理工具调用
+                messages.append({
+                    "role": "assistant",
+                    "content": full_content,
+                    "tool_calls": tool_calls
+                })
+
+                is_final_report_triggered = False
+                for tool_call in tool_calls:
+                    func_name = tool_call["function"]["name"]
+                    import json
+                    try:
+                        args = json.loads(tool_call["function"]["arguments"])
+                    except:
+                        args = {}
+                    
+                    yield {'type': 'tool_start', 'tool': func_name, 'args': args}
+                    
+                    result = ""
+                    try:
+                        if func_name == "search_videos":
+                            keyword = args.get("keyword")
+                            search_res = run_async(bilibili_service.search_videos(keyword, limit=5))
+                            if search_res['success']:
+                                result = json.dumps(search_res['data'], ensure_ascii=False)
+                                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data'][:3]} 
+                            else:
+                                result = f"搜索失败: {search_res['error']}"
+                        
+                        elif func_name == "analyze_video":
+                            bvid = args.get("bvid")
+                            # 1. 获取视频信息
+                            v_info_res = run_async(bilibili_service.get_video_info(bvid))
+                            if not v_info_res['success']:
+                                result = f"获取视频信息失败: {v_info_res['error']}"
+                            else:
+                                v_info = v_info_res['data']
+                                
+                                # 2. 获取多维内容 (字幕 + 弹幕 + 评论)
+                                yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'message': '正在搜集视频全维信息 (字幕/弹幕/评论)...'}
+                                
+                                # 获取字幕
+                                sub_res = run_async(bilibili_service.get_video_subtitles(bvid))
+                                subtitle_text = ""
+                                if sub_res['success'] and sub_res['data'].get('has_subtitle'):
+                                    subtitle_text = sub_res['data']['full_text']
+                                
+                                # 获取弹幕 (采样一部分)
+                                danmaku_res = run_async(bilibili_service.get_video_danmaku(bvid, limit=1000))
+                                danmaku_text = ""
+                                if danmaku_res['success']:
+                                    # 取前100条用于 context
+                                    danmaku_list = danmaku_res['data']['danmakus']
+                                    danmaku_text = f"\n\n【弹幕内容（部分）】\n" + "\n".join(danmaku_list[:100])
+                                
+                                # 获取热评 (采样一部分)
+                                comments_res = run_async(bilibili_service.get_video_comments(bvid, max_pages=30, target_count=500))
+                                comments_text = ""
+                                if comments_res['success']:
+                                    comments_list = [f"{c['username']}: {c['message']}" for c in comments_res['data']['comments'][:50]]
+                                    comments_text = f"\n\n【视频评论（部分）】\n" + "\n".join(comments_list)
+                                
+                                # 整合原材料 (但不全部传给 Agent，而是传给预分析 AI)
+                                full_raw_content = subtitle_text if subtitle_text else f"简介: {v_info.get('desc', '无')}"
+                                full_raw_content += danmaku_text + comments_text
+                                
+                                # 3. 提取视频关键帧 (多模态增强)
+                                yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'message': '正在提取视频关键帧进行多模态建模...'}
+                                frames_result = run_async(bilibili_service.extract_video_frames(bvid))
+                                video_frames = None
+                                if frames_result['success']:
+                                    video_frames = frames_result['data']['frames']
+                                
+                                # 4. 调用 AI 深度分析（流式反馈进度）
+                                yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'message': '正在结合视觉与文本进行深度解析...'}
+                                
+                                # 使用完整分析提示词，让预分析 AI 生成全维度的报告
+                                prompt = self._build_full_analysis_prompt(
+                                    v_info, 
+                                    full_raw_content, 
+                                    has_video_frames=bool(video_frames), 
+                                    danmaku_content=danmaku_text if danmaku_text else None
+                                )
+                                
+                                # 构建多模态内容
+                                user_content = [{"type": "text", "text": prompt}]
+                                if video_frames:
+                                    for frame_base64 in video_frames:
+                                        user_content.append({
+                                            "type": "image_url",
+                                            "image_url": {
+                                                "url": f"data:image/jpeg;base64,{frame_base64}",
+                                                "detail": "low"
+                                            }
+                                        })
+
+                                analysis_stream = self.client.chat.completions.create(
+                                    model=self.model,
+                                    messages=[
+                                        {
+                                            "role": "system", 
+                                            "content": "你是一位资深的B站视频内容分析专家，擅长结合视频画面、字幕和舆情进行全维度分析。"
+                                        },
+                                        {"role": "user", "content": user_content}
+                                    ],
+                                    stream=True
+                                )
+                                
+                                result_text = ""
+                                current_analysis_tokens = 0
+                                for analysis_chunk in analysis_stream:
+                                    if not analysis_chunk.choices: continue
+                                    delta = analysis_chunk.choices[0].delta
+                                    if delta.content:
+                                        result_text += delta.content
+                                        # 实时反馈 token 增长
+                                        current_analysis_tokens = len(result_text)
+                                        yield {
+                                            'type': 'tool_progress', 
+                                            'tool': func_name, 
+                                            'bvid': bvid, 
+                                            'tokens': current_analysis_tokens
+                                        }
+                                
+                                result = result_text
+                                yield {
+                                    'type': 'tool_result', 
+                                    'tool': func_name, 
+                                    'result': {'bvid': bvid, 'title': v_info['title'], 'summary': result},
+                                    'tokens': current_analysis_tokens
+                                }
+                        
+                        elif func_name == "finish_research_and_write_report":
+                            result = "资料搜集阶段结束。请现在撰写全方位、深度的研究报告，并严格遵守参考来源标注规范。"
+                            is_final_report_triggered = True
+                            yield {'type': 'tool_result', 'tool': func_name, 'result': '进入撰写报告阶段...'}
+
+                    except Exception as e:
+                        result = f"执行工具出错: {str(e)}"
+                        yield {'type': 'error', 'error': result}
+
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call["id"],
+                        "name": func_name,
+                        "content": result
+                    })
+                
+                # 如果触发了最终报告撰写，进入最后一段生成
+                if is_final_report_triggered:
+                    yield {'type': 'report_start'}
+                    final_stream = self.client.chat.completions.create(
+                        model=self.research_model,
+                        messages=messages,
+                        stream=True
+                    )
+                    final_report = ""
+                    for chunk in final_stream:
+                        if not chunk.choices: continue
+                        delta = chunk.choices[0].delta
+                        if hasattr(delta, 'reasoning_content') and delta.reasoning_content:
+                            yield {'type': 'thinking', 'content': delta.reasoning_content}
+                        if delta.content:
+                            final_report += delta.content
+                            yield {'type': 'content', 'content': delta.content}
+                    
+                    # 持久化报告 (Markdown 和 PDF)
+                    try:
+                        self._save_research_report(topic, final_report)
+                    except Exception as e:
+                        print(f"[警告] 保存报告失败: {e}")
+                    
+                    break
+
+            yield {'type': 'done'}
+
+        except Exception as e:
+            print(f"[错误] 深度研究失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            yield {'type': 'error', 'error': str(e)}
+
+    def _save_research_report(self, topic: str, content: str):
+        """将研究报告保存到本地并生成 PDF"""
+        import os
+        from datetime import datetime
+        import re
+        
+        report_dir = "research_reports"
+        if not os.path.exists(report_dir):
+            os.makedirs(report_dir)
+            
+        # 清理文件名
+        safe_topic = re.sub(r'[\\/*?:"<>|]', '_', topic)[:50]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename_base = f"{timestamp}_{safe_topic}"
+        
+        # 1. 保存 Markdown
+        md_filepath = os.path.join(report_dir, f"{filename_base}.md")
+        with open(md_filepath, "w", encoding="utf-8") as f:
+            f.write(f"# 研究课题：{topic}\n")
+            f.write(f"生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write(content)
+        
+        # 2. 生成 PDF
+        try:
+            pdf_path = os.path.join(report_dir, f"{filename_base}.pdf")
+            self._generate_bili_style_pdf(topic, content, pdf_path)
+        except Exception as e:
+            print(f"[警告] PDF 生成失败: {e}")
+        
+        print(f"[信息] 研究报告已持久化: {md_filepath}")
+
+    def _generate_bili_style_pdf(self, topic: str, content: str, output_path: str):
+        """生成 Bilibili 风格的 PDF 报告"""
+        try:
+            import markdown2
+            from xhtml2pdf import pisa
+            from datetime import datetime
+            
+            # 将 Markdown 转为 HTML
+            html_content = markdown2.markdown(content, extras=["tables", "fenced-code-blocks"])
+            
+            # Bilibili 风格 CSS (针对 xhtml2pdf 优化的中文字体支持)
+            bili_css = """
+            @font-face {
+                font-family: "SimSun";
+                src: url("C:/Windows/Fonts/simsun.ttc");
+            }
+            @page {
+                size: a4;
+                margin: 2cm;
+                @frame footer {
+                    -pdf-frame-content: footerContent;
+                    bottom: 1cm;
+                    margin-left: 2cm;
+                    margin-right: 2cm;
+                    height: 1cm;
+                }
+            }
+            body {
+                font-family: "SimSun", serif;
+                color: #18191C;
+                line-height: 1.6;
+            }
+            .header {
+                text-align: center;
+                border-bottom: 2px solid #FB7299;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .logo {
+                color: #FB7299;
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            h1 { color: #FB7299; font-size: 28px; }
+            h2 { color: #00AEEC; border-left: 5px solid #00AEEC; padding-left: 10px; margin-top: 25px; font-size: 20px; }
+            h3 { color: #18191C; font-size: 18px; margin-top: 20px; }
+            p { margin-bottom: 12px; font-size: 14px; text-align: justify; }
+            .meta {
+                font-size: 12px;
+                color: #9499A0;
+                margin-bottom: 30px;
+            }
+            .footer {
+                text-align: center;
+                font-size: 10px;
+                color: #9499A0;
+                border-top: 1px solid #E3E5E7;
+                padding-top: 10px;
+            }
+            blockquote {
+                background-color: #F1F2F3;
+                border-left: 4px solid #FB7299;
+                padding: 10px 20px;
+                margin: 20px 0;
+                font-style: italic;
+            }
+            code {
+                background-color: #F1F2F3;
+                padding: 2px 4px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+            a { color: #00AEEC; text-decoration: none; }
+            """
+            
+            full_html = f"""
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>{bili_css}</style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo">BiliBili Summarize · Deep Research</div>
+                    <h1>{topic}</h1>
+                    <div class="meta">报告生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | AI 深度研究专家</div>
+                </div>
+                
+                <div class="content">
+                    {html_content}
+                </div>
+                
+                <div id="footerContent" class="footer">
+                    © 2025 BiliBili Summarize - 由 AI 驱动的深度研究引擎 | 第 <pdf:pagenumber> 页
+                </div>
+            </body>
+            </html>
+            """
+            
+            with open(output_path, "wb") as f:
+                pisa.CreatePDF(full_html, dest=f)
+                
+        except Exception as e:
+            raise Exception(f"PDF 渲染出错: {str(e)}")
+
     def chat_stream(self, question: str, context: str, video_info: Dict, history: List[Dict] = None) -> Generator[Dict, None, None]:
         """视频内容流式问答
         
