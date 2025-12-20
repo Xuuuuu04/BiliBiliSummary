@@ -508,8 +508,36 @@ class BilibiliService:
         try:
             art = article.Article(cvid, credential=self.credential)
             info = await art.get_info()
-            html_content = info.get('content', '')
-            clean_text = re.sub(r'<[^>]+>', '', html_content).strip()
+
+            # bilibili-api-python 新版本中，get_info() 不再返回 content，需要额外 fetch_content()
+            clean_text = ''
+            html_content = ''
+            try:
+                await art.fetch_content()
+                children = getattr(art, '_Article__children', []) or []
+
+                # ParagraphNode/TextNode 等提供 markdown()，直接拼接即可得到可读原文
+                parts = []
+                for node in children:
+                    if hasattr(node, 'markdown'):
+                        try:
+                            md = node.markdown()
+                            if isinstance(md, str) and md.strip():
+                                parts.append(md.strip())
+                        except Exception:
+                            continue
+                clean_text = "\n\n".join(parts).strip()
+
+                # meta 中通常带有 summary，可作为兜底
+                if not clean_text:
+                    meta = getattr(art, '_Article__meta', {}) or {}
+                    summary = meta.get('summary') or ''
+                    if isinstance(summary, str) and summary.strip():
+                        clean_text = summary.strip()
+            except Exception:
+                # fetch_content 失败时，至少返回基本信息
+                clean_text = ''
+
             return {
                 'success': True,
                 'data': {

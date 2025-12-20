@@ -1269,6 +1269,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentMode === 'article' && data.info) {
                     currentData.videoInfo = data.info;
                     updateVideoCard(data.info);
+
+                    // 关键修复：专栏原文应优先从 info_complete 填充（无需等待 AI/最终 final）
+                    // 这样即使 AI Key 无效导致后续流式解析失败，也能正常看到“专栏原文”。
+                    if (typeof data.info.content === 'string') {
+                        elements.articleOriginalContent.textContent = data.info.content || '无法获取专栏原文';
+                        updateMetaValue('metaWordCount', (data.info.content || '').length, '');
+                    }
                 } else if (currentMode === 'video') {
                     fetchVideoInfo(elements.videoUrl.value).then(res => {
                         if (res && res.owner && res.owner.mid) {
