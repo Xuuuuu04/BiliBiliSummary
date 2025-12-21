@@ -34,6 +34,9 @@ class Config:
     BILIBILI_BUVID3 = os.getenv('BILIBILI_BUVID3')
     BILIBILI_DEDEUSERID = os.getenv('BILIBILI_DEDEUSERID')
 
+    # 小红书配置
+    XHS_COOKIE = os.getenv('XHS_COOKIE')
+
     # 应用配置
     MAX_SUBTITLE_LENGTH = 50000  # 最大字幕长度
     REQUEST_TIMEOUT = 300  # 请求超时时间（秒）
