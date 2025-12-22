@@ -36,41 +36,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentBvid = '';
     let videoData = null;
 
-    // 1. 初始化设置
-    const config = await chrome.storage.local.get(['apiKey', 'apiBase', 'model']);
-    elements.apiKey.value = config.apiKey || DEFAULT_CONFIG.apiKey;
-    elements.apiBase.value = config.apiBase || DEFAULT_CONFIG.apiBase;
-    elements.apiModel.value = config.model || DEFAULT_CONFIG.model;
+    // --- 基础初始化 ---
+    try {
+        // 1. 初始化设置
+        const config = await chrome.storage.local.get(['apiKey', 'apiBase', 'model']);
+        elements.apiKey.value = config.apiKey || DEFAULT_CONFIG.apiKey;
+        elements.apiBase.value = config.apiBase || DEFAULT_CONFIG.apiBase;
+        elements.apiModel.value = config.model || DEFAULT_CONFIG.model;
 
-    // 2. 获取当前视频信息
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.url.includes('bilibili.com/video/')) {
-        currentBvid = extractBvid(tab.url);
-        elements.vBvid.textContent = currentBvid;
-        elements.videoBox.style.display = 'block';
-        await fetchVideoInfo(currentBvid);
-    } else {
-        showError('请在 B 站视频播放页使用');
-        elements.btnAI.disabled = true;
-        elements.btnTxt.disabled = true;
+        // 2. 获取当前视频信息
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab && tab.url && tab.url.includes('bilibili.com/video/')) {
+            currentBvid = extractBvid(tab.url);
+            if (currentBvid) {
+                elements.vBvid.textContent = currentBvid;
+                elements.videoBox.style.display = 'block';
+                await fetchVideoInfo(currentBvid);
+            } else {
+                showError('未能解析视频 ID');
+            }
+        } else {
+            showError('请在 B 站视频播放页使用此插件');
+            elements.btnAI.disabled = true;
+            elements.btnTxt.disabled = true;
+        }
+    } catch (err) {
+        console.error('Initialization error:', err);
+        showError('插件初始化失败，请重试');
     }
 
-    // 事件监听
+    // --- 事件监听 ---
+
+    // 切换设置面板
     elements.toggleSettings.addEventListener('click', () => {
         const isVisible = elements.settingsPanel.style.display === 'block';
         elements.settingsPanel.style.display = isVisible ? 'none' : 'block';
     });
 
+    // 保存设置
     elements.saveBtn.addEventListener('click', async () => {
-        await chrome.storage.local.set({
-            apiKey: elements.apiKey.value,
-            apiBase: elements.apiBase.value,
-            model: elements.apiModel.value
-        });
-        alert('配置已保存');
-        elements.settingsPanel.style.display = 'none';
+        try {
+            await chrome.storage.local.set({
+                apiKey: elements.apiKey.value,
+                apiBase: elements.apiBase.value,
+                model: elements.apiModel.value
+            });
+            alert('配置已保存');
+            elements.settingsPanel.style.display = 'none';
+        } catch (err) {
+            alert('保存失败: ' + err.message);
+        }
     });
 
+    // 提取文本
     elements.btnTxt.addEventListener('click', async () => {
         if (!videoData) {
             showError('正在加载视频信息，请稍后再试');
@@ -97,13 +115,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // AI 智能总结
     elements.btnAI.addEventListener('click', async () => {
         if (!videoData) {
             showError('正在加载视频信息，请稍后再试');
             return;
         }
         resetUI();
-        showLoading('正在多维度采集视频数据...', '获取字幕、弹幕及高赞评论...');
+        showLoading('正在采集视频多维数据...', '获取字幕、弹幕及高赞评论...');
 
         try {
             const [transcript, danmaku, comments] = await Promise.all([
@@ -112,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 getComments(videoData.aid)
             ]);
 
-            showLoading('AI 正在深度解析内容...', '结合文本、情绪与反馈生成总结...');
+            showLoading('AI 正在深度解析内容...', '正在生成总结报告...');
 
             const prompt = `你是一个专业的B站视频分析专家。请根据以下采集到的多维度视频数据，生成一份简洁、专业且富有洞察力的总结报告。
 
@@ -121,21 +140,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 作者：${videoData.owner.name}
 简介：${videoData.desc}
 
-【视频文本内容 (字幕/文案)】
+【视频文本内容】
 ${transcript.substring(0, 8000)}
 
-【精选弹幕 (反映实时反馈)】
+【精选弹幕】
 ${danmaku.substring(0, 1000)}
 
-【热门评论 (反映观众核心观点)】
+【热门评论】
 ${comments.substring(0, 1500)}
 
 要求：
 1. **核心总结**：用一句话概括视频主旨。
 2. **内容精华**：分点列出视频的关键知识点或核心论点。
-3. **舆情分析**：结合弹幕和评论，分析观众对视频的反馈、共鸣点或争议点。
-4. **精华结论**：提取视频中的金句或给观众带来的实际价值。
-5. **格式要求**：使用 Markdown 格式，保持专业且易读。`;
+3. **舆情分析**：分析观众对视频的反馈、共鸣点或争议点。
+4. **精华结论**：提取视频中的金句或实际价值。
+5. **格式要求**：使用 Markdown 格式。`;
 
             await callAIService(prompt, (chunk) => {
                 elements.loading.style.display = 'none';
@@ -150,10 +169,14 @@ ${comments.substring(0, 1500)}
         }
     });
 
+    // 复制按钮
     elements.btnCopy.addEventListener('click', () => {
-        navigator.clipboard.writeText(elements.resultContent.innerText);
-        elements.btnCopy.textContent = '已复制';
-        setTimeout(() => elements.btnCopy.textContent = '复制', 2000);
+        const text = elements.resultContent.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = elements.btnCopy.textContent;
+            elements.btnCopy.textContent = '已复制';
+            setTimeout(() => elements.btnCopy.textContent = originalText, 2000);
+        });
     });
 
     // --- 核心业务函数 ---
@@ -181,9 +204,7 @@ ${comments.substring(0, 1500)}
     }
 
     async function getTranscript(bvid) {
-        if (!videoData || !videoData.cid) {
-            throw new Error('未获取到视频信息');
-        }
+        if (!videoData || !videoData.cid) throw new Error('未获取到视频信息');
         
         try {
             const playerUrl = `https://api.bilibili.com/x/player/v2?bvid=${bvid}&cid=${videoData.cid}`;
@@ -238,7 +259,7 @@ ${comments.substring(0, 1500)}
 
     async function callAIService(prompt, onChunk) {
         const apiKey = elements.apiKey.value;
-        const apiBase = elements.apiBase.value.replace(///$/, '');
+        const apiBase = elements.apiBase.value.replace(/\/$/, '');
         const model = elements.apiModel.value;
 
         const response = await fetch(`${apiBase}/chat/completions`, {
@@ -267,12 +288,14 @@ ${comments.substring(0, 1500)}
             const { value, done } = await reader.read();
             if (done) break;
 
-            const chunks = decoder.decode(value).split('\n');
-            for (const chunk of chunks) {
-                if (chunk.trim() === '' || chunk.trim() === 'data: [DONE]') continue;
-                if (chunk.startsWith('data: ')) {
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
+                if (line.startsWith('data: ')) {
                     try {
-                        const data = JSON.parse(chunk.slice(6));
+                        const data = JSON.parse(line.slice(6));
                         const content = data.choices[0].delta.content || '';
                         fullContent += content;
                         onChunk(fullContent);
@@ -301,9 +324,12 @@ ${comments.substring(0, 1500)}
         elements.error.style.display = 'none';
     }
 
-    function showLoading(text) {
+    function showLoading(text, detail = '') {
         elements.loading.style.display = 'block';
         elements.loadingText.textContent = text;
+        // 如果 HTML 中有 status-detail 元素可以显示更多细节
+        const detailEl = document.getElementById('status-detail');
+        if (detailEl) detailEl.textContent = detail;
     }
 
     function showError(msg) {
