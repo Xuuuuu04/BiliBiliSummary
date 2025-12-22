@@ -1,5 +1,5 @@
 /**
- * BiliBili AI 助手 (全量版) - Popup 核心脚本
+ * BiliBili AI 助手 - Popup 核心脚本
  * 纯前端实现：直接调用 B 站接口和 AI 接口
  */
 
@@ -44,10 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. 获取当前视频信息
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    console.log('Current tab:', tab);
     if (tab && tab.url.includes('bilibili.com/video/')) {
         currentBvid = extractBvid(tab.url);
-        console.log('Extracted BVID:', currentBvid);
         elements.vBvid.textContent = currentBvid;
         elements.videoBox.style.display = 'block';
         await fetchVideoInfo(currentBvid);
@@ -73,123 +71,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.settingsPanel.style.display = 'none';
     });
 
-        elements.btnTxt.addEventListener('click', async () => {
-
-            if (!videoData) {
-
-                showError('正在加载视频信息，请稍后再试');
-
-                return;
-
+    elements.btnTxt.addEventListener('click', async () => {
+        if (!videoData) {
+            showError('正在加载视频信息，请稍后再试');
+            return;
+        }
+        resetUI();
+        showLoading('正在提取视频文本及相关信息...');
+        try {
+            const transcript = await getTranscript(currentBvid);
+            const danmaku = await getDanmaku(videoData.cid);
+            
+            elements.loading.style.display = 'none';
+            elements.resultContainer.style.display = 'block';
+            
+            let html = `<h3>视频原文本</h3><pre>${transcript}</pre>`;
+            if (danmaku) {
+                html += `<h3>精选弹幕</h3><pre>${danmaku}</pre>`;
             }
+            elements.resultContent.innerHTML = html;
+        } catch (e) {
+            console.error('Extraction error:', e);
+            showError(`内容提取失败: ${e.message}`);
+            elements.loading.style.display = 'none';
+        }
+    });
 
-            resetUI();
+    elements.btnAI.addEventListener('click', async () => {
+        if (!videoData) {
+            showError('正在加载视频信息，请稍后再试');
+            return;
+        }
+        resetUI();
+        showLoading('正在多维度采集视频数据...', '获取字幕、弹幕及高赞评论...');
 
-            showLoading('正在提取视频字幕...');
+        try {
+            const [transcript, danmaku, comments] = await Promise.all([
+                getTranscript(currentBvid),
+                getDanmaku(videoData.cid),
+                getComments(videoData.aid)
+            ]);
 
-            try {
+            showLoading('AI 正在深度解析内容...', '结合文本、情绪与反馈生成总结...');
 
-                console.log('Starting transcript extraction for CID:', videoData.cid);
+            const prompt = `你是一个专业的B站视频分析专家。请根据以下采集到的多维度视频数据，生成一份简洁、专业且富有洞察力的总结报告。
 
-                const transcript = await getTranscript(currentBvid);
+【视频基本信息】
+标题：${videoData.title}
+作者：${videoData.owner.name}
+简介：${videoData.desc}
 
+【视频文本内容 (字幕/文案)】
+${transcript.substring(0, 8000)}
+
+【精选弹幕 (反映实时反馈)】
+${danmaku.substring(0, 1000)}
+
+【热门评论 (反映观众核心观点)】
+${comments.substring(0, 1500)}
+
+要求：
+1. **核心总结**：用一句话概括视频主旨。
+2. **内容精华**：分点列出视频的关键知识点或核心论点。
+3. **舆情分析**：结合弹幕和评论，分析观众对视频的反馈、共鸣点或争议点。
+4. **精华结论**：提取视频中的金句或给观众带来的实际价值。
+5. **格式要求**：使用 Markdown 格式，保持专业且易读。`;
+
+            await callAIService(prompt, (chunk) => {
                 elements.loading.style.display = 'none';
-
                 elements.resultContainer.style.display = 'block';
+                renderStreamingContent(chunk);
+            });
 
-                elements.resultContent.innerHTML = `<h3>视频文本内容</h3><pre>${transcript}</pre>`;
-
-            } catch (e) {
-
-                console.error('Transcript error:', e);
-
-                showError(`获取字幕失败: ${e.message}`);
-
-                elements.loading.style.display = 'none';
-
-            }
-
-        });
-
-    
-
-        elements.btnAI.addEventListener('click', async () => {
-
-            if (!videoData) {
-
-                showError('正在加载视频信息，请稍后再试');
-
-                return;
-
-            }
-
-            resetUI();
-
-            showLoading('获取内容并生成 AI 总结...');
-
-    
-
-            try {
-
-                console.log('Fetching transcript for AI...');
-
-                const transcript = await getTranscript(currentBvid);
-
-                showLoading('AI 正在深度思考中...');
-
-    
-
-                const prompt = `你是一个专业的B站视频分析专家。请根据以下视频内容，生成一份简洁、专业且富有洞察力的总结。
-
-    视频标题：${videoData.title}
-
-    视频简介：${videoData.desc}
-
-    内容文本：${transcript.substring(0, 10000)}
-
-    
-
-    要求：
-
-    1. 分段总结核心观点。
-
-    2. 提取视频中的精华结论或金句。
-
-    3. 如果是技术或教程类，总结出具体步骤。
-
-    4. 使用 Markdown 格式。`;
-
-    
-
-                console.log('Calling AI service...');
-
-                await callAIService(prompt, (chunk) => {
-
-                    elements.loading.style.display = 'none';
-
-                    elements.resultContainer.style.display = 'block';
-
-                    // 简单的流式渲染
-
-                    renderStreamingContent(chunk);
-
-                });
-
-    
-
-            } catch (e) {
-
-                console.error('AI error:', e);
-
-                showError(`总结生成失败: ${e.message}`);
-
-                elements.loading.style.display = 'none';
-
-            }
-
-        });
-
-    
+        } catch (e) {
+            console.error('AI error:', e);
+            showError(`总结生成失败: ${e.message}`);
+            elements.loading.style.display = 'none';
+        }
+    });
 
     elements.btnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(elements.resultContent.innerText);
@@ -204,60 +163,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         return match ? match[0] : '';
     }
 
-        async function fetchVideoInfo(bvid) {
-            try {
-                console.log('Fetching video info for:', bvid);
-                const resp = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`);
-                const json = await resp.json();
-                console.log('Video info response:', json);
-                if (json.code === 0) {
-                    videoData = json.data;
-                    elements.vTitle.textContent = videoData.title;
-                    elements.vAuthor.textContent = `UP: ${videoData.owner.name}`;
-                } else {
-                    showError(`获取视频信息失败: ${json.message}`);
-                }
-            } catch (e) {
-                console.error('fetchVideoInfo error:', e);
-                showError(`请求视频接口失败: ${e.message}`);
+    async function fetchVideoInfo(bvid) {
+        try {
+            const resp = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`);
+            const json = await resp.json();
+            if (json.code === 0) {
+                videoData = json.data;
+                elements.vTitle.textContent = videoData.title;
+                elements.vAuthor.textContent = `UP: ${videoData.owner.name}`;
+            } else {
+                showError(`获取视频信息失败: ${json.message}`);
             }
+        } catch (e) {
+            console.error('fetchVideoInfo error:', e);
+            showError(`请求视频接口失败: ${e.message}`);
         }
-    
-        async function getTranscript(bvid) {
-            if (!videoData || !videoData.cid) {
-                throw new Error('未获取到视频 CID，请尝试刷新页面');
-            }
-            
-            console.log('Fetching player info for CID:', videoData.cid);
-            // 获取视频分段和字幕列表
+    }
+
+    async function getTranscript(bvid) {
+        if (!videoData || !videoData.cid) {
+            throw new Error('未获取到视频信息');
+        }
+        
+        try {
             const playerUrl = `https://api.bilibili.com/x/player/v2?bvid=${bvid}&cid=${videoData.cid}`;
             const playerResp = await fetch(playerUrl);
             const playerData = await playerResp.json();
-            console.log('Player info response:', playerData);
-    
-            if (playerData.code !== 0) {
-                throw new Error(`获取播放信息失败: ${playerData.message}`);
-            }
-    
-            const subtitles = playerData.data.subtitle.subtitles;
-            if (!subtitles || subtitles.length === 0) {
-                console.log('No official subtitles found, using description');
-                return `[提示] 该视频暂无官方字幕。视频简介：${videoData.desc}`;
-            }
-    
-            // 2. 获取第一个字幕的内容 (通常是中文)
-            const subUrl = subtitles[0].subtitle_url.replace(/^\/\//, 'https://');
-            console.log('Fetching subtitle content from:', subUrl);
-            const subContentResp = await fetch(subUrl);
-            const subJson = await subContentResp.json();
             
-            const text = subJson.body.map(item => item.content).join(' ');
-            console.log('Transcript length:', text.length);
-            return text;
+            const subtitles = playerData.data?.subtitle?.subtitles;
+            if (subtitles && subtitles.length > 0) {
+                const targetSub = subtitles.find(s => s.lan.includes('zh')) || subtitles[0];
+                const subUrl = targetSub.subtitle_url.replace(/^\/\//, 'https://');
+                const subContentResp = await fetch(subUrl);
+                const subJson = await subContentResp.json();
+                return subJson.body.map(item => item.content).join(' ');
+            }
+        } catch (e) {
+            console.warn('获取官方字幕失败', e);
         }
-        async function callAIService(prompt, onChunk) {
+        return `[无官方字幕] 视频简介：${videoData.desc}`;
+    }
+
+    async function getDanmaku(cid) {
+        try {
+            const resp = await fetch(`https://api.bilibili.com/x/v1/dm/list.so?oid=${cid}`);
+            const text = await resp.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, "text/xml");
+            const dNodes = xmlDoc.getElementsByTagName("d");
+            const danmakus = [];
+            for (let i = 0; i < Math.min(dNodes.length, 150); i++) {
+                danmakus.push(dNodes[i].textContent);
+            }
+            return danmakus.join('\n');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    async function getComments(aid) {
+        try {
+            const resp = await fetch(`https://api.bilibili.com/x/v2/reply?type=1&oid=${aid}&sort=2&ps=20`);
+            const json = await resp.json();
+            if (json.code === 0 && json.data?.replies) {
+                return json.data.replies
+                    .map(r => `${r.member.uname}: ${r.content.message}`)
+                    .join('\n');
+            }
+            return '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    async function callAIService(prompt, onChunk) {
         const apiKey = elements.apiKey.value;
-        const apiBase = elements.apiBase.value.replace(/\/$/, '');
+        const apiBase = elements.apiBase.value.replace(///$/, '');
         const model = elements.apiModel.value;
 
         const response = await fetch(`${apiBase}/chat/completions`, {
@@ -301,7 +282,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 渲染 Markdown (极简版)
     function renderStreamingContent(text) {
         const html = text
             .replace(/^# (.*$)/gm, '<h1>$1</h1>')
