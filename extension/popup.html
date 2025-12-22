@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiliBili AI 助手</title>
+    <style>
+        :root {
+            --bili-pink: #fb7299;
+            --bili-blue: #00aeec;
+            --bg-color: #ffffff;
+            --text-color: #212121;
+            --border-color: #e3e5e7;
+        }
+
+        body {
+            width: 350px;
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--bili-pink);
+        }
+
+        .video-info {
+            background: #f6f7f8;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .video-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        button {
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background-color: var(--bili-pink);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #fc8bab;
+        }
+
+        .btn-secondary {
+            background-color: var(--bili-blue);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #33bef0;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #result-container {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            display: none;
+        }
+
+        .status-msg {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #eee;
+        }
+
+        .error {
+            color: #ff4d4f;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="#fb7299"/>
+            <path d="M30 45 L50 65 L70 45" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="title">BiliBili AI 助手</div>
+    </div>
+
+    <div id="video-info" class="video-info">
+        <div class="video-title" id="display-title">正在获取视频信息...</div>
+        <div id="display-bvid" style="color: #666; font-size: 11px;"></div>
+    </div>
+
+    <div class="actions">
+        <button id="btn-summarize" class="btn-primary">
+            <span>✨</span> 智能总结
+        </button>
+        <button id="btn-transcript" class="btn-secondary">
+            <span>📝</span> 提取文本
+        </button>
+    </div>
+
+    <div id="loading" class="loading">
+        <div class="spinner">⏳</div>
+        <div id="loading-text">正在处理中...</div>
+        <div class="status-msg" id="status-detail">请稍候，这可能需要几十秒</div>
+    </div>
+
+    <div id="result-container">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button id="btn-copy" style="padding: 4px 8px; font-size: 11px; background: #eee; color: #333;">复制结果</button>
+        </div>
+        <div id="result-content"></div>
+    </div>
+
+    <div id="error-msg" class="error" style="display: none;"></div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
