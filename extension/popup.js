@@ -7,7 +7,7 @@
 const DEFAULT_CONFIG = {
     apiKey: 'sk-kjfvtxdspxngnsgsmeciaycwitfpuyvnybokuivrliquzbbt',
     apiBase: 'https://api.siliconflow.cn/v1',
-    model: 'Qwen/Qwen2.5-72B-Instruct'
+    model: 'Qwen/Qwen3-Omni-30B-A3B-Captioner'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -131,31 +131,65 @@ document.addEventListener('DOMContentLoaded', async () => {
                 getComments(videoData.aid)
             ]);
 
-            showLoading('AI 正在深度解析内容...', '正在生成总结报告...');
+            showLoading('AI 正在深度解析内容...', '结合画面、文本与舆情生成报告...');
 
-            const prompt = `你是一个专业的B站视频分析专家。请根据以下采集到的多维度视频数据，生成一份简洁、专业且富有洞察力的总结报告。
+            const prompt = `你是一位资深的B站视频分析专家。你的任务是基于我提供的多维度素材生成一份**准确无误、深度且专业**的分析报告。
+
+【分析准则 - 严紧防幻觉】
+1. **仅限素材**：所有结论必须直接来源于提供的素材。严禁编造。
+2. **逻辑严密**：分段总结核心观点，提取精华结论。
 
 【视频基本信息】
 标题：${videoData.title}
 作者：${videoData.owner.name}
 简介：${videoData.desc}
 
-【视频文本内容】
-${transcript.substring(0, 8000)}
+【视频文本内容 (字幕/文案)】
+${transcript.substring(0, 10000)}
 
-【精选弹幕】
+【精选弹幕 (反映实时反馈)】
 ${danmaku.substring(0, 1000)}
 
-【热门评论】
+【热门评论 (反映观众核心观点)】
 ${comments.substring(0, 1500)}
 
-要求：
-1. **核心总结**：用一句话概括视频主旨。
-2. **内容精华**：分点列出视频的关键知识点或核心论点。
-3. **舆情分析**：分析观众对视频的反馈、共鸣点或争议点。
-4. **精华结论**：提取视频中的金句或实际价值。
-5. **格式要求**：使用 Markdown 格式。`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+请严格按照以下**三大板块**提供深度分析报告：
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+## 📋 第一板块：内容深度总结与分析
+
+### 1. 视频核心概览
+- **核心主旨**：用一句话精准概括视频。
+- **目标价值**：视频解决了什么核心问题？提供了什么价值？
+
+### 2. 结构化内容详述
+- 按逻辑逻辑，**精细化**提取核心论据、关键步骤、数据支撑和典型案例。
+- 分章节进行详尽总结，字数需充实，深度解析内容逻辑。
+
+### 3. 关键知识点与深度见解
+- **事实罗列**：列出视频中提到的核心知识点。
+- **深度延伸**：分析其在更广阔背景下的意义。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 💬 第二板块：弹幕互动与舆情分析
+- **氛围洞察**：分析弹幕情绪。
+- **互动槽点**：捕捉视频中的“梗”或争议点。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 📝 第三板块：评论区深度解析与建议
+- **评论画像**：分析高赞评论的构成。
+- **精选解读**：提取评论中最有价值的观点。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**输出格式要求**：
+- 使用 Markdown 格式，大量使用**加粗**强调核心词汇。
+- 使用 Emoji 增加易读性。`;
+
+            console.log('Calling AI service with high-quality prompt...');
             await callAIService(prompt, (chunk) => {
                 elements.loading.style.display = 'none';
                 elements.resultContainer.style.display = 'block';
@@ -206,6 +240,7 @@ ${comments.substring(0, 1500)}
     async function getTranscript(bvid) {
         if (!videoData || !videoData.cid) throw new Error('未获取到视频信息');
         
+        console.log('Attempting to fetch official subtitles for BVID:', bvid, 'CID:', videoData.cid);
         try {
             const playerUrl = `https://api.bilibili.com/x/player/v2?bvid=${bvid}&cid=${videoData.cid}`;
             const playerResp = await fetch(playerUrl);
@@ -215,14 +250,19 @@ ${comments.substring(0, 1500)}
             if (subtitles && subtitles.length > 0) {
                 const targetSub = subtitles.find(s => s.lan.includes('zh')) || subtitles[0];
                 const subUrl = targetSub.subtitle_url.replace(/^\/\//, 'https://');
+                console.log('Downloading subtitle from:', subUrl);
                 const subContentResp = await fetch(subUrl);
                 const subJson = await subContentResp.json();
-                return subJson.body.map(item => item.content).join(' ');
+                const text = subJson.body.map(item => item.content).join(' ');
+                console.log('Successfully fetched transcript, length:', text.length);
+                return text;
             }
         } catch (e) {
-            console.warn('获取官方字幕失败', e);
+            console.warn('获取官方字幕接口报错:', e);
         }
-        return `[无官方字幕] 视频简介：${videoData.desc}`;
+        
+        console.log('No official subtitles found. Falling back to video description.');
+        return `[无官方字幕] 视频简介内容：\n${videoData.desc}`;
     }
 
     async function getDanmaku(cid) {
@@ -305,15 +345,22 @@ ${comments.substring(0, 1500)}
         }
     }
 
+    // 渲染 Markdown (增强版，对标原项目)
     function renderStreamingContent(text) {
-        const html = text
+        let html = text
             .replace(/^# (.*$)/gm, '<h1>$1</h1>')
             .replace(/^## (.*$)/gm, '<h2>$1</h2>')
             .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━/gm, '<hr style="border:0; border-top:1px solid #eee; margin:20px 0;">')
             .replace(/^\d\. (.*$)/gm, '<li>$1</li>')
             .replace(/^\* (.*$)/gm, '<li>$1</li>')
+            .replace(/^\- (.*$)/gm, '<li>$1</li>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
+            
+        // 修正列表嵌套
+        html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>').replace(/<\/ul><ul>/g, '');
+        
         elements.resultContent.innerHTML = html;
         elements.resultContainer.scrollTop = elements.resultContainer.scrollHeight;
     }
