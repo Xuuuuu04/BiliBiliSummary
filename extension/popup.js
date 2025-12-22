@@ -1,173 +1,241 @@
 /**
- * BiliBili AI 助手 - Popup 脚本
- * 负责与本地 Flask 后端通信并显示结果
+ * BiliBili AI 助手 (全量版) - Popup 核心脚本
+ * 纯前端实现：直接调用 B 站接口和 AI 接口
  */
 
-const API_BASE = 'http://localhost:5000';
+// 默认配置 (从你的 .env 中提取作为初始值)
+const DEFAULT_CONFIG = {
+    apiKey: 'sk-kjfvtxdspxngnsgsmeciaycwitfpuyvnybokuivrliquzbbt',
+    apiBase: 'https://api.siliconflow.cn/v1',
+    model: 'Qwen/Qwen2.5-72B-Instruct'
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const btnSummarize = document.getElementById('btn-summarize');
-    const btnTranscript = document.getElementById('btn-transcript');
-    const loading = document.getElementById('loading');
-    const resultContent = document.getElementById('result-content');
-    const resultContainer = document.getElementById('result-container');
-    const errorMsg = document.getElementById('error-msg');
-    const videoInfo = document.getElementById('video-info');
-    const displayTitle = document.getElementById('display-title');
-    const displayBvid = document.getElementById('display-bvid');
-    const statusDetail = document.getElementById('status-detail');
+    // DOM 元素
+    const elements = {
+        apiKey: document.getElementById('api-key'),
+        apiBase: document.getElementById('api-base'),
+        apiModel: document.getElementById('api-model'),
+        saveBtn: document.getElementById('save-settings'),
+        toggleSettings: document.getElementById('toggle-settings'),
+        settingsPanel: document.getElementById('settings-panel'),
+        videoBox: document.getElementById('video-box'),
+        vTitle: document.getElementById('v-title'),
+        vAuthor: document.getElementById('v-author'),
+        vBvid: document.getElementById('v-bvid'),
+        btnAI: document.getElementById('btn-ai'),
+        btnTxt: document.getElementById('btn-txt'),
+        btnCopy: document.getElementById('btn-copy'),
+        loading: document.getElementById('loading'),
+        loadingText: document.getElementById('loading-text'),
+        resultContainer: document.getElementById('result-container'),
+        resultContent: document.getElementById('result-content'),
+        error: document.getElementById('err')
+    };
 
-    let currentUrl = '';
+    let currentBvid = '';
+    let videoData = null;
 
-    // 1. 获取当前标签页 URL
-    try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        currentUrl = tab.url;
+    // 1. 初始化设置
+    const config = await chrome.storage.local.get(['apiKey', 'apiBase', 'model']);
+    elements.apiKey.value = config.apiKey || DEFAULT_CONFIG.apiKey;
+    elements.apiBase.value = config.apiBase || DEFAULT_CONFIG.apiBase;
+    elements.apiModel.value = config.model || DEFAULT_CONFIG.model;
 
-        if (currentUrl.includes('bilibili.com/video/')) {
-            videoInfo.style.display = 'block';
-            const bvid = extractBvid(currentUrl);
-            displayBvid.textContent = bvid;
-            // 尝试获取视频标题
-            displayTitle.textContent = tab.title.replace('_哔哩哔哩_bilibili', '');
-        } else {
-            showError('请在 B 站视频播放页面使用此插件');
-            btnSummarize.disabled = true;
-            btnTranscript.disabled = true;
-        }
-    } catch (e) {
-        showError('无法获取当前页面信息');
+    // 2. 获取当前视频信息
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url.includes('bilibili.com/video/')) {
+        currentBvid = extractBvid(tab.url);
+        elements.vBvid.textContent = currentBvid;
+        elements.videoBox.style.display = 'block';
+        fetchVideoInfo(currentBvid);
+    } else {
+        showError('请在 B 站视频播放页使用');
+        elements.btnAI.disabled = true;
+        elements.btnTxt.disabled = true;
     }
 
-    // 2. 智能总结功能 (流式)
-    btnSummarize.addEventListener('click', async () => {
+    // 事件监听
+    elements.toggleSettings.addEventListener('click', () => {
+        const isVisible = elements.settingsPanel.style.display === 'block';
+        elements.settingsPanel.style.display = isVisible ? 'none' : 'block';
+    });
+
+    elements.saveBtn.addEventListener('click', async () => {
+        await chrome.storage.local.set({
+            apiKey: elements.apiKey.value,
+            apiBase: elements.apiBase.value,
+            model: elements.apiModel.value
+        });
+        alert('配置已保存');
+        elements.settingsPanel.style.display = 'none';
+    });
+
+    elements.btnTxt.addEventListener('click', async () => {
         resetUI();
-        showLoading('正在生成智能总结...', '正在分析视频内容，请稍候...');
+        showLoading('正在提取视频字幕...');
+        try {
+            const transcript = await getTranscript(currentBvid);
+            elements.loading.style.display = 'none';
+            elements.resultContainer.style.display = 'block';
+            elements.resultContent.innerHTML = `<h3>视频文本内容</h3><pre>${transcript}</pre>`;
+        } catch (e) {
+            showError(`获取字幕失败: ${e.message}`);
+            elements.loading.style.display = 'none';
+        }
+    });
+
+    elements.btnAI.addEventListener('click', async () => {
+        resetUI();
+        showLoading('获取内容并生成 AI 总结...');
         
         try {
-            const response = await fetch(`${API_BASE}/api/analyze/stream`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: currentUrl })
-            });
-
-            if (!response.ok) throw new Error('后端服务未启动或连接失败');
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let summaryHtml = '';
+            const transcript = await getTranscript(currentBvid);
+            showLoading('AI 正在深度思考中...');
             
-            resultContainer.style.display = 'block';
+            const prompt = `你是一个专业的B站视频分析专家。请根据以下视频内容，生成一份简洁、专业且富有洞察力的总结。
+视频标题：${videoData.title}
+视频简介：${videoData.desc}
+内容文本：${transcript.substring(0, 10000)}
 
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
+要求：
+1. 分段总结核心观点。
+2. 提取视频中的精华结论或金句。
+3. 如果是技术或教程类，总结出具体步骤。
+4. 使用 Markdown 格式。`;
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            
-                            if (data.type === 'stage') {
-                                statusDetail.textContent = data.message;
-                            } else if (data.type === 'chunk') {
-                                // 隐藏加载动画，显示实时内容
-                                loading.style.display = 'none';
-                                summaryHtml += data.content;
-                                resultContent.innerHTML = formatMarkdown(summaryHtml);
-                                // 滚动到底部
-                                resultContainer.scrollTop = resultContainer.scrollHeight;
-                            } else if (data.type === 'error') {
-                                throw new Error(data.error);
-                            } else if (data.type === 'final') {
-                                statusDetail.textContent = '总结完成！';
-                            }
-                        } catch (e) {
-                            console.error('解析 JSON 失败', e);
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            showError(`总结失败: ${e.message}`);
-        } finally {
-            loading.style.display = 'none';
-        }
-    });
-
-    // 3. 提取文本功能
-    btnTranscript.addEventListener('click', async () => {
-        resetUI();
-        showLoading('正在提取视频文本...', '正在获取字幕信息...');
-
-        try {
-            const response = await fetch(`${API_BASE}/api/video/subtitle`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: currentUrl })
+            await callAIService(prompt, (chunk) => {
+                elements.loading.style.display = 'none';
+                elements.resultContainer.style.display = 'block';
+                // 简单的流式渲染
+                renderStreamingContent(chunk);
             });
 
-            const data = await response.json();
-            loading.style.display = 'none';
-
-            if (data.success) {
-                resultContainer.style.display = 'block';
-                const text = data.data.full_text || '未找到字幕内容';
-                resultContent.innerHTML = `<h3>视频全文本</h3><pre>${text}</pre>`;
-            } else {
-                throw new Error(data.error || '提取失败');
-            }
         } catch (e) {
-            showError(`提取失败: ${e.message}`);
-            loading.style.display = 'none';
+            showError(`总结生成失败: ${e.message}`);
+            elements.loading.style.display = 'none';
         }
     });
 
-    // 4. 复制功能
-    document.getElementById('btn-copy').addEventListener('click', () => {
-        const text = resultContent.innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('btn-copy');
-            const originalText = btn.textContent;
-            btn.textContent = '已复制！';
-            setTimeout(() => btn.textContent = originalText, 2000);
-        });
+    elements.btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(elements.resultContent.innerText);
+        elements.btnCopy.textContent = '已复制';
+        setTimeout(() => elements.btnCopy.textContent = '复制', 2000);
     });
 
-    // 辅助函数
+    // --- 核心业务函数 ---
+
     function extractBvid(url) {
         const match = url.match(/BV[a-zA-Z0-9]+/);
         return match ? match[0] : '';
     }
 
-    function resetUI() {
-        resultContainer.style.display = 'none';
-        resultContent.innerHTML = '';
-        errorMsg.style.display = 'none';
+    async function fetchVideoInfo(bvid) {
+        try {
+            const resp = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`);
+            const json = await resp.json();
+            if (json.code === 0) {
+                videoData = json.data;
+                elements.vTitle.textContent = videoData.title;
+                elements.vAuthor.textContent = `UP: ${videoData.owner.name}`;
+            }
+        } catch (e) {
+            console.error('获取视频信息失败', e);
+        }
     }
 
-    function showLoading(text, detail) {
-        loading.style.display = 'block';
-        document.getElementById('loading-text').textContent = text;
-        statusDetail.textContent = detail;
+    async function getTranscript(bvid) {
+        // 1. 获取视频分段和字幕列表
+        const playerResp = await fetch(`https://api.bilibili.com/x/player/v2?bvid=${bvid}&cid=${videoData.cid}`);
+        const playerData = await playerResp.json();
+        
+        const subtitles = playerData.data.subtitle.subtitles;
+        if (!subtitles || subtitles.length === 0) {
+            // 如果没有官方字幕，尝试从简介中提取，或告知无字幕
+            return `[提示] 该视频暂无官方字幕。简介：${videoData.desc}`;
+        }
+
+        // 2. 获取第一个字幕的内容 (通常是中文)
+        const subUrl = subtitles[0].subtitle_url.replace(/^\/\//, 'https://');
+        const subContentResp = await fetch(subUrl);
+        const subJson = await subContentResp.json();
+        
+        return subJson.body.map(item => item.content).join(' ');
+    }
+
+    async function callAIService(prompt, onChunk) {
+        const apiKey = elements.apiKey.value;
+        const apiBase = elements.apiBase.value.replace(/\/$/, '');
+        const model = elements.apiModel.value;
+
+        const response = await fetch(`${apiBase}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: 'user', content: prompt }],
+                stream: true
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || 'AI 接口请求失败');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            const chunks = decoder.decode(value).split('\n');
+            for (const chunk of chunks) {
+                if (chunk.trim() === '' || chunk.trim() === 'data: [DONE]') continue;
+                if (chunk.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(chunk.slice(6));
+                        const content = data.choices[0].delta.content || '';
+                        fullContent += content;
+                        onChunk(fullContent);
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    // 渲染 Markdown (极简版)
+    function renderStreamingContent(text) {
+        const html = text
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^\d\. (.*$)/gm, '<li>$1</li>')
+            .replace(/^\* (.*$)/gm, '<li>$1</li>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+        elements.resultContent.innerHTML = html;
+        elements.resultContainer.scrollTop = elements.resultContainer.scrollHeight;
+    }
+
+    function resetUI() {
+        elements.resultContainer.style.display = 'none';
+        elements.resultContent.innerHTML = '';
+        elements.error.style.display = 'none';
+    }
+
+    function showLoading(text) {
+        elements.loading.style.display = 'block';
+        elements.loadingText.textContent = text;
     }
 
     function showError(msg) {
-        errorMsg.textContent = msg;
-        errorMsg.style.display = 'block';
-    }
-
-    // 极简 Markdown 格式化 (由于插件环境，我们不引入大库)
-    function formatMarkdown(text) {
-        return text
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^\d\. (.*$)/gim, '<li>$1</li>')
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            .replace(/\n/g, '<br>');
+        elements.error.textContent = msg;
+        elements.error.style.display = 'block';
     }
 });

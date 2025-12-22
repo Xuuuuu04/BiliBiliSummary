@@ -2,26 +2,22 @@
   "manifest_version": 3,
   "name": "BiliBili AI 助手",
   "version": "1.0.0",
-  "description": "一键总结 B 站视频内容，提取视频文本。",
+  "description": "无需后端，直接在浏览器中总结 B 站视频内容。",
   "permissions": [
     "activeTab",
     "sidePanel",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
-    "http://localhost:5000/*",
-    "https://*.bilibili.com/*"
+    "https://api.bilibili.com/*",
+    "https://*.hdslb.com/*",
+    "https://api.siliconflow.cn/*"
   ],
   "action": {
     "default_popup": "popup.html"
   },
   "side_panel": {
     "default_path": "popup.html"
-  },
-  "content_scripts": [
-    {
-      "matches": ["https://www.bilibili.com/video/*"],
-      "js": ["content.js"]
-    }
-  ]
+  }
 }

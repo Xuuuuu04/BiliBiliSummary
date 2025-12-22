@@ -14,7 +14,7 @@
         }
 
         body {
-            width: 350px;
+            width: 380px;
             margin: 0;
             padding: 16px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -25,9 +25,15 @@
         .header {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 16px;
             padding-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
         }
 
         .logo {
@@ -42,22 +48,39 @@
             color: var(--bili-pink);
         }
 
+        .settings-icon {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .settings-icon:hover {
+            background: #f1f1f1;
+        }
+
         .video-info {
             background: #f6f7f8;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             margin-bottom: 16px;
             font-size: 13px;
-            display: none;
         }
 
         .video-title {
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            color: #666;
+            font-size: 12px;
         }
 
         .actions {
@@ -69,8 +92,8 @@
 
         button {
             border: none;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
@@ -107,25 +130,75 @@
         #result-container {
             border-top: 1px solid var(--border-color);
             padding-top: 12px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
             font-size: 14px;
             line-height: 1.6;
             display: none;
         }
 
+        .copy-btn {
+            float: right;
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #eee;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
-            color: #666;
             display: none;
         }
 
-        .status-msg {
+        .spinner {
+            font-size: 24px;
+            margin-bottom: 8px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        #settings-panel {
+            display: none;
+            padding: 10px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
             font-size: 12px;
+            margin-bottom: 4px;
             color: #666;
-            margin-top: 8px;
-            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .error {
+            color: #ff4d4f;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 10px;
         }
 
         pre {
@@ -138,62 +211,63 @@
             border: 1px solid #eee;
         }
 
-        .error {
-            color: #ff4d4f;
-            background: #fff2f0;
-            border: 1px solid #ffccc7;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        /* 滚动条样式 */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
+        .summary-content h2 { font-size: 16px; color: var(--bili-pink); border-left: 4px solid var(--bili-pink); padding-left: 8px; margin-top: 16px; }
+        .summary-content h3 { font-size: 14px; color: #333; margin-top: 12px; }
+        .summary-content li { margin-bottom: 6px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="45" fill="#fb7299"/>
-            <path d="M30 45 L50 65 L70 45" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
-        </svg>
-        <div class="title">BiliBili AI 助手</div>
+        <div class="logo-box">
+            <svg class="logo" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="#fb7299"/>
+                <path d="M30 45 L50 65 L70 45" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div class="title">BiliBili AI 助手</div>
+        </div>
+        <div class="settings-icon" id="toggle-settings">⚙️</div>
     </div>
 
-    <div id="video-info" class="video-info">
-        <div class="video-title" id="display-title">正在获取视频信息...</div>
-        <div id="display-bvid" style="color: #666; font-size: 11px;"></div>
+    <div id="settings-panel">
+        <div class="form-group">
+            <label>API Key (SiliconFlow/OpenAI)</label>
+            <input type="password" id="api-key" placeholder="sk-...">
+        </div>
+        <div class="form-group">
+            <label>API Base</label>
+            <input type="text" id="api-base" placeholder="https://api.siliconflow.cn/v1">
+        </div>
+        <div class="form-group">
+            <label>Model</label>
+            <input type="text" id="api-model" placeholder="Qwen/Qwen2.5-72B-Instruct">
+        </div>
+        <button id="save-settings" class="btn-secondary" style="width: 100%; padding: 6px;">保存配置</button>
+    </div>
+
+    <div id="video-box" class="video-info" style="display: none;">
+        <div class="video-title" id="v-title">正在加载...</div>
+        <div class="stats">
+            <span id="v-author">UP: -</span>
+            <span id="v-bvid">BV-</span>
+        </div>
     </div>
 
     <div class="actions">
-        <button id="btn-summarize" class="btn-primary">
-            <span>✨</span> 智能总结
-        </button>
-        <button id="btn-transcript" class="btn-secondary">
-            <span>📝</span> 提取文本
-        </button>
+        <button id="btn-ai" class="btn-primary">✨ AI 智能总结</button>
+        <button id="btn-txt" class="btn-secondary">📝 提取文本</button>
     </div>
 
     <div id="loading" class="loading">
-        <div class="spinner">⏳</div>
-        <div id="loading-text">正在处理中...</div>
-        <div class="status-msg" id="status-detail">请稍候，这可能需要几十秒</div>
+        <div class="spinner">🌀</div>
+        <div id="loading-text">处理中...</div>
     </div>
 
     <div id="result-container">
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-            <button id="btn-copy" style="padding: 4px 8px; font-size: 11px; background: #eee; color: #333;">复制结果</button>
-        </div>
-        <div id="result-content"></div>
+        <div class="copy-btn" id="btn-copy">复制</div>
+        <div id="result-content" class="summary-content"></div>
     </div>
 
-    <div id="error-msg" class="error" style="display: none;"></div>
+    <div id="err" class="error" style="display: none;"></div>
 
     <script src="popup.js"></script>
 </body>
