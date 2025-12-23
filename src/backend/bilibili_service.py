@@ -10,18 +10,21 @@ import cv2
 from PIL import Image
 import io
 from src.config import Config
+from src.backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class BilibiliService:
     """B站视频服务类"""
-    
+
     def __init__(self):
         self.credential = self._init_credential()
 
     def refresh_credential(self):
         """刷新登录凭据（从Config重新加载）"""
         self.credential = self._init_credential()
-        print(f"[信息] B站服务凭据已刷新 (登录状态: {bool(self.credential)})")
+        logger.info(f"B站服务凭据已刷新 (登录状态: {bool(self.credential)})")
 
     def _init_credential(self) -> Optional[Credential]:
         """初始化B站登录凭据"""
@@ -37,13 +40,13 @@ class BilibiliService:
                     buvid3=Config.BILIBILI_BUVID3 or "",
                     dedeuserid=Config.BILIBILI_DEDEUSERID
                 )
-                print("[信息] 已加载B站登录凭据，将获取完整数据")
+                logger.info("已加载B站登录凭据，将获取完整数据")
                 return credential
             else:
-                print("[信息] 未配置B站登录凭据，将获取有限的公开数据")
+                logger.info("未配置B站登录凭据，将获取有限的公开数据")
                 return None
         except Exception as e:
-            print(f"[警告] 初始化B站凭据失败: {e}")
+            logger.warning(f"初始化B站凭据失败: {e}")
             return None
 
     async def check_credential_valid(self) -> bool:
@@ -54,7 +57,7 @@ class BilibiliService:
             is_valid = await self.credential.check_valid()
             return is_valid
         except Exception as e:
-            print(f"[警告] 检查凭据有效性失败: {e}")
+            logger.warning(f"检查凭据有效性失败: {e}")
             return False
 
     def _format_duration(self, seconds: int) -> str:
@@ -286,7 +289,7 @@ class BilibiliService:
                     curr_pag = get_next_offset(res_hot)
                     page_count += 1
             except Exception as e:
-                print(f"[警告] 抓取热门评论失败: {e}")
+                logger.warning(f"抓取热门评论失败: {e}")
 
             # 采样与处理
             sampled_comments = all_comments_list[:actual_target]
@@ -305,7 +308,7 @@ class BilibiliService:
                     'avatar': member.get('avatar', '')
                 })
 
-            print(f"[信息] 评论抓取完成: 实际获取 {len(processed_comments)} 条")
+            logger.info(f"评论抓取完成: 实际获取 {len(processed_comments)} 条")
 
             return {
                 'success': True,
@@ -386,7 +389,7 @@ class BilibiliService:
                 })
             return {'success': True, 'data': processed}
         except Exception as e:
-            print(f"[警告] 获取热门视频失败: {e}")
+            logger.warning(f"获取热门视频失败: {e}")
             return {'success': False, 'error': str(e)}
 
     # --- 新增功能：用户、搜索、专栏 ---

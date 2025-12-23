@@ -63,4 +63,10 @@ uploads/
 cache/
 .history/
 research_reports/
+.spec-workflow/
+bilibili-api/
 
+# AI Context Documentation
+.claude/
+CLAUDE.md
+**/CLAUDE.md

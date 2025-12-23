@@ -1,13 +1,16 @@
 import json
 from openai import OpenAI
 from src.config import Config
+from src.backend.utils.logger import get_logger
 from typing import Dict, Optional, Callable, Generator, List
 import time
+
+logger = get_logger(__name__)
 
 
 class AIService:
     """AI服务类，用于调用大模型生成总结"""
-    
+
     def __init__(self):
         self.client = OpenAI(
             api_key=Config.OPENAI_API_KEY,
@@ -328,7 +331,7 @@ class AIService:
             error_msg = str(e)
             if "401" in error_msg or "Invalid token" in error_msg:
                 error_msg = "API Key 校验失败（401 - Invalid token）。请在设置中检查您的 OpenAI API Key 和 API Base 是否正确。"
-            print(f"[错误] 智能小UP失败: {error_msg}")
+            logger.error(f"智能小UP失败: {error_msg}")
             import traceback
             traceback.print_exc()
             yield {'type': 'error', 'error': error_msg}
@@ -579,7 +582,7 @@ class AIService:
                                 from src.backend.bilibili_service import BilibiliService
                                 bvid = BilibiliService.extract_bvid(bvid) or bvid
                             
-                            print(f"[工具] 深度研究 Agent 发起视频分析: {bvid}")
+                            logger.info(f"[工具] 深度研究 Agent 发起视频分析: {bvid}")
                             
                             # 1. 获取视频信息 (这一步很快，先拿基础信息)
                             v_info_res = run_async(bilibili_service.get_video_info(bvid))
@@ -739,14 +742,14 @@ class AIService:
                     try:
                         self._save_research_report(topic, final_report)
                     except Exception as e:
-                        print(f"[警告] 保存报告失败: {e}")
+                        logger.warning(f"保存报告失败: {e}")
                     
                     break
 
             yield {'type': 'done'}
 
         except Exception as e:
-            print(f"[错误] 深度研究失败: {str(e)}")
+            logger.error(f"深度研究失败: {str(e)}")
             import traceback
             traceback.print_exc()
             yield {'type': 'error', 'error': str(e)}
@@ -778,9 +781,9 @@ class AIService:
             pdf_path = os.path.join(report_dir, f"{filename_base}.pdf")
             self._generate_bili_style_pdf(topic, content, pdf_path)
         except Exception as e:
-            print(f"[警告] PDF 生成失败: {e}")
+            logger.warning(f"PDF 生成失败: {e}")
         
-        print(f"[信息] 研究报告已持久化: {md_filepath}")
+        logger.info(f"研究报告已持久化: {md_filepath}")
 
     def _web_search_exa(self, query: str) -> Dict:
         """使用 Exa AI 进行网络搜索"""
@@ -801,7 +804,7 @@ class AIService:
                 "type": "neural"
             }
             
-            print(f"[工具] Exa 网络搜索: {query}")
+            logger.info(f"[工具] Exa 网络搜索: {query}")
             response = requests.post("https://api.exa.ai/search", json=payload, headers=headers, timeout=20)
             res_data = response.json()
             
@@ -817,7 +820,7 @@ class AIService:
             else:
                 return {'success': False, 'error': res_data.get('error', '未知错误')}
         except Exception as e:
-            print(f"[错误] Exa 搜索失败: {e}")
+            logger.error(f"Exa 搜索失败: {e}")
             return {'success': False, 'error': str(e)}
 
     def _generate_bili_style_pdf(self, topic: str, content: str, output_path: str):
@@ -857,17 +860,17 @@ class AIService:
                         
                         current_font_name = name
                         font_registered = True
-                        print(f"[PDF] 成功注册并映射字体: {name} (路径: {path})")
+                        logger.debug(f"[PDF] 成功注册并映射字体: {name} (路径: {path})")
                         break # 只要注册成功一个就退出循环
                     except Exception as e:
-                        print(f"[PDF] 尝试注册字体 {name} 失败: {e}")
+                        logger.debug(f"[PDF] 尝试注册字体 {name} 失败: {e}")
             
             if not font_registered:
                 # 最后的保底：使用内置的 STSong-Light (无需外部文件)
                 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
                 pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
                 current_font_name = "STSong-Light"
-                print(f"[PDF] 未找到系统字体，使用内置保底字体: {current_font_name}")
+                logger.debug(f"[PDF] 未找到系统字体，使用内置保底字体: {current_font_name}")
 
             # --- 2. 准备 HTML 内容 ---
             # 强化加粗内容的样式，使其在 PDF 中呈现 B 站粉色
@@ -1054,7 +1057,7 @@ class AIService:
                 )
                 
             if pisa_status.err:
-                print(f"[错误] PDF 生成过程中出现错误")
+                logger.error(f"PDF 生成过程中出现错误")
                 
         except Exception as e:
             import traceback
@@ -1114,7 +1117,7 @@ UP主: {video_info.get('author', '未知')}
             yield {'type': 'done'}
 
         except Exception as e:
-            print(f"[错误] QA问答失败: {str(e)}")
+            logger.error(f"QA问答失败: {str(e)}")
             yield {'type': 'error', 'error': str(e)}
 
     def generate_summary(self, video_info: Dict, content: str) -> Dict:
@@ -1152,8 +1155,8 @@ UP主: {video_info.get('author', '未知')}
                 }
             }
         except Exception as e:
-            print(f"[错误] 生成总结失败: {str(e)}")
-            print(f"[调试] 错误类型: {type(e).__name__}")
+            logger.error(f"生成总结失败: {str(e)}")
+            logger.debug(f"错误类型: {type(e).__name__}")
             import traceback
             traceback.print_exc()
             return {
@@ -1194,7 +1197,7 @@ UP主: {video_info.get('author', '未知')}
                 }
             }
         except Exception as e:
-            print(f"[错误] 生成思维导图失败: {str(e)}")
+            logger.error(f"生成思维导图失败: {str(e)}")
             import traceback
             traceback.print_exc()
             return {
@@ -1211,9 +1214,9 @@ UP主: {video_info.get('author', '未知')}
             video_frames: 可选的视频帧（base64编码列表）
         """
         try:
-            print(f"[调试] 开始生成分析 - 模型: {self.model}")
-            print(f"[调试] API Base: {Config.OPENAI_API_BASE}")
-            print(f"[调试] 视频帧数量: {len(video_frames) if video_frames else 0}")
+            logger.debug(f"开始生成分析 - 模型: {self.model}")
+            logger.debug(f"API Base: {Config.OPENAI_API_BASE}")
+            logger.debug(f"视频帧数量: {len(video_frames) if video_frames else 0}")
 
             # 构建综合提示词（支持弹幕内容）
             danmaku_preview = None
@@ -1221,7 +1224,7 @@ UP主: {video_info.get('author', '未知')}
                 # 提取弹幕预览用于分析
                 danmaku_preview = content
             prompt = self._build_full_analysis_prompt(video_info, content, has_video_frames=bool(video_frames), danmaku_content=danmaku_preview)
-            print(f"[调试] 提示词长度: {len(prompt)}")
+            logger.debug(f"提示词长度: {len(prompt)}")
 
             # 构建消息内容 - 适配新的多模态格式
             user_content = [
@@ -1241,7 +1244,7 @@ UP主: {video_info.get('author', '未知')}
                             "detail": "low"  # 使用low detail以节省token
                         }
                     })
-                    print(f"[调试] 添加第 {idx+1} 帧到消息中")
+                    logger.debug(f"添加第 {idx+1} 帧到消息中")
 
             # 使用新的消息格式调用API
             messages = [
@@ -1262,7 +1265,7 @@ UP主: {video_info.get('author', '未知')}
                 }
             ]
 
-            print(f"[调试] 发送请求到API...")
+            logger.debug(f"发送请求到API...")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -1271,8 +1274,8 @@ UP主: {video_info.get('author', '未知')}
                 timeout=240
             )
             
-            print(f"[调试] API响应类型: {type(response)}")
-            print(f"[调试] API响应前100字符: {str(response)[:100]}")
+            logger.debug(f"API响应类型: {type(response)}")
+            logger.debug(f"API响应前100字符: {str(response)[:100]}")
             
             # 处理不同API响应格式
             analysis_text = self._extract_content(response)
@@ -1290,21 +1293,21 @@ UP主: {video_info.get('author', '未知')}
                 }
             }
         except Exception as e:
-            print(f"[错误] 生成完整分析失败: {str(e)}")
-            print(f"[调试] 错误类型: {type(e).__name__}")
+            logger.error(f"生成完整分析失败: {str(e)}")
+            logger.debug(f"错误类型: {type(e).__name__}")
 
             # 针对网络和超时错误的特殊处理
             if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network', '504', '502', '500']):
                 if retry_count < 2:  # 最多重试2次
-                    print(f"[重试] 检测到网络错误，正在进行第{retry_count + 1}次重试...")
-                    print(f"[重试] 错误详情: {str(e)}")
+                    logger.info(f"[重试] 检测到网络错误，正在进行第{retry_count + 1}次重试...")
+                    logger.info(f"[重试] 错误详情: {str(e)}")
 
                     if video_frames and len(video_frames) > 4:  # 如果帧数太多，减少到4帧
                         reduced_frames = video_frames[:4]
-                        print(f"[降级] 减少视频帧数量: {len(video_frames)} → {len(reduced_frames)}")
+                        logger.warning(f"[降级] 减少视频帧数量: {len(video_frames)} → {len(reduced_frames)}")
                         return self.generate_full_analysis(video_info, content, reduced_frames, retry_count + 1)
                     elif video_frames and retry_count == 0:  # 第一次重试，去除视频帧
-                        print(f"[降级] 放弃视频帧，仅使用文本分析")
+                        logger.warning(f"[降级] 放弃视频帧，仅使用文本分析")
                         return self.generate_full_analysis(video_info, content, None, retry_count + 1)
 
             import traceback
@@ -1341,9 +1344,9 @@ UP主: {video_info.get('author', '未知')}
             if progress_callback:
                 progress_callback('preparing', 0, '准备生成分析...', 0)
 
-            print(f"[调试] 开始流式生成分析 - 模型: {self.model}")
-            print(f"[调试] API Base: {Config.OPENAI_API_BASE}")
-            print(f"[调试] 视频帧数量: {len(video_frames) if video_frames else 0}")
+            logger.debug(f"开始流式生成分析 - 模型: {self.model}")
+            logger.debug(f"API Base: {Config.OPENAI_API_BASE}")
+            logger.debug(f"视频帧数量: {len(video_frames) if video_frames else 0}")
 
             # 构建综合提示词
             danmaku_preview = None
@@ -1381,7 +1384,7 @@ UP主: {video_info.get('author', '未知')}
                             "detail": "low"
                         }
                     })
-                    print(f"[调试] 添加第 {idx+1} 帧到消息中")
+                    logger.debug(f"添加第 {idx+1} 帧到消息中")
 
             messages = [
                 {
@@ -1413,7 +1416,7 @@ UP主: {video_info.get('author', '未知')}
             if progress_callback:
                 progress_callback('calling_api', 20, '调用AI模型生成分析...', 0)
 
-            print(f"[调试] 发送流式请求到API...")
+            logger.debug(f"发送流式请求到API...")
 
             # 流式调用API
             stream = self.client.chat.completions.create(
@@ -1517,11 +1520,11 @@ UP主: {video_info.get('author', '未知')}
             if progress_callback:
                 progress_callback('completed', 100, '分析完成！', total_tokens)
 
-            print(f"[调试] 流式分析完成 - 总共 {chunk_count} 个chunk, 约 {total_tokens} tokens")
+            logger.debug(f"流式分析完成 - 总共 {chunk_count} 个chunk, 约 {total_tokens} tokens")
 
         except Exception as e:
-            print(f"[错误] 流式生成分析失败: {str(e)}")
-            print(f"[调试] 错误类型: {type(e).__name__}")
+            logger.error(f"流式生成分析失败: {str(e)}")
+            logger.debug(f"错误类型: {type(e).__name__}")
 
             # 错误处理和降级策略
             if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network', '504', '502', '500']):
@@ -1817,12 +1820,12 @@ UP主：{video_info.get('author', '未知')}
     def _extract_content(self, response) -> str:
         """提取响应内容，兼容不同API格式"""
         try:
-            print(f"[调试] _extract_content - 响应类型: {type(response)}")
+            logger.debug(f"_extract_content - 响应类型: {type(response)}")
             
             # 尝试标准OpenAI格式
             if hasattr(response, 'choices') and response.choices:
                 content = response.choices[0].message.content
-                print(f"[调试] 提取到内容长度: {len(content) if content else 0}")
+                logger.debug(f"提取到内容长度: {len(content) if content else 0}")
                 
                 # 检查是否是HTML（错误响应）
                 if content and content.strip().startswith('<!doctype') or content.strip().startswith('<html'):
@@ -1851,10 +1854,10 @@ UP主：{video_info.get('author', '未知')}
             
             # 尝试转换为字符串
             result = str(response)
-            print(f"[警告] 响应格式未知，转为字符串: {result[:200]}")
+            logger.warning(f"响应格式未知，转为字符串: {result[:200]}")
             return result
         except Exception as e:
-            print(f"[错误] 提取内容失败: {str(e)}, 响应类型: {type(response)}")
+            logger.error(f"提取内容失败: {str(e)}, 响应类型: {type(response)}")
             raise
     
     def _extract_tokens(self, response) -> int:
@@ -1870,7 +1873,7 @@ UP主：{video_info.get('author', '未知')}
             
             return 0
         except Exception as e:
-            print(f"[警告] 提取tokens失败: {str(e)}")
+            logger.warning(f"提取tokens失败: {str(e)}")
             return 0
     
     def _parse_analysis_response(self, analysis_text: str) -> Dict:
