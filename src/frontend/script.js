@@ -356,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 BiliAPI.getPopularVideos，保留包装函数以兼容调用
     async function fetchPopularVideos() {
         try {
             // 如果已有缓存，直接渲染
@@ -365,11 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const response = await fetch('/api/video/popular');
-            const result = await response.json();
-            if (result.success) {
-                popularVideosCache = result.data; // 存入缓存
-                renderInitRecommendations(result.data);
+            const videos = await BiliAPI.getPopularVideos();
+            if (videos && videos.length > 0) {
+                popularVideosCache = videos; // 存入缓存
+                renderInitRecommendations(videos);
                 setupHorizontalScroll();
             }
         } catch (error) {
@@ -422,12 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Main Functions ---
 
+    // 已迁移到 BiliAPI.getSettings，保留包装函数以兼容调用
     async function fetchSettings() {
         try {
-            const response = await fetch('/api/settings');
-            const result = await response.json();
-            if (result.success) {
-                const data = result.data;
+            const data = await BiliAPI.getSettings();
+            if (data) {
                 elements.apiBaseInput.value = data.openai_api_base || '';
                 elements.apiKeyInput.value = data.openai_api_key || '';
                 // Change input type to text so it's not hidden
@@ -436,11 +435,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.qaModelInput.value = data.qa_model || '';
                 elements.deepResearchModelInput.value = data.deep_research_model || '';
                 elements.exaApiKeyInput.value = data.exa_api_key || '';
-                
+
                 // Change input type to text so it's not hidden
                 elements.apiKeyInput.type = 'text';
                 elements.exaApiKeyInput.type = 'text';
-                
+
                 // If backend says dark mode and local storage is empty, use backend
                 if (data.dark_mode && localStorage.getItem('darkMode') === null) {
                     elements.darkModeToggle.checked = true;
@@ -452,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 BiliAPI.saveSettings，保留包装函数以兼容调用
     async function saveSettings() {
         const data = {
             openai_api_base: elements.apiBaseInput.value.trim(),
@@ -466,22 +466,17 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             elements.saveSettingsBtn.disabled = true;
             elements.saveSettingsBtn.textContent = '保存中...';
-            
-            const response = await fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
+
+            const result = await BiliAPI.saveSettings(data);
+
             if (result.success) {
-                BiliHelpers.showToast(设置已保存！, elements.toast));
+                BiliHelpers.showToast('设置已保存！', elements.toast);
                 closeSettings();
             } else {
-                BiliHelpers.showToast(保存失败: , elements.toast) + result.error);
+                BiliHelpers.showToast('保存失败: ' + (result.error || '未知错误'), elements.toast);
             }
         } catch (error) {
-            BiliHelpers.showToast(保存时发生错误, elements.toast));
+            BiliHelpers.showToast('保存时发生错误: ' + error.message, elements.toast);
         } finally {
             elements.saveSettingsBtn.disabled = false;
             elements.saveSettingsBtn.textContent = '保存设置';
@@ -1642,18 +1637,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 BiliAPI.loginStart，保留包装函数以兼容调用
     async function startLogin() {
         if (loginPollInterval) clearInterval(loginPollInterval);
         elements.loginStatus.textContent = '正在生成二维码...';
         elements.qrcode.innerHTML = '';
 
         try {
-            const response = await fetch('/api/bilibili/login/start', { method: 'POST' });
-            const result = await response.json();
+            const data = await BiliAPI.loginStart();
 
-            if (result.success) {
-                const qrCodeData = result.data.qr_code;
-                const sessionId = result.data.session_id;
+            if (data) {
+                const qrCodeData = data.qr_code;
+                const sessionId = data.session_id;
                 const img = document.createElement('img');
                 img.src = qrCodeData;
                 elements.qrcode.appendChild(img);
@@ -1667,21 +1662,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 BiliAPI.loginStatus，保留包装函数以兼容调用
     async function pollLoginStatus(sessionId) {
         try {
-            const response = await fetch('/api/bilibili/login/status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId })
-            });
-            const result = await response.json();
+            const data = await BiliAPI.loginStatus(sessionId);
 
-            if (result.success) {
-                const status = result.data.status;
+            if (data) {
+                const status = data.status;
                 if (status === 'success') {
                     clearInterval(loginPollInterval);
                     loginPollInterval = null;
-                    BiliHelpers.showToast(登录成功！🎉, elements.toast));
+                    BiliHelpers.showToast('登录成功！🎉', elements.toast);
                     closeLoginModal();
                     checkLoginState();
                 } else if (status === 'expired') {
@@ -1695,6 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 BiliAPI.loginCheck，保留包装函数以兼容调用
     async function checkLoginState() {
         // --- 尝试从本地缓存加载用户信息 (实现瞬时加载) ---
         const cachedUser = localStorage.getItem('bili_user');
@@ -1705,11 +1697,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('/api/bilibili/login/check');
-            const result = await response.json();
+            const user = await BiliAPI.loginCheck();
 
-            if (result.success && result.data.is_logged_in) {
-                const user = result.data;
+            if (user) {
                 // 更新缓存
                 localStorage.setItem('bili_user', JSON.stringify(user));
                 renderUserBadge(user);
@@ -1724,7 +1714,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 elements.loginBtn.classList.remove('logged-in');
                 elements.loginBtn.onclick = openLoginModal;
-                
+
                 // Show hint if NOT logged in
                 elements.loginHint.classList.remove('hidden');
                 elements.hintLoginBtn.onclick = (e) => {
@@ -1782,13 +1772,14 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.loginHint.classList.add('hidden');
     }
 
-    function logout() {
+    // 已迁移到 BiliAPI.logout，保留包装函数以兼容调用
+    async function logout() {
         try {
-            fetch('/api/bilibili/login/logout', { method: 'POST' });
-            BiliHelpers.showToast(已退出登录, elements.toast));
+            await BiliAPI.logout();
+            BiliHelpers.showToast('已退出登录', elements.toast);
             window.location.assign('/');
         } catch (error) {
-            BiliHelpers.showToast(退出失败, elements.toast));
+            BiliHelpers.showToast('退出失败', elements.toast);
         }
     }
 
@@ -2176,8 +2167,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // 已迁移到 BiliHelpers.renderMarkdown，保留包装函数以兼容调用
     function renderMarkdown(element, text) {
-        element.innerHTML = marked.parse(text);
+        BiliHelpers.renderMarkdown(element, text);
     }
 
     function renderTopComments(comments) {
@@ -2863,6 +2855,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = ''; // Restore scrolling
     }
 
+    // 已迁移到 BiliHelpers.copyToClipboard，保留包装函数以兼容事件绑定
     function copyContent() {
         const activeTab = document.querySelector('.nav-btn.active').dataset.tab;
         let content = '';
@@ -2870,31 +2863,16 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeTab === 'danmaku') content = currentData.danmaku;
         else if (activeTab === 'comments') content = currentData.comments;
         else if (activeTab === 'subtitle') content = currentData.rawContent;
-        if (!content) {
-            BiliHelpers.showToast(当前没有可复制的内容, elements.toast));
-            return;
-        }
-        navigator.clipboard.writeText(content).then(() => {
-            BiliHelpers.showToast(复制成功！, elements.toast));
-        });
+
+        // 使用 BiliHelpers.copyToClipboard
+        BiliHelpers.copyToClipboard(content, (msg) => BiliHelpers.showToast(msg, elements.toast));
     }
 
+    // 已迁移到 BiliHelpers.downloadMarkdown，保留包装函数以兼容事件绑定
     function downloadMarkdown() {
         const content = currentData.fullMarkdown;
-        if (!content) {
-            BiliHelpers.showToast(没有可下载的内容, elements.toast));
-            return;
-        }
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'bilibili_analysis_' + new Date().getTime() + '.md';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
+        const filename = 'bilibili_analysis_' + new Date().getTime() + '.md';
+        BiliHelpers.downloadMarkdown(content, filename);
     }
 
     // 初始化默认模式
