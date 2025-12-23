@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.resultArea.classList.contains('hidden') && elements.loadingState.classList.contains('hidden')) {
                 logoClicks++;
                 if (logoClicks === 5) {
-                    BiliHelpers.showToast('🎉 你发现了隐藏彩蛋！感谢支持 BiliBili Summarize！', elements.toast));
+                    BiliHelpers.showToast('🎉 你发现了隐藏彩蛋！感谢支持 BiliBili Summarize！', elements.toast);
                     logoArea.style.animation = 'tada 1s';
                     setTimeout(() => logoArea.style.animation = '', 1000);
                     logoClicks = 0;
@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const input = elements.videoUrl.value.trim();
         if (!input) {
-            BiliHelpers.showToast('请输入B站链接或关键词', elements.toast));
+            BiliHelpers.showToast('请输入B站链接或关键词', elements.toast);
             return;
         }
 
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Analysis failed:', error);
-            BiliHelpers.showToast('分析失败: ' + error.message, elements.toast));
+            BiliHelpers.showToast('分析失败: ' + error.message, elements.toast);
             isAnalyzing = false;
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
             elements.resultArea.classList.remove('hidden');
-            BiliHelpers.showToast('分析完成！✨', elements.toast));
+            BiliHelpers.showToast('分析完成！✨', elements.toast);
         } else {
             throw new Error(json.error);
         }
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else if (data.type === 'error') {
                         addTimelineItem('error', `出现错误: ${data.error}`);
                     } else if (data.type === 'done') {
-                        BiliHelpers.showToast('深度研究已完成并持久化！', elements.toast));
+                        BiliHelpers.showToast('深度研究已完成并持久化！', elements.toast);
                         updateProgress(100, '研究完成');
                         addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧“研究报告”查看。');
                         
@@ -1374,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.rawSubtitleText.textContent = data.content;
                 }
                 if (data.type === 'complete' || data.type === 'final') {
-                    BiliHelpers.showToast('分析完成！✨', elements.toast));
+                    BiliHelpers.showToast('分析完成！✨', elements.toast);
                 }
                 break;
                 
@@ -1476,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendMessage() {
         if (isAnalyzing) {
-            BiliHelpers.showToast('AI 正在分析视频，请在分析完成后再发起提问', elements.toast));
+            BiliHelpers.showToast('AI 正在分析视频，请在分析完成后再发起提问', elements.toast);
             return;
         }
         if (isChatting) return;
@@ -1484,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
 
         if (!currentData.fullMarkdown) {
-            BiliHelpers.showToast('请先完成视频分析', elements.toast));
+            BiliHelpers.showToast('请先完成视频分析', elements.toast);
             return;
         }
 
@@ -1731,7 +1731,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMode = ModeUI.switchMode(mode, {
             elements,
             updateSidebarUI: () => updateSidebarUI(),
-            showToast: (msg) => BiliHelpers.showToast('msg', elements.toast)
+            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast)
         });
 
         // 切换模式时应刷新侧边栏入口（否则可能保留上一模式的隐藏/显示状态）
@@ -1894,12 +1894,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.downloadPdfBtn.classList.remove('hidden');
                 
                 switchTab('research_report');
-                BiliHelpers.showToast('已加载历史报告', elements.toast));
+                BiliHelpers.showToast('已加载历史报告', elements.toast);
             } else {
-                BiliHelpers.showToast('加载报告失败: ' + data.error, elements.toast));
+                BiliHelpers.showToast('加载报告失败: ' + data.error, elements.toast);
             }
         } catch (e) {
-            BiliHelpers.showToast('请求报告失败', elements.toast));
+            BiliHelpers.showToast('请求报告失败', elements.toast);
         }
     };
 
@@ -1909,7 +1909,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadFile(currentData.researchFileId, 'pdf');
         } else {
             // 如果是刚生成的，尝试根据当前状态寻找最新文件
-            BiliHelpers.showToast('正在为您从历史中寻找刚生成的 PDF...', elements.toast));
+            BiliHelpers.showToast('正在为您从历史中寻找刚生成的 PDF...', elements.toast);
             showResearchHistory();
         }
     };
@@ -2557,10 +2557,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (json.success && json.data && json.data.length > 0) {
                 renderSearchResults(json.data);
             } else {
-                BiliHelpers.showToast('未找到相关内容，请尝试更精确的关键词', elements.toast));
+                BiliHelpers.showToast('未找到相关内容，请尝试更精确的关键词', elements.toast);
             }
         } catch (e) {
-            BiliHelpers.showToast('搜索失败，请检查网络', elements.toast));
+            BiliHelpers.showToast('搜索失败，请检查网络', elements.toast);
         } finally {
             elements.analyzeBtn.disabled = false;
             btnText.textContent = originalText;
@@ -2633,7 +2633,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeTab === 'subtitle') content = currentData.rawContent;
 
         // 使用 BiliHelpers.copyToClipboard
-        BiliHelpers.copyToClipboard(content, (msg) => BiliHelpers.showToast('msg', elements.toast));
+        BiliHelpers.copyToClipboard(content, (msg) => BiliHelpers.showToast(msg, elements.toast));
     }
 
     // 已迁移到 BiliHelpers.downloadMarkdown，保留包装函数以兼容事件绑定
