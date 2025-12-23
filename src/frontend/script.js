@@ -483,78 +483,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const modeMeta = {
-        video: [
-            { id: 'metaDuration', title: '视频时长', icon: '⏱️', default: '--:--' },
-            { id: 'metaSubtitle', title: '字幕状态', icon: '📝', default: '无字幕' },
-            { id: 'metaFrames', title: '分析帧数', icon: '🖼️', default: '0 帧' },
-            { id: 'metaDanmaku', title: '分析弹幕', icon: '💬', default: '0 弹' }
-        ],
-        article: [
-            { id: 'metaWordCount', title: '文章字数', icon: '📄', default: '0 字' },
-            { id: 'metaViews', title: '阅读量', icon: '👁️', default: '0' },
-            { id: 'metaLikes', title: '点赞数', icon: '👍', default: '0' }
-        ],
-        user: [
-            { id: 'metaUserLevel', title: '用户等级', icon: '⭐', default: 'L--' },
-            { id: 'metaFollowers', title: '粉丝数', icon: '👥', default: '0' },
-            { id: 'metaWorksCount', title: '作品数', icon: '📁', default: '0' }
-        ],
-        research: [
-            { id: 'metaRounds', title: '研究轮次', icon: '🔄', default: '0 轮' },
-            { id: 'metaSearch', title: '搜索次数', icon: '🔍', default: '0 次' },
-            { id: 'metaAnalysis', title: '分析次数', icon: '📽️', default: '0 次' },
-            { id: 'metaTokens', title: '累计 Tokens', icon: '🪙', default: '0' }
-        ],
-        smart_up: [
-            { id: 'metaRounds', title: '思考深度', icon: '🧠', default: '深度思考' },
-            { id: 'metaSearch', title: '检索次数', icon: '🔍', default: '0 次' },
-            { id: 'metaTokens', title: '消耗 Tokens', icon: '🪙', default: '0' }
-        ]
-    };
-
-    const modeButtonTexts = {
-        smart_up: '开始对话',
-        research: '深度研究',
-        video: '开始分析',
-        article: '解析专栏',
-        user: '画像分析'
-    };
-
+    // 已迁移到 ModeUI，保留包装函数以兼容调用
     function initAnalysisMeta(mode) {
-        const metas = modeMeta[mode] || modeMeta.video;
-        elements.analysisMeta.innerHTML = '';
-        metas.forEach(meta => {
-            const span = document.createElement('span');
-            span.id = meta.id;
-            span.title = meta.title;
-            span.innerHTML = `${meta.icon} ${meta.default}`;
-            elements.analysisMeta.appendChild(span);
-        });
+        ModeUI.initAnalysisMeta(elements, mode);
     }
 
     function updateMetaValue(id, value, prefix = '') {
-        const el = document.getElementById(id);
-        if (el) {
-            // Find the icon (it's at the start of innerHTML)
-            const icon = el.innerHTML.split(' ')[0];
-            el.innerHTML = `${icon} ${prefix}${value}`;
-        }
+        ModeUI.updateMetaValue(id, value, prefix);
     }
 
     function toggleDarkMode(isDark) {
-        if (isDark) {
-            document.body.classList.add('dark-theme');
-            localStorage.setItem('darkMode', 'true');
-        } else {
-            document.body.classList.remove('dark-theme');
-            localStorage.setItem('darkMode', 'false');
-        }
+        ModeUI.toggleDarkMode(isDark);
     }
 
     function resetMeta(mode) {
-        elements.tokenCount.textContent = '0';
-        initAnalysisMeta(mode);
+        ModeUI.resetMeta(elements, mode);
     }
 
     // Search Results Panel
@@ -1783,110 +1726,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 已迁移到 ModeUI，保留包装函数以兼容调用
     function switchMode(mode) {
-        currentMode = mode;
-        elements.modeBtns.forEach(btn => {
-            if (btn.dataset.mode === mode) btn.classList.add('active');
-            else btn.classList.remove('active');
+        currentMode = ModeUI.switchMode(mode, {
+            elements,
+            updateSidebarUI: () => updateSidebarUI(),
+            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast)
         });
-
-        // UI Feedback: Update Search Box and Button
-        const searchBox = document.querySelector('.search-box');
-        searchBox.className = `search-box mode-${mode}`;
-        
-        const modeDesc = document.getElementById('modeDescription');
-        if (modeDesc) {
-            const descriptions = {
-                'smart_up': '智连全网，自适应你的每一个好奇。',
-                'research': '多维拆解，在海量信息中捕捉深度洞见。',
-                'video': '瞬息提炼，让每一帧光影都有迹可循。',
-                'article': '结构重组，深度转译专栏背后的文字灵魂。',
-                'user': '风格画像，全景式洞察创作背后的灵魂印记。'
-            };
-            modeDesc.textContent = descriptions[mode] || '';
-            modeDesc.className = `mode-description mode-${mode} animate-fade-in`;
-        }
-        
-        elements.analyzeBtn.className = `btn-primary mode-${mode}`;
-        const btnText = elements.analyzeBtn.lastChild;
-
-        // --- 关键修复：在离开智能小UP/全屏对话时恢复通用布局（视频/专栏/用户/深度研究） ---
-        // 之前 smart_up 会隐藏视频卡片并给 resultArea 加 smart-up-fullscreen，若不移除会导致
-        // “卡片消失、内容堆到底部/尾巴”的错乱布局。
-        if (mode !== 'smart_up') {
-            // 退出真正全屏
-            if (elements.resultArea.classList.contains('smart-up-true-fullscreen')) {
-                elements.resultArea.classList.remove('smart-up-true-fullscreen');
-            }
-            document.body.classList.remove('smart-up-full-overflow');
-
-            // 退出沉浸式宽屏
-            elements.resultArea.classList.remove('smart-up-fullscreen');
-
-            // 恢复视频/专栏/用户卡片显示
-            const videoCard = document.querySelector('.video-info-card');
-            if (videoCard) videoCard.classList.remove('hidden');
-
-            // 确保智能小UP面板不再占用 active
-            if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
-        }
-
-        if (mode === 'video') {
-            elements.videoUrl.placeholder = '粘贴 Bilibili 视频链接或 BV 号...';
-            btnText.textContent = ' 视频分析';
-        } else if (mode === 'article') {
-            elements.videoUrl.placeholder = '粘贴专栏链接或 CV 号...';
-            btnText.textContent = ' 专题解析';
-        } else if (mode === 'user') {
-            elements.videoUrl.placeholder = '输入用户 UID 或 空间链接...';
-            btnText.textContent = ' 用户画像';
-        } else if (mode === 'research') {
-            elements.videoUrl.placeholder = '输入你想要研究的课题 (如: 2025 AI 发展趋势)';
-            btnText.textContent = ' 深度研究';
-            
-            // 深度研究模式显示历史入口
-            elements.researchHistoryShortcut.classList.remove('hidden');
-            
-            if (elements.resultArea.classList.contains('hidden')) {
-                BiliHelpers.showToast(💡 您可以点击输入框下方的按钮查看以往的研究报告, elements.toast));
-            }
-        } else if (mode === 'smart_up') {
-            elements.videoUrl.placeholder = '输入您的问题，智能小UP为您检索视频并作答...';
-            btnText.textContent = ' 智能对话';
-        }
-                
-                // 非研究模式隐藏历史入口
-                if (mode !== 'research') {
-                    elements.researchHistoryShortcut.classList.add('hidden');
-                }
 
         // 切换模式时应刷新侧边栏入口（否则可能保留上一模式的隐藏/显示状态）
         updateSidebarUI();
     }
 
+    // 已迁移到 TabUI，保留包装函数以兼容调用
     function updateSidebarUI() {
-        const navBtns = elements.sidebarNav.querySelectorAll('.nav-btn, .nav-btn-action');
-        let firstVisibleTab = '';
-
-        navBtns.forEach(btn => {
-            const showOn = btn.dataset.showOn;
-            if (!showOn || showOn === currentMode) {
-                btn.classList.remove('hidden');
-                if (!firstVisibleTab && btn.classList.contains('nav-btn')) firstVisibleTab = btn.dataset.tab;
-            } else {
-                btn.classList.add('hidden');
-            }
+        TabUI.updateSidebarUI({
+            elements,
+            currentMode,
+            switchTab: (tabName) => switchTab(tabName)
         });
-
-        // Auto switch to first available tab
-        if (firstVisibleTab) switchTab(firstVisibleTab);
-
-        // 特殊处理：智能小UP 模式下隐藏相关推荐侧边栏
-        if (currentMode === 'smart_up' || currentMode === 'research') {
-            elements.relatedSection.classList.add('hidden');
-        } else {
-            elements.relatedSection.classList.remove('hidden');
-        }
     }
 
     function updateVideoCard(info) {
@@ -1957,53 +1815,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     };
 
+    // 已迁移到 TabUI，保留包装函数以兼容调用
     function switchTab(tabName) {
-        if (isAnalyzing && tabName === 'chat') {
-            BiliHelpers.showToast(分析尚未结束，请耐心等待 AI 建模完成。在此期间请勿刷新或退出界面。, elements.toast));
-            return;
-        }
-        
-        if (isAnalyzing && tabName === 'research_report' && currentMode === 'research') {
-            BiliHelpers.showToast(研究正在进行中，请在“思考过程”中查看进度，完成后将自动展示报告, elements.toast));
-            return;
-        }
-
-        elements.navBtns.forEach(btn => {
-            if (btn.dataset.tab === tabName) btn.classList.add('active');
-            else btn.classList.remove('active');
+        TabUI.switchTab(tabName, {
+            elements,
+            currentMode,
+            isAnalyzing,
+            currentData,
+            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast),
+            generateWordCloud: (data) => generateWordCloud ? generateWordCloud(data) : null
         });
-        // 强制移除所有面板的 active 状态，确保互斥
-        elements.tabContents.forEach(pane => {
-            pane.classList.remove('active');
-        });
-        
-        // 特别处理：确保两个聊天面板互斥
-        if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
-        if (elements.chatContent) elements.chatContent.classList.remove('active');
-        
-        // Show target pane
-        if (tabName === 'summary') elements.summaryContent.classList.add('active');
-        else if (tabName === 'danmaku') {
-            elements.danmakuContent.classList.add('active');
-            if (currentData.danmakuPreview && currentData.danmakuPreview.length > 0) {
-                setTimeout(() => generateWordCloud(currentData.danmakuPreview), 50);
-            }
-        }
-        else if (tabName === 'comments') elements.commentsContent.classList.add('active');
-        else if (tabName === 'subtitle') elements.subtitleContent.classList.add('active');
-        else if (tabName === 'article_analysis') elements.articleAnalysisContent.classList.add('active');
-        else if (tabName === 'article_content') elements.articleOriginalContent.classList.add('active');
-        else if (tabName === 'user_portrait') elements.userPortraitContentPane.classList.add('active');
-        else if (tabName === 'user_works') elements.userWorksContent.classList.add('active');
-        else if (tabName === 'research_report') elements.researchReportContent.classList.add('active');
-        else if (tabName === 'research_process') elements.researchProcessContent.classList.add('active');
-        else if (tabName === 'chat') {
-            elements.chatContent.classList.add('active');
-            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
-        } else if (tabName === 'smart_up_chat') {
-            elements.smartUpChatContent.classList.add('active');
-            elements.smartUpMessages.scrollTop = elements.smartUpMessages.scrollHeight;
-        }
     }
 
     // --- 历史研究报告逻辑 ---
@@ -2093,78 +1914,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const modeSteps = {
-        video: [
-            { id: 'search', text: '搜索相关视频' },
-            { id: 'info', text: '获取视频信息' },
-            { id: 'content', text: '拉取文本与互动数据' },
-            { id: 'frames', text: '提取视觉关键帧' },
-            { id: 'ai', text: 'AI 深度建模分析' }
-        ],
-        article: [
-            { id: 'search', text: '定位目标专栏' },
-            { id: 'info', text: '拉取专栏元数据' },
-            { id: 'content', text: '提取专栏核心文本' },
-            { id: 'ai', text: '逻辑链路深度解析' }
-        ],
-        user: [
-            { id: 'search', text: '搜索匹配用户' },
-            { id: 'info', text: '检索用户基本资料' },
-            { id: 'content', text: '分析近期作品趋势' },
-            { id: 'ai', text: '生成 AI 深度画像' }
-        ],
-        research: [
-            { id: 'ai', text: '深度研究 Agent 运行中' }
-        ]
-    };
-
+    // 已迁移到 ProgressUI，保留包装函数以兼容调用
     function initStepper(mode) {
-        const steps = modeSteps[mode] || modeSteps.video;
-        elements.loadingStepper.innerHTML = '';
-        steps.forEach((step, index) => {
-            const stepDiv = document.createElement('div');
-            stepDiv.className = 'step';
-            stepDiv.id = `step-${step.id}`;
-            stepDiv.innerHTML = `
-                <div class="step-icon">${index + 1}</div>
-                <div class="step-text">${step.text}</div>
-            `;
-            elements.loadingStepper.appendChild(stepDiv);
-        });
+        ProgressUI.initStepper(elements, mode);
     }
 
     function resetProgress() {
-        elements.progressBar.style.width = '0%';
-        elements.loadingText.textContent = '准备就绪...';
-        elements.streamingStatus.classList.add('hidden');
-        elements.chunkCounter.textContent = '0';
-        elements.danmakuWordCloudContainer.classList.add('hidden');
+        ProgressUI.resetProgress(elements);
     }
 
     function updateProgress(percent, text) {
-        elements.progressBar.style.width = percent + '%';
-        if (text) elements.loadingText.textContent = text;
+        ProgressUI.updateProgress(elements, percent, text);
     }
 
     function updateStepper(stepId, status) {
-        const step = document.getElementById(`step-${stepId}`);
-        if (!step) return;
-
-        if (status === 'active') {
-            // Remove active from others
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            step.classList.add('active');
-            step.classList.remove('completed');
-        } else if (status === 'completed') {
-            step.classList.add('completed');
-            step.classList.remove('active');
-        }
+        ProgressUI.updateStepper(stepId, status);
     }
 
     function resetStepper() {
-        document.querySelectorAll('.step').forEach(s => {
-            s.className = 'step';
-        });
+        ProgressUI.resetStepper();
     }
     
     // 已迁移到 BiliHelpers.renderMarkdown，保留包装函数以兼容调用
