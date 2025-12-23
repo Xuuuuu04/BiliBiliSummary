@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.resultArea.classList.contains('hidden') && elements.loadingState.classList.contains('hidden')) {
                 logoClicks++;
                 if (logoClicks === 5) {
-                    BiliHelpers.showToast(🎉 你发现了隐藏彩蛋！感谢支持 BiliBili Summarize！, elements.toast));
+                    showToast('🎉 你发现了隐藏彩蛋！感谢支持 BiliBili Summarize！');
                     logoArea.style.animation = 'tada 1s';
                     setTimeout(() => logoArea.style.animation = '', 1000);
                     logoClicks = 0;
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="related-title" title="${video.title}">${video.title}</div>
                     <div class="related-info">
                         <span class="related-author">${video.author}</span>
-                        <span class="related-views">${BiliHelpers.formatNumber(video.view)} 播放</span>
+                        <span class="related-views">${formatNumber(video.view)} 播放</span>
                     </div>
                     <div class="related-actions" style="display: flex; gap: 8px; margin-top: 12px;">
                         <button class="btn-mini btn-primary-mini" style="padding: 6px 12px;" onclick="event.stopPropagation(); window.analyzeBvid('${video.bvid}')">开始分析</button>
@@ -475,13 +475,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await response.json();
             if (result.success) {
-                BiliHelpers.showToast(设置已保存！, elements.toast));
+                showToast('设置已保存！');
                 closeSettings();
             } else {
-                BiliHelpers.showToast(保存失败: , elements.toast) + result.error);
+                showToast('保存失败: ' + result.error);
             }
         } catch (error) {
-            BiliHelpers.showToast(保存时发生错误, elements.toast));
+            showToast('保存时发生错误');
         } finally {
             elements.saveSettingsBtn.disabled = false;
             elements.saveSettingsBtn.textContent = '保存设置';
@@ -570,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const input = elements.videoUrl.value.trim();
         if (!input) {
-            BiliHelpers.showToast(请输入B站链接或关键词, elements.toast));
+            showToast('请输入B站链接或关键词');
             return;
         }
 
@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Analysis failed:', error);
-            BiliHelpers.showToast(分析失败: , elements.toast) + error.message);
+            showToast('分析失败: ' + error.message);
             isAnalyzing = false;
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
             elements.resultArea.classList.remove('hidden');
-            BiliHelpers.showToast(分析完成！✨, elements.toast));
+            showToast('分析完成！✨');
         } else {
             throw new Error(json.error);
         }
@@ -727,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Meta/Card (Reusing video card area for basic user info)
         elements.videoTitle.textContent = data.info.name;
         elements.upName.textContent = data.info.official || '个人UP主';
-        elements.viewCount.textContent = '粉丝: ' + BiliHelpers.formatNumber(data.info.follower || 0);
+        elements.viewCount.textContent = '粉丝: ' + formatNumber(data.info.follower || 0);
         elements.danmakuCount.textContent = '-';
         elements.likeCount.textContent = '-';
         elements.commentCount.textContent = '-';
@@ -741,7 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update Meta for User
         updateMetaValue('metaUserLevel', 'L' + data.info.level);
-        updateMetaValue('metaFollowers', BiliHelpers.formatNumber(data.info.follower || 0));
+        updateMetaValue('metaFollowers', formatNumber(data.info.follower || 0));
         updateMetaValue('metaWorksCount', data.recent_videos ? data.recent_videos.length : 0);
         
         // Update Works Tab
@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="user-work-info">
                         <div class="user-work-title" title="${v.title}">${v.title}</div>
-                        <div class="user-work-meta">播放: ${BiliHelpers.formatNumber(v.play)}</div>
+                        <div class="user-work-meta">播放: ${formatNumber(v.play)}</div>
                         <div class="user-work-actions">
                             <button class="btn-mini btn-primary-mini" onclick="event.stopPropagation(); window.analyzeBvid('${v.bvid}')">智能分析</button>
                             <a href="https://www.bilibili.com/video/${v.bvid}" target="_blank" class="btn-mini btn-outline-mini" onclick="event.stopPropagation()">跳转观看</a>
@@ -1055,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else if (data.type === 'error') {
                         addTimelineItem('error', `出现错误: ${data.error}`);
                     } else if (data.type === 'done') {
-                        BiliHelpers.showToast(深度研究已完成并持久化！, elements.toast));
+                        showToast('深度研究已完成并持久化！');
                         updateProgress(100, '研究完成');
                         addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧“研究报告”查看。');
                         
@@ -1425,8 +1425,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (data.frame_count !== undefined) updateMetaValue('metaFrames', data.frame_count, '');
                         if (data.danmaku_count !== undefined) updateMetaValue('metaDanmaku', data.danmaku_count, '');
                     } else if (currentMode === 'article' && data.info) {
-                        updateMetaValue('metaViews', BiliHelpers.formatNumber(data.info.view));
-                        updateMetaValue('metaLikes', BiliHelpers.formatNumber(data.info.like));
+                        updateMetaValue('metaViews', formatNumber(data.info.view));
+                        updateMetaValue('metaLikes', formatNumber(data.info.like));
                         updateMetaValue('metaWordCount', (data.content || '').length, '');
                     }
                 }
@@ -1436,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.rawSubtitleText.textContent = data.content;
                 }
                 if (data.type === 'complete' || data.type === 'final') {
-                    BiliHelpers.showToast(分析完成！✨, elements.toast));
+                    showToast('分析完成！✨');
                 }
                 break;
                 
@@ -1510,7 +1510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="related-title" title="${video.title}">${video.title}</div>
                     <div class="related-info">
                         <span class="related-author">${video.author}</span>
-                        <span class="related-views">${BiliHelpers.formatNumber(video.view)} 播放</span>
+                        <span class="related-views">${formatNumber(video.view)} 播放</span>
                     </div>
                     <div class="related-actions" style="display: flex; gap: 8px; margin-top: 8px;">
                         <button class="btn-mini btn-primary-mini" onclick="event.stopPropagation(); window.analyzeBvid('${video.bvid}')">分析</button>
@@ -1538,7 +1538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendMessage() {
         if (isAnalyzing) {
-            BiliHelpers.showToast(AI 正在分析视频，请在分析完成后再发起提问, elements.toast));
+            showToast('AI 正在分析视频，请在分析完成后再发起提问');
             return;
         }
         if (isChatting) return;
@@ -1546,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
 
         if (!currentData.fullMarkdown) {
-            BiliHelpers.showToast(请先完成视频分析, elements.toast));
+            showToast('请先完成视频分析');
             return;
         }
 
@@ -1681,7 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (status === 'success') {
                     clearInterval(loginPollInterval);
                     loginPollInterval = null;
-                    BiliHelpers.showToast(登录成功！🎉, elements.toast));
+                    showToast('登录成功！🎉');
                     closeLoginModal();
                     checkLoginState();
                 } else if (status === 'expired') {
@@ -1785,10 +1785,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function logout() {
         try {
             fetch('/api/bilibili/login/logout', { method: 'POST' });
-            BiliHelpers.showToast(已退出登录, elements.toast));
+            showToast('已退出登录');
             window.location.assign('/');
         } catch (error) {
-            BiliHelpers.showToast(退出失败, elements.toast));
+            showToast('退出失败');
         }
     }
 
@@ -1857,7 +1857,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.researchHistoryShortcut.classList.remove('hidden');
             
             if (elements.resultArea.classList.contains('hidden')) {
-                BiliHelpers.showToast(💡 您可以点击输入框下方的按钮查看以往的研究报告, elements.toast));
+                showToast('💡 您可以点击输入框下方的按钮查看以往的研究报告');
             }
         } else if (mode === 'smart_up') {
             elements.videoUrl.placeholder = '输入您的问题，智能小UP为您检索视频并作答...';
@@ -1901,12 +1901,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateVideoCard(info) {
         elements.videoTitle.textContent = info.title;
         elements.upName.textContent = info.author;
-        elements.viewCount.textContent = BiliHelpers.formatNumber(info.view);
+        elements.viewCount.textContent = formatNumber(info.view);
         
         // 适配视频/专栏不同的点赞/弹幕字段
-        elements.danmakuCount.textContent = (info.danmaku !== undefined) ? BiliHelpers.formatNumber(info.danmaku) : '-';
-        elements.likeCount.textContent = (info.like !== undefined) ? BiliHelpers.formatNumber(info.like) : (info.stats ? BiliHelpers.formatNumber(info.stats.like) : '-');
-        elements.commentCount.textContent = (info.reply !== undefined) ? BiliHelpers.formatNumber(info.reply) : (info.stats ? BiliHelpers.formatNumber(info.stats.reply) : '-');
+        elements.danmakuCount.textContent = (info.danmaku !== undefined) ? formatNumber(info.danmaku) : '-';
+        elements.likeCount.textContent = (info.like !== undefined) ? formatNumber(info.like) : (info.stats ? formatNumber(info.stats.like) : '-');
+        elements.commentCount.textContent = (info.reply !== undefined) ? formatNumber(info.reply) : (info.stats ? formatNumber(info.stats.reply) : '-');
         
         elements.videoDuration.textContent = info.duration_str || info.duration || (currentMode === 'article' ? '专栏文章' : '');
         
@@ -1968,12 +1968,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function switchTab(tabName) {
         if (isAnalyzing && tabName === 'chat') {
-            BiliHelpers.showToast(分析尚未结束，请耐心等待 AI 建模完成。在此期间请勿刷新或退出界面。, elements.toast));
+            showToast('分析尚未结束，请耐心等待 AI 建模完成。在此期间请勿刷新或退出界面。');
             return;
         }
         
         if (isAnalyzing && tabName === 'research_report' && currentMode === 'research') {
-            BiliHelpers.showToast(研究正在进行中，请在“思考过程”中查看进度，完成后将自动展示报告, elements.toast));
+            showToast('研究正在进行中，请在“思考过程”中查看进度，完成后将自动展示报告');
             return;
         }
 
@@ -2082,12 +2082,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.downloadPdfBtn.classList.remove('hidden');
                 
                 switchTab('research_report');
-                BiliHelpers.showToast(已加载历史报告, elements.toast));
+                showToast('已加载历史报告');
             } else {
-                BiliHelpers.showToast(加载报告失败: , elements.toast) + data.error);
+                showToast('加载报告失败: ' + data.error);
             }
         } catch (e) {
-            BiliHelpers.showToast(请求报告失败, elements.toast));
+            showToast('请求报告失败');
         }
     };
 
@@ -2097,7 +2097,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadFile(currentData.researchFileId, 'pdf');
         } else {
             // 如果是刚生成的，尝试根据当前状态寻找最新文件
-            BiliHelpers.showToast(正在为您从历史中寻找刚生成的 PDF..., elements.toast));
+            showToast('正在为您从历史中寻找刚生成的 PDF...');
             showResearchHistory();
         }
     };
@@ -2216,13 +2216,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                             </svg>
-                            ${BiliHelpers.formatNumber(comment.like)}
+                            ${formatNumber(comment.like)}
                         </span>
                         <span class="comment-stat" title="回复数">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                             </svg>
-                            ${BiliHelpers.formatNumber(comment.reply_count)}
+                            ${formatNumber(comment.reply_count)}
                         </span>
                     </div>
                 </div>
@@ -2797,10 +2797,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (json.success && json.data && json.data.length > 0) {
                 renderSearchResults(json.data);
             } else {
-                BiliHelpers.showToast(未找到相关内容，请尝试更精确的关键词, elements.toast));
+                showToast('未找到相关内容，请尝试更精确的关键词');
             }
         } catch (e) {
-            BiliHelpers.showToast(搜索失败，请检查网络, elements.toast));
+            showToast('搜索失败，请检查网络');
         } finally {
             elements.analyzeBtn.disabled = false;
             btnText.textContent = originalText;
@@ -2823,7 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (currentMode === 'video') {
                 idValue = item.bvid;
-                metaText = `UP主: ${item.author} | 播放: ${BiliHelpers.formatNumber(item.play)}`;
+                metaText = `UP主: ${item.author} | 播放: ${formatNumber(item.play)}`;
             } else if (currentMode === 'user') {
                 idValue = item.mid;
                 displayTitle = item.name; // 用户模式强制使用 name
@@ -2851,7 +2851,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // formatNumber 和 showToast 已迁移到 helpers.js (BiliHelpers)
+    function formatNumber(num) {
+        if (!num) return '0';
+        if (num > 10000) return (num / 10000).toFixed(1) + '万';
+        return num;
+    }
+
+    function showToast(msg) {
+        elements.toast.textContent = msg;
+        elements.toast.classList.remove('hidden');
+        setTimeout(() => elements.toast.classList.add('hidden'), 3000);
+    }
 
     function openSettings() {
         elements.settingsDrawer.classList.remove('hidden');
@@ -2871,18 +2881,18 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeTab === 'comments') content = currentData.comments;
         else if (activeTab === 'subtitle') content = currentData.rawContent;
         if (!content) {
-            BiliHelpers.showToast(当前没有可复制的内容, elements.toast));
+            showToast('当前没有可复制的内容');
             return;
         }
         navigator.clipboard.writeText(content).then(() => {
-            BiliHelpers.showToast(复制成功！, elements.toast));
+            showToast('复制成功！');
         });
     }
 
     function downloadMarkdown() {
         const content = currentData.fullMarkdown;
         if (!content) {
-            BiliHelpers.showToast(没有可下载的内容, elements.toast));
+            showToast('没有可下载的内容');
             return;
         }
         const blob = new Blob([content], { type: 'text/markdown' });
