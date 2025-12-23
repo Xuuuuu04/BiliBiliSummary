@@ -17,7 +17,7 @@ def init_user_routes(app, bilibili_service, ai_service):
         bilibili_service: BilibiliService 实例
         ai_service: AIService 实例
     """
-    from src.backend.bilibili_service import run_async
+    from src.backend.services.bilibili import run_async
 
     @app.route('/api/user/portrait', methods=['POST'])
     def get_user_portrait():

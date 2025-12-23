@@ -14,13 +14,14 @@ static_folder = os.path.join(BASE_DIR, 'src', 'frontend')
 app = Flask(__name__, static_folder=static_folder, static_url_path='')
 CORS(app)
 
-# 初始化核心服务
-from src.backend.bilibili_service import BilibiliService
-from src.backend.ai_service import AIService
-from src.backend.bilibili_login import login_service
+# 初始化核心服务（使用新的模块化架构）
+from src.backend.services.bilibili import BilibiliService
+from src.backend.services.ai import AIService
+from src.backend.services.bilibili.login_service import LoginService
 
 bilibili_service = BilibiliService()
 ai_service = AIService()
+login_service = LoginService()  # 实例化登录服务
 
 # 创建 AI 服务引用容器（用于动态刷新）
 ai_service_ref = {'service': ai_service}

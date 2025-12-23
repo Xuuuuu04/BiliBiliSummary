@@ -21,7 +21,7 @@ def init_bilibili_routes(app, bilibili_service, login_service):
         bilibili_service: BilibiliService 实例
         login_service: BilibiliLoginService 实例
     """
-    from src.backend.bilibili_service import BilibiliService, run_async
+    from src.backend.services.bilibili import BilibiliService, run_async
 
     @app.route('/api/search', methods=['POST'])
     def search_content():

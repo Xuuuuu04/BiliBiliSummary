@@ -86,7 +86,7 @@ def init_settings_routes(app, ai_service_ref):
                 os.environ['DARK_MODE'] = str(data['dark_mode']).lower()
 
             # 重新初始化 AI 服务以应用新配置
-            from src.backend.ai_service import AIService
+            from src.backend.services.ai import AIService
 
             ai_service_ref['service'] = AIService()
 

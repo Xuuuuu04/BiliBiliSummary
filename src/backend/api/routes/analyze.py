@@ -19,7 +19,7 @@ def init_analyze_routes(app, bilibili_service, ai_service):
         bilibili_service: BilibiliService 实例
         ai_service: AIService 实例
     """
-    from src.backend.bilibili_service import BilibiliService, run_async
+    from src.backend.services.bilibili import BilibiliService, run_async
 
     @app.route('/api/smart_up/stream', methods=['POST'])
     def smart_up_stream():
