@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Analysis failed:', error);
-            BiliHelpers.showToast('分析失败: ', elements.toast) + error.message);
+            BiliHelpers.showToast('分析失败: ' + error.message, elements.toast));
             isAnalyzing = false;
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
@@ -1822,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentMode,
             isAnalyzing,
             currentData,
-            showToast: (msg) => BiliHelpers.showToast('msg, elements.toast)',
+            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast)',
             generateWordCloud: (data) => generateWordCloud ? generateWordCloud(data) : null
         });
     }
@@ -1896,7 +1896,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 switchTab('research_report');
                 BiliHelpers.showToast('已加载历史报告', elements.toast));
             } else {
-                BiliHelpers.showToast('加载报告失败: ', elements.toast) + data.error);
+                BiliHelpers.showToast('加载报告失败: ' + data.error, elements.toast));
             }
         } catch (e) {
             BiliHelpers.showToast('请求报告失败', elements.toast));
