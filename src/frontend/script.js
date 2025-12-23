@@ -1822,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentMode,
             isAnalyzing,
             currentData,
-            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast)',
+            showToast: (msg) => BiliHelpers.showToast(msg, elements.toast),
             generateWordCloud: (data) => generateWordCloud ? generateWordCloud(data) : null
         });
     }
