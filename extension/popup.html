@@ -3,271 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiliBili AI 助手</title>
-    <style>
-        :root {
-            --bili-pink: #fb7299;
-            --bili-blue: #00aeec;
-            --bg-color: #ffffff;
-            --text-color: #212121;
-            --border-color: #e3e5e7;
-        }
-
-        body {
-            width: 380px;
-            margin: 0;
-            padding: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo-box {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-        }
-
-        .title {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--bili-pink);
-        }
-
-        .settings-icon {
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-
-        .settings-icon:hover {
-            background: #f1f1f1;
-        }
-
-        .video-info {
-            background: #f6f7f8;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 13px;
-        }
-
-        .video-title {
-            font-weight: bold;
-            margin-bottom: 6px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .stats {
-            display: flex;
-            gap: 12px;
-            color: #666;
-            font-size: 12px;
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        button {
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .btn-primary {
-            background-color: var(--bili-pink);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #fc8bab;
-        }
-
-        .btn-secondary {
-            background-color: var(--bili-blue);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #33bef0;
-        }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        #result-container {
-            border-top: 1px solid var(--border-color);
-            padding-top: 12px;
-            max-height: 450px;
-            overflow-y: auto;
-            font-size: 14px;
-            line-height: 1.6;
-            display: none;
-        }
-
-        .copy-btn {
-            float: right;
-            padding: 4px 8px;
-            font-size: 11px;
-            background: #eee;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-
-        .spinner {
-            font-size: 24px;
-            margin-bottom: 8px;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-
-        #settings-panel {
-            display: none;
-            padding: 10px;
-            background: #fafafa;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 4px;
-            color: #666;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        .error {
-            color: #ff4d4f;
-            background: #fff2f0;
-            border: 1px solid #ffccc7;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background: #f9f9f9;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            border: 1px solid #eee;
-        }
-
-        .summary-content h2 { font-size: 16px; color: var(--bili-pink); border-left: 4px solid var(--bili-pink); padding-left: 8px; margin-top: 16px; }
-        .summary-content h3 { font-size: 14px; color: #333; margin-top: 12px; }
-        .summary-content li { margin-bottom: 6px; }
-    </style>
+    <title>BiliBili Summarize AI</title>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div class="header">
-        <div class="logo-box">
-            <svg class="logo" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="#fb7299"/>
-                <path d="M30 45 L50 65 L70 45" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
-            </svg>
-            <div class="title">BiliBili AI 助手</div>
+    <div class="popup-container">
+        <!-- 头部 -->
+        <div class="popup-header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h1>BiliBili Summarize AI</h1>
+            </div>
+            <div class="status" id="apiStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">检查中...</span>
+            </div>
         </div>
-        <div class="settings-icon" id="toggle-settings">⚙️</div>
-    </div>
 
-    <div id="settings-panel">
-        <div class="form-group">
-            <label>API Key (SiliconFlow/OpenAI)</label>
-            <input type="password" id="api-key" placeholder="sk-...">
+        <!-- API设置 -->
+        <div class="settings-card">
+            <h2>AI模型配置</h2>
+            <div class="form-group">
+                <label for="apiBase">API地址</label>
+                <input type="text" id="apiBase" placeholder="https://api.siliconflow.cn/v1">
+                <small>OpenAI兼容的API地址</small>
+            </div>
+            <div class="form-group">
+                <label for="apiKey">API密钥</label>
+                <input type="password" id="apiKey" placeholder="sk-...">
+                <small>您的API密钥</small>
+            </div>
+            <div class="form-group">
+                <label for="model">文本模型</label>
+                <input type="text" id="model" placeholder="Qwen/Qwen3-Omni-30B-A3B-Captioner">
+            </div>
+            <div class="form-group">
+                <label for="vlModel">视觉模型 (可选)</label>
+                <input type="text" id="vlModel" placeholder="Qwen/Qwen3-Omni-30B-A3B-Captioner">
+                <small>用于分析视频画面，支持VL模型</small>
+            </div>
+            <button class="btn btn-primary" id="saveSettings">
+                <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                保存配置
+            </button>
         </div>
-        <div class="form-group">
-            <label>API Base</label>
-            <input type="text" id="api-base" placeholder="https://api.siliconflow.cn/v1">
+
+        <!-- 当前页面分析 -->
+        <div class="current-page-card" id="currentPageCard" style="display:none;">
+            <h2>当前页面</h2>
+            <div class="page-info" id="pageInfo"></div>
+            <button class="btn btn-analyze" id="analyzePage">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                分析当前页面
+            </button>
         </div>
-        <div class="form-group">
-            <label>Model</label>
-            <input type="text" id="api-model" placeholder="Qwen/Qwen3-Omni-30B-A3B-Captioner">
+
+        <!-- 快速操作 -->
+        <div class="quick-actions">
+            <h2>快速操作</h2>
+            <div class="action-buttons">
+                <button class="action-btn" id="openPanel">
+                    <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+                    打开分析面板
+                </button>
+                <button class="action-btn" id="viewHistory">
+                    <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    分析历史
+                </button>
+                <button class="action-btn" id="openSettings">
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    高级设置
+                </button>
+            </div>
         </div>
-        <button id="save-settings" class="btn-secondary" style="width: 100%; padding: 6px;">保存配置</button>
-    </div>
 
-    <div id="video-box" class="video-info" style="display: none;">
-        <div class="video-title" id="v-title">正在加载...</div>
-        <div class="stats">
-            <span id="v-author">UP: -</span>
-            <span id="v-bvid">BV-</span>
+        <!-- 底部信息 -->
+        <div class="popup-footer">
+            <p>💡 访问B站视频页面即可使用AI分析功能</p>
+            <p id="version">v1.0.0</p>
         </div>
     </div>
-
-    <div class="actions">
-        <button id="btn-ai" class="btn-primary">✨ AI 智能总结</button>
-        <button id="btn-txt" class="btn-secondary">📝 提取文本</button>
-    </div>
-
-    <div id="loading" class="loading">
-        <div class="spinner">🌀</div>
-        <div id="loading-text">处理中...</div>
-    </div>
-
-    <div id="result-container">
-        <div class="copy-btn" id="btn-copy">复制</div>
-        <div id="result-content" class="summary-content"></div>
-    </div>
-
-    <div id="err" class="error" style="display: none;"></div>
 
     <script src="popup.js"></script>
 </body>

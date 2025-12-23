@@ -21,16 +21,18 @@ class DeepResearchAgent:
     针对课题进行全方位深度调研，撰写专业研究报告
     """
 
-    def __init__(self, client: OpenAI, model: str):
+    def __init__(self, client: OpenAI, model: str, vl_model: str = None):
         """
         初始化深度研究 Agent
 
         Args:
             client: OpenAI客户端
-            model: 使用的模型
+            model: 使用的模型（深度研究）
+            vl_model: 视觉语言模型（可选，用于视频帧分析）
         """
         self.client = client
         self.model = model
+        self.vl_model = vl_model or model  # 如果未指定，使用普通模型
 
     def stream_research(self, topic: str, bilibili_service) -> Generator[Dict, None, None]:
         """
@@ -386,7 +388,7 @@ class DeepResearchAgent:
                         })
 
                 analysis_stream = self.client.chat.completions.create(
-                    model=self.client,
+                    model=self.vl_model,
                     messages=[
                         {
                             "role": "system",

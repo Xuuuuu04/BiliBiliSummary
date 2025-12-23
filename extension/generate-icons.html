@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>生成图标 PNG</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #00A1D6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        button:hover {
+            background: #00B5E5;
+        }
+        .info {
+            background: #f6f7f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .icon-preview {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .icon-size {
+            text-align: center;
+        }
+        .icon-size canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 图标生成器</h1>
+
+    <div class="info">
+        <h3>使用说明：</h3>
+        <ol>
+            <li>点击下方按钮生成图标</li>
+            <li>右键点击生成的图标，选择「图片另存为」</li>
+            <li>保存为 <code>icon.png</code></li>
+            <li>将文件放到 <code>extension</code> 文件夹中</li>
+        </ol>
+    </div>
+
+    <button onclick="generateAllIcons()">生成所有尺寸图标</button>
+    <button onclick="downloadAll()">下载所有图标</button>
+
+    <div class="icon-preview" id="preview"></div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const scale = size / 128;
+
+            // 背景
+            ctx.fillStyle = '#00A1D6';
+            roundRect(ctx, 0, 0, size, size, 24 * scale);
+            ctx.fill();
+
+            // 播放按钮
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(50 * scale, 40 * scale);
+            ctx.lineTo(50 * scale, 88 * scale);
+            ctx.lineTo(85 * scale, 64 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            // AI 点缀
+            ctx.fillStyle = '#FB7299';
+            ctx.beginPath();
+            ctx.arc(95 * scale, 40 * scale, 8 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(251, 114, 153, 0.6)';
+            ctx.beginPath();
+            ctx.arc(33 * scale, 90 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // B站边框
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 3 * scale;
+            roundRect(ctx, 25 * scale, 25 * scale, 78 * scale, 78 * scale, 16 * scale);
+            ctx.stroke();
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function generateAllIcons() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+
+            const sizes = [16, 48, 128];
+
+            sizes.forEach(size => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'icon-size';
+
+                const canvas = document.createElement('canvas');
+                canvas.id = `icon${size}`;
+                drawIcon(canvas, size);
+
+                const label = document.createElement('div');
+                label.textContent = `${size}x${size}`;
+
+                wrapper.appendChild(canvas);
+                wrapper.appendChild(label);
+                preview.appendChild(wrapper);
+            });
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`icon${size}`);
+            const url = canvas.toDataURL('image/png');
+
+            const link = document.createElement('a');
+            link.download = `icon${size}.png`;
+            link.href = url;
+            link.click();
+        }
+
+        function downloadAll() {
+            const sizes = [16, 48, 128];
+            sizes.forEach((size, index) => {
+                setTimeout(() => downloadIcon(size), index * 200);
+            });
+        }
+
+        // 页面加载时自动生成
+        window.onload = generateAllIcons;
+    </script>
+</body>
+</html>
