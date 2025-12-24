@@ -5,6 +5,15 @@ BiliBili 视频总结系统 - 主应用入口
 from flask import Flask
 from flask_cors import CORS
 import os
+import logging
+
+# 初始化日志系统（必须在导入其他模块之前）
+from src.backend.utils.logger import setup_logging, get_logger, get_log_dir, get_current_log_file
+setup_logging(
+    level=logging.INFO,
+    console_level=logging.INFO,
+    log_to_file=True
+)
 
 # 使用绝对路径确保在不同环境下都能找到前端资源
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,6 +22,16 @@ static_folder = os.path.join(BASE_DIR, 'src', 'frontend')
 # 创建 Flask 应用
 app = Flask(__name__, static_folder=static_folder, static_url_path='')
 CORS(app)
+
+# 配置 Flask 使用统一的日志格式
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.INFO)
+for handler in log.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        handler.setFormatter(logging.Formatter(
+            '[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s',
+            datefmt='%H:%M:%S'
+        ))
 
 # 初始化核心服务（使用新的模块化架构）
 from src.backend.services.bilibili import BilibiliService
@@ -48,46 +67,74 @@ if __name__ == '__main__':
     from src.config import Config
 
     # 终端颜色代码
-    PINK = '\033[38;5;213m'
-    BLUE = '\033[38;5;75m'
+    # B站品牌色：粉色 #FB7299 和 蓝色 #23ADE5
+    BILI_PINK = '\033[38;2;251;114;153m'   # B站粉
+    BILI_BLUE = '\033[38;2;35;173;229m'    # B站蓝
+    CYAN = '\033[38;2;0;255;255m'
+    WHITE = '\033[38;2;255;255;255m'
+    GRADIENT = [
+        '\033[38;2;251;114;153m',  # B站粉
+        '\033[38;2;231;119;159m',
+        '\033[38;2;211;124;165m',
+        '\033[38;2;191;129;171m',
+        '\033[38;2;171;134;177m',
+        '\033[38;2;151;139;183m',
+        '\033[38;2;131;144;189m',
+        '\033[38;2;111;149;195m',
+        '\033[38;2;91;154;201m',
+        '\033[38;2;71;159;207m',
+        '\033[38;2;51;164;213m',
+        '\033[38;2;35;173;229m'    # B站蓝
+    ]
     GOLD = '\033[38;5;220m'
+    DIM = '\033[2m'
     RESET = '\033[0m'
     BOLD = '\033[1m'
 
-    # 顶级 Bilibili 风格 ASCII LOGO
+    # 精致的 B 站小电视 + BILIBILI 渐变 Logo
     logo = f"""
-{PINK}   ██████╗ ██╗██╗     ██╗██████╗ ██╗██╗     ██╗
-   ██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║
-   ██████╔╝██║██║     ██║██████╔╝██║██║     ██║
-   ██╔══██╗██║██║     ██║██╔══██╗██║██║     ██║
-   ██████╔╝██║███████╗██║██████╔╝██║███████╗██║
-   ╚═════╝ ╚═╝╚══════╝╚═╝╚═════╝ ╚═╝╚══════╝╚═╝{RESET}
+{BILI_PINK}    ╭─────────────────────╮{RESET}
+{BILI_PINK}   ╱                      ╲{RESET}
+{BILI_PINK}  │   ╭─────────────╮   │{RESET}       {BOLD}{GRADIENT[0]}B{GRADIENT[1]}I{GRADIENT[2]}L{GRADIENT[3]}I{GRADIENT[4]}B{GRADIENT[5]}I{GRADIENT[6]}L{GRADIENT[7]}I{RESET}{BOLD}
+{BILI_PINK}  │   │{WHITE}  ▄▄▄▄▄▄▄▄  {BILI_PINK}│   │{RESET}       {DIM}{WHITE}Video Analysis Helper{RESET}
+{BILI_PINK}  │   │{WHITE}  █ ████ █  {BILI_PINK}│   │{RESET}
+{BILI_PINK}  │   │{WHITE}  █ ▄▀ ▀█ █  {BILI_PINK}│   │{RESET}       {CYAN}▸{RESET} {BOLD}Author:{RESET} {WHITE}mumu_xsy{RESET}
+{BILI_PINK}  │   │{WHITE}  █ ████ █  {BILI_PINK}│   │{RESET}       {CYAN}▸{RESET} {BOLD}GitHub:{RESET} {CYAN}https://gitcode.com/mumu_xsy/Bilibili_Analysis_Helper{RESET}
+{BILI_PINK}  │   │{WHITE}  ▀▀▀▀▀▀▀▀  {BILI_PINK}│   │{RESET}
+{BILI_PINK}  │   ╰─────────────╯   │{RESET}
+{BILI_PINK}   ╲                      ╱{RESET}
+{BILI_PINK}    ╰─────────────────────╯{RESET}
+"""
 
-{BLUE}   ███████╗██╗   ██╗███╗   ███╗███╗   ███╗ █████╗ ██████╗ ██╗███████╗███████╗
-   ██╔════╝██║   ██║████╗ ████║████╗ ████║██╔══██╗██╔══██╗██║╚══███╔╝██╔════╝
-   ███████╗██║   ██║██╔████╔██║██╔████╔██║███████║██████╔╝██║  ███╔╝ █████╗
-   ╚════██║██║   ██║██║╚██╔╝██║██║╚██╔╝██║██╔══██║██╔══██╗██║ ███╔╝  ██╔════╝
-   ███████║╚██████╔╝██║ ╚═╝ ██║██║ ╚═╝ ██║██║  ██║██║  ██║██║███████╗███████╗
-   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝{RESET}
-    """
     print(logo)
     print(f"{BOLD}🚀 BiliBili视频总结系统正在启动...{RESET}")
     print(f"{'='*60}")
     print(f"{BOLD}📡 运行配置:{RESET}")
-    print(f"  > {BOLD}服务地址:{RESET} {BLUE}http://{Config.FLASK_HOST}:{Config.FLASK_PORT}{RESET}")
+    print(f"  > {BOLD}服务地址:{RESET} {BILI_BLUE}http://{Config.FLASK_HOST}:{Config.FLASK_PORT}{RESET}")
     print(f"  > {BOLD}调试模式:{RESET} {GOLD}{Config.FLASK_DEBUG}{RESET}")
     print(f"\n{BOLD}🤖 AI 引擎配置:{RESET}")
-    print(f"  > {BOLD}基础模型:{RESET} {BLUE}{Config.OPENAI_MODEL}{RESET}")
-    print(f"  > {BOLD}问答模型:{RESET} {BLUE}{Config.QA_MODEL}{RESET}")
+    print(f"  > {BOLD}基础模型:{RESET} {BILI_BLUE}{Config.OPENAI_MODEL}{RESET}")
+    print(f"  > {BOLD}问答模型:{RESET} {BILI_BLUE}{Config.QA_MODEL}{RESET}")
     print(f"  > {BOLD}深度研究:{RESET} {GOLD}{Config.DEEP_RESEARCH_MODEL}{RESET}")
     print(f"  > {BOLD}API 代理:{RESET} {Config.OPENAI_API_BASE}")
 
     # 检查 API Key 状态（脱敏显示）
     api_key = Config.OPENAI_API_KEY
-    key_status = f"{PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
+    key_status = f"{BILI_PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
     print(f"  > {BOLD}API Key :{RESET} {key_status}")
+    print(f"\n{BOLD}📝 日志系统:{RESET}")
+    print(f"  > {BOLD}日志目录:{RESET} {BILI_BLUE}{get_log_dir()}{RESET}")
+    print(f"  > {BOLD}当前日志:{RESET} {BILI_BLUE}{get_current_log_file().name}{RESET}")
 
     print(f"{'='*60}")
+
+    logger = get_logger(__name__)
+    logger.info("=" * 60)
+    logger.info("应用启动")
+    logger.info(f"Flask 服务: {Config.FLASK_HOST}:{Config.FLASK_PORT}")
+    logger.info(f"调试模式: {Config.FLASK_DEBUG}")
+    logger.info(f"AI 模型: {Config.OPENAI_MODEL}")
+    logger.info("=" * 60)
 
     app.run(
         host=Config.FLASK_HOST,

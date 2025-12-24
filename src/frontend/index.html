@@ -502,6 +502,32 @@
                 </div>
             </div>
             <div id="researchProcessContent" class="tab-pane">
+                <!-- 全局折叠控制 -->
+                <div class="timeline-controls">
+                    <div class="timeline-controls-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        思考过程时间线
+                    </div>
+                    <div class="timeline-controls-buttons">
+                        <button class="timeline-control-btn" onclick="collapseAllTimeline()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 14 12 6 20 14"></polyline>
+                                <line x1="12" y1="6" x2="12" y2="22"></line>
+                            </svg>
+                            全部折叠
+                        </button>
+                        <button class="timeline-control-btn" onclick="expandAllTimeline()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 10 12 18 20 10"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="2"></line>
+                            </svg>
+                            全部展开
+                        </button>
+                    </div>
+                </div>
+
                 <div id="researchTimeline" class="research-timeline">
                     <!-- 动态插入思考过程和工具调用 -->
                 </div>
@@ -661,6 +687,29 @@
                     <div class="setting-item">
                         <label>深度研究模型 (Reasoning/Thinking)</label>
                         <input type="text" id="deepResearchModelInput" placeholder="例如: moonshotai/Kimi-K2-Thinking">
+                        <p class="setting-hint">
+                            💡 提示：部分混合态模型（如 DeepSeek-V3、Kimi-K2）支持思考模式，可开启下方开关获得更深入的推理能力。
+                        </p>
+                    </div>
+                    <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label style="margin-bottom: 4px;">启用思考模式 (智能小UP)</label>
+                            <p class="setting-hint" style="margin: 0;">为智能小UP启用深度思考，适合复杂推理任务</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="enableSmartUpThinking">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label style="margin-bottom: 4px;">启用思考模式 (深度研究)</label>
+                            <p class="setting-hint" style="margin: 0;">为深度研究启用深度思考，获得更全面的分析</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="enableResearchThinking">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                     <div class="setting-item">
                         <label>Exa Search API Key (用于深度联网搜索)</label>

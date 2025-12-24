@@ -135,6 +135,98 @@ class BilibiliService:
         """获取Opus动态内容"""
         return await self.content.get_opus_content(opus_id)
 
+    # ========== 热门和排行榜相关方法 ==========
+
+    async def get_hot_videos(self, pn: int = 1, ps: int = 20):
+        """
+        获取B站热门视频
+
+        Args:
+            pn: 页码，默认1
+            ps: 每页数量，默认20
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        try:
+            from bilibili_api import hot
+            result = await hot.get_hot_videos(pn=pn, ps=ps)
+            return {"success": True, "data": result}
+        except Exception as e:
+            logger.error(f"获取热门视频失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    async def get_hot_buzzwords(self, page_num: int = 1, page_size: int = 20):
+        """
+        获取B站热词图鉴
+
+        Args:
+            page_num: 页码，默认1
+            page_size: 每页数量，默认20
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        try:
+            from bilibili_api import hot
+            result = await hot.get_hot_buzzwords(page_num=page_num, page_size=page_size)
+            return {"success": True, "data": result}
+        except Exception as e:
+            logger.error(f"获取热词图鉴失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    async def get_weekly_hot_videos(self, week: int = 1):
+        """
+        获取B站每周必看视频
+
+        Args:
+            week: 第几周，默认1
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        try:
+            from bilibili_api import hot
+            result = await hot.get_weekly_hot_videos(week=week)
+            return {"success": True, "data": result}
+        except Exception as e:
+            logger.error(f"获取每周必看失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    async def get_history_popular_videos(self):
+        """
+        获取B站入站必刷视频
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        try:
+            from bilibili_api import hot
+            result = await hot.get_history_popular_videos()
+            return {"success": True, "data": result}
+        except Exception as e:
+            logger.error(f"获取入站必刷失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    async def get_rank_videos(self, type_, day: int = 3):
+        """
+        获取B站视频排行榜
+
+        Args:
+            type_: 分区类型 (RankType枚举)
+            day: 时间范围，3=三日排行，7=周排行
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        try:
+            from bilibili_api import rank
+            result = await rank.get_rank(type_=type_, day=3 if day == 3 else 7)
+            return {"success": True, "data": result}
+        except Exception as e:
+            logger.error(f"获取排行榜失败: {str(e)}")
+            return {"success": False, "error": str(e)}
+
     # ========== 辅助方法（保持向后兼容）==========
 
     def _format_duration(self, seconds: int) -> str:

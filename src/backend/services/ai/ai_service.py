@@ -47,8 +47,17 @@ class AIService:
         self.research_model = Config.DEEP_RESEARCH_MODEL
 
         # 初始化 Agent（深度研究Agent需要视觉模型用于视频分析）
-        self._smart_up_agent = SmartUpAgent(self.client, self.research_model)
-        self._deep_research_agent = DeepResearchAgent(self.client, self.research_model, vl_model=self.model)
+        self._smart_up_agent = SmartUpAgent(
+            self.client,
+            self.research_model,
+            enable_thinking=Config.ENABLE_SMART_UP_THINKING
+        )
+        self._deep_research_agent = DeepResearchAgent(
+            self.client,
+            self.research_model,
+            vl_model=self.model,
+            enable_thinking=Config.ENABLE_RESEARCH_THINKING
+        )
 
     # ========== Agent 方法（保持向后兼容）==========
 

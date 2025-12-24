@@ -3668,3 +3668,1733 @@ body.smart-up-full-overflow {
         max-width: 95% !important;
     }
 }
+
+/* ========================================
+   时间线卡片折叠功能样式
+   ======================================== */
+
+/* 折叠按钮 */
+.timeline-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+    padding: 0;
+}
+
+.timeline-collapse-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+[data-theme="dark"] .timeline-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-collapse-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+}
+
+/* 折叠状态：图标旋转 */
+.timeline-item.collapsed .timeline-collapse-btn svg {
+    transform: rotate(-90deg);
+}
+
+/* 可折叠内容区域 */
+.timeline-collapsible-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 1;
+}
+
+.timeline-item.collapsed .timeline-collapsible-content {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* 折叠摘要信息 */
+.timeline-collapse-summary {
+    display: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline-item.collapsed .timeline-collapse-summary {
+    display: flex;
+}
+
+/* 状态徽章 */
+.timeline-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.timeline-status-badge.active {
+    background: rgba(251, 114, 153, 0.1);
+    color: var(--bili-pink);
+}
+
+.timeline-status-badge.completed {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+[data-theme="dark"] .timeline-status-badge.active {
+    background: rgba(251, 114, 153, 0.2);
+}
+
+[data-theme="dark"] .timeline-status-badge.completed {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+/* ========================================
+   并行工具组容器样式
+   ======================================== */
+
+/* 工具组容器 */
+.tool-group-container {
+    position: relative;
+    padding: 16px;
+    margin: 16px 0;
+    background: var(--card-bg);
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.tool-group-container:hover {
+    border-color: var(--bili-pink);
+    box-shadow: 0 4px 12px rgba(251, 114, 153, 0.1);
+}
+
+[data-theme="dark"] .tool-group-container:hover {
+    box-shadow: 0 4px 12px rgba(251, 114, 153, 0.2);
+}
+
+/* 工具组头部 */
+.tool-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tool-group-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tool-group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, var(--bili-pink), #ff8fab);
+    color: white;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(251, 114, 153, 0.3);
+}
+
+[data-theme="dark"] .tool-group-badge {
+    background: linear-gradient(135deg, var(--bili-pink), #d4465a);
+    box-shadow: 0 2px 8px rgba(251, 114, 153, 0.4);
+}
+
+.tool-group-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: 'Consolas', monospace;
+}
+
+.tool-group-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--nav-hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tool-group-collapse-btn:hover {
+    background: var(--bili-pink);
+    color: white;
+    border-color: var(--bili-pink);
+}
+
+/* 工具组内容 */
+.tool-group-content {
+    display: grid;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    max-height: 5000px;
+    overflow: hidden;
+}
+
+/* 并行工具组使用网格布局 */
+.tool-group-container.parallel {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.tool-group-container.collapsed .tool-group-content {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* 工具组内的卡片 */
+.tool-group-item {
+    background: var(--nav-hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+.tool-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .tool-group-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 进度指示器 */
+.tool-progress-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .tool-progress-indicator {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ========================================
+   思考过程优化样式
+   ======================================== */
+
+.timeline-item.type-thinking {
+    position: relative;
+}
+
+/* 思考过程折叠时的摘要 */
+.thinking-collapse-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(35, 173, 229, 0.08);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--bili-blue);
+}
+
+[data-theme="dark"] .thinking-collapse-summary {
+    background: rgba(35, 173, 229, 0.15);
+}
+
+.thinking-char-count {
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* 思考内容 */
+.thinking-content {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ========================================
+   全局折叠控制按钮
+   ======================================== */
+
+.timeline-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.timeline-controls-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline-controls-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.timeline-control-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--nav-hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.timeline-control-btn:hover {
+    background: var(--bili-pink);
+    color: white;
+    border-color: var(--bili-pink);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(251, 114, 153, 0.2);
+}
+
+.timeline-control-btn:active {
+    transform: translateY(0);
+}
+
+/* 图标旋转动画 */
+@keyframes rotateDown {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-90deg);
+    }
+}
+
+/* 脉冲动画优化 */
+@keyframes pulse-pink {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(251, 114, 153, 0);
+    }
+}
+
+/* 时间线项目进入动画 */
+@keyframes timelineItemIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 工具组进入动画 */
+@keyframes toolGroupIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tool-group-container {
+    animation: toolGroupIn 0.4s ease-out forwards;
+}
+
+/* ========================================
+   响应式优化
+   ======================================== */
+
+@media (max-width: 768px) {
+    .tool-group-container.parallel {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .timeline-controls-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .timeline-control-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   折叠摘要左右布局样式
+   ======================================== */
+
+.timeline-collapse-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .timeline-collapse-summary {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.summary-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.summary-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    gap: 8px;
+}
+
+.result-preview {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .result-preview {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.result-preview.success {
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    border-color: rgba(76, 175, 80, 0.2);
+}
+
+[data-theme="dark"] .result-preview.success {
+    background: rgba(76, 175, 80, 0.15);
+}
+
+.result-preview .count {
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* 标题文本样式 */
+.title-text {
+    flex: 1;
+}
+
+/* 优化折叠按钮位置 */
+.timeline-collapse-btn {
+    margin-right: 8px;
+}
+
+/* ========================================
+   响应式优化
+   ======================================== */
+
+@media (max-width: 768px) {
+    .timeline-collapse-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .summary-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* ========================================
+   信息流动画效果
+   ======================================== */
+
+/* 时间线连接线上的流动光点 */
+.research-timeline::after {
+    content: '';
+    position: absolute;
+    left: 31px;
+    top: 40px;
+    width: 2px;
+    height: 2px;
+    background: var(--bili-pink);
+    border-radius: 50%;
+    box-shadow: 0 0 6px 2px var(--bili-pink),
+                0 0 12px 4px rgba(251, 114, 153, 0.5);
+    z-index: 2;
+    animation: flowDown 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    opacity: 0;
+}
+
+[data-theme="dark"] .research-timeline::after {
+    box-shadow: 0 0 8px 3px var(--bili-pink),
+                0 0 16px 6px rgba(251, 114, 153, 0.6);
+}
+
+/* 流动动画 */
+@keyframes flowDown {
+    0% {
+        top: 40px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        top: calc(100% - 40px);
+        opacity: 0;
+    }
+}
+
+/* 节点间的连接线发光效果 */
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: -28px; /* 连接到时间线 */
+    top: 0;
+    width: 0;
+    height: 100%;
+    border-left: 2px solid transparent;
+    background: linear-gradient(to bottom,
+        var(--bili-pink) 0%,
+        rgba(251, 114, 153, 0.3) 50%,
+        transparent 100%);
+    background-size: 0 2px;
+    background-repeat: no-repeat;
+    background-position: left top;
+    opacity: 0;
+    animation: connectLine 0.6s ease-out forwards;
+    z-index: 0;
+}
+
+/* 只有活动节点才有连接动画 */
+.timeline-item.active::after {
+    animation: connectLineFlow 0.6s ease-out forwards;
+}
+
+@keyframes connectLine {
+    0% {
+        background-size: 0 2px;
+        opacity: 0;
+    }
+    100% {
+        background-size: 100% 2px;
+        opacity: 0.5;
+    }
+}
+
+@keyframes connectLineFlow {
+    0% {
+        background-size: 0 2px;
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        background-size: 100% 2px;
+        opacity: 0.3;
+    }
+}
+
+/* 节点圆圈的脉冲流动效果 */
+.timeline-item.active::before {
+    animation: nodePulse 2s ease-in-out infinite,
+               pulseRing 1.5s ease-out infinite;
+}
+
+@keyframes nodePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes pulseRing {
+    0% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(251, 114, 153, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0);
+    }
+}
+
+/* 信息从节点流动到卡片的动画 */
+.timeline-content-box {
+    position: relative;
+    overflow: hidden;
+}
+
+.timeline-content-box::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom,
+        var(--bili-pink),
+        transparent);
+    opacity: 0;
+    animation: slideInBorder 0.4s ease-out forwards;
+}
+
+@keyframes slideInBorder {
+    0% {
+        height: 0;
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        height: 100%;
+        opacity: 0;
+    }
+}
+
+/* 数据包流动效果 */
+.timeline-item.active .timeline-content-box {
+    animation: dataFlow 0.6s ease-out;
+}
+
+@keyframes dataFlow {
+    0% {
+        transform: translateX(-10px);
+        opacity: 0;
+    }
+    50% {
+        transform: translateX(5px);
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 完成状态的庆祝动画 */
+.timeline-item.completed::before {
+    animation: completeBurst 0.6s ease-out forwards;
+}
+
+@keyframes completeBurst {
+    0% {
+        background: #4CAF50;
+        border-color: #4CAF50;
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+    }
+    100% {
+        background: #4CAF50;
+        border-color: #4CAF50;
+        transform: scale(1);
+    }
+}
+
+/* 增强时间线连接线本身 */
+.research-timeline::before {
+    background: linear-gradient(to bottom,
+        var(--border-color) 0%,
+        var(--bili-pink) 50%,
+        var(--border-color) 100%);
+    background-size: 100% 200%;
+    animation: lineGlow 3s ease-in-out infinite;
+}
+
+@keyframes lineGlow {
+    0%, 100% {
+        background-position: 0% 0%;
+    }
+    50% {
+        background-position: 0% 100%;
+    }
+}
+
+/* 信息流动粒子效果 */
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item.active::after {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: -10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--bili-pink) 0%, transparent 70%);
+    animation: particleFlow 1s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes particleFlow {
+    0% {
+        top: -10px;
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        top: calc(100% + 10px);
+        opacity: 0;
+        transform: scale(0.3);
+    }
+}
+
+/* 多层粒子效果 */
+.timeline-item.active:nth-child(3n+1)::after {
+    animation-delay: 0s;
+}
+
+.timeline-item.active:nth-child(3n+2)::after {
+    animation-delay: 0.3s;
+}
+
+.timeline-item.active:nth-child(3n+3)::after {
+    animation-delay: 0.6s;
+}
+
+/* ========================================
+   卡片进入动画增强
+   ======================================== */
+
+.timeline-item {
+    animation: timelineItemEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+               fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes timelineItemEnter {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.9);
+    }
+    60% {
+        transform: translateX(5px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* 依次进入动画延迟 */
+.timeline-item:nth-child(1) { animation-delay: 0.05s; }
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.15s; }
+.timeline-item:nth-child(4) { animation-delay: 0.2s; }
+.timeline-item:nth-child(5) { animation-delay: 0.25s; }
+.timeline-item:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* ========================================
+   响应式优化
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* 移动端减弱动画效果以提升性能 */
+    .research-timeline::after {
+        animation: flowDown 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    
+    .timeline-item::after {
+        display: none; /* 移动端隐藏粒子效果 */
+    }
+}
+
+/* ========================================
+   折叠按钮旋转状态样式
+   ======================================== */
+
+.timeline-collapse-btn.collapsed svg {
+    transform: rotate(-90deg);
+}
+
+/* 确保折叠按钮本身的过渡效果 */
+.timeline-collapse-btn svg {
+    transition: transform 0.3s ease;
+}
+
+/* ========================================
+   工具卡片执行中的动画效果
+   ======================================== */
+
+/* 加载旋转图标 */
+.loading-spinner {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 加载点动画 */
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px 8px;
+}
+
+.loading-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bili-pink);
+    animation: dotBounce 1.4s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotBounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Token计数更新动画 */
+.token-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.token-counter.updating {
+    animation: tokenPulse 0.5s ease;
+}
+
+@keyframes tokenPulse {
+    0% {
+        transform: scale(1);
+        background: rgba(0, 0, 0, 0.03);
+    }
+    50% {
+        transform: scale(1.1);
+        background: rgba(251, 114, 153, 0.1);
+    }
+    100% {
+        transform: scale(1);
+        background: rgba(0, 0, 0, 0.03);
+    }
+}
+
+/* 状态徽章增强动画 */
+.timeline-status-badge.active {
+    position: relative;
+    overflow: hidden;
+}
+
+.timeline-status-badge.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent);
+    animation: badgeShine 2s ease-in-out infinite;
+}
+
+@keyframes badgeShine {
+    0% {
+        left: -100%;
+    }
+    50%, 100% {
+        left: 100%;
+    }
+}
+
+/* 脉冲圆环增强 */
+.timeline-item.active::before {
+    position: relative;
+}
+
+.timeline-item.active::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 3px solid var(--bili-pink);
+    z-index: 1;
+    animation: 
+        nodePulse 2s ease-in-out infinite,
+        ripple 1.5s ease-out infinite;
+}
+
+@keyframes ripple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.8);
+    }
+    100% {
+        box-shadow: 0 0 0 12px rgba(251, 114, 153, 0);
+    }
+}
+
+/* 数据流动线条 */
+.data-flow-line {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent,
+        var(--bili-pink));
+    transform: translateY(-50%);
+    opacity: 0;
+}
+
+.timeline-item.active .data-flow-line {
+    animation: dataFlowIn 0.5s ease-out forwards,
+               dataFlowPulse 1s ease-in-out infinite 0.5s;
+}
+
+@keyframes dataFlowIn {
+    0% {
+        opacity: 0;
+        width: 0;
+    }
+    100% {
+        opacity: 1;
+        width: 20px;
+    }
+}
+
+@keyframes dataFlowPulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* 工具执行时的卡片光晕 */
+.timeline-item.active .timeline-content-box {
+    position: relative;
+    box-shadow: 0 0 0 0 rgba(251, 114, 153, 0);
+    transition: box-shadow 2s ease;
+}
+
+.timeline-item.active .timeline-content-box::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    background: linear-gradient(45deg,
+        var(--bili-pink),
+        transparent,
+        var(--bili-pink));
+    z-index: -1;
+    opacity: 0;
+    animation: cardGlow 2s ease-in-out infinite;
+}
+
+@keyframes cardGlow {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* 搜索状态加载动画 */
+.search-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-status.loading {
+    animation: statusBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes statusBlink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* 结果数字滚动动画 */
+.result-number {
+    display: inline-block;
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.result-number.counting {
+    animation: numberPop 0.3s ease;
+}
+
+@keyframes numberPop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 工具类型特定动画 */
+.timeline-item.type-tool_start .timeline-content-box {
+    border-left: 4px solid var(--bili-pink);
+    position: relative;
+}
+
+/* 流动边框效果 */
+.timeline-item.type-tool_start.active .timeline-content-box::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 4px;
+    height: 0;
+    background: linear-gradient(to bottom,
+        var(--bili-pink),
+        #ff8fab,
+        var(--bili-pink));
+    animation: borderSlide 2s ease-in-out infinite;
+}
+
+@keyframes borderSlide {
+    0% {
+        height: 0;
+        top: 0;
+    }
+    50% {
+        height: 100%;
+        top: 0;
+    }
+    51% {
+        height: 100%;
+        top: auto;
+        bottom: 0;
+    }
+    100% {
+        height: 0;
+        top: auto;
+        bottom: 0;
+    }
+}
+
+/* 思考过程特殊动画 */
+.timeline-item.type-thinking .timeline-content-box {
+    border-left: 4px solid var(--bili-blue);
+    position: relative;
+}
+
+.timeline-item.type-thinking.active .timeline-content-box::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom,
+        transparent,
+        var(--bili-blue),
+        transparent);
+    animation: thinkingPulse 3s ease-in-out infinite;
+}
+
+@keyframes thinkingPulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* 完成状态动画 */
+.timeline-item.completed .timeline-content-box {
+    animation: completeGlow 0.6s ease-out forwards;
+}
+
+@keyframes completeGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+/* 字符计数更新动画 */
+.char-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(35, 173, 229, 0.1);
+    color: var(--bili-blue);
+}
+
+.char-counter.updating {
+    animation: charUpdate 0.3s ease;
+}
+
+@keyframes charUpdate {
+    0% {
+        transform: scale(1);
+        background: rgba(35, 173, 229, 0.1);
+    }
+    50% {
+        transform: scale(1.15);
+        background: rgba(35, 173, 229, 0.25);
+    }
+    100% {
+        transform: scale(1);
+        background: rgba(35, 173, 229, 0.1);
+    }
+}
+
+/* 波浪加载动画 */
+.wave-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 12px;
+}
+
+.wave-loader span {
+    width: 3px;
+    height: 100%;
+    background: var(--bili-pink);
+    border-radius: 2px;
+    animation: wave 1.2s ease-in-out infinite;
+}
+
+.wave-loader span:nth-child(1) { animation-delay: 0s; }
+.wave-loader span:nth-child(2) { animation-delay: 0.1s; }
+.wave-loader span:nth-child(3) { animation-delay: 0.2s; }
+.wave-loader span:nth-child(4) { animation-delay: 0.3s; }
+.wave-loader span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wave {
+    0%, 100% {
+        height: 4px;
+    }
+    50% {
+        height: 12px;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    /* 移动端简化动画 */
+    .timeline-item.active .timeline-content-box::before {
+        display: none;
+    }
+    
+    .timeline-item.type-tool_start.active .timeline-content-box::after {
+        display: none;
+    }
+}
+
+/* ========================================
+   详细结果展示样式
+   ======================================== */
+
+/* 结果详情卡片 */
+.result-detail-card {
+    background: var(--nav-hover-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+    animation: detailSlideIn 0.3s ease-out;
+}
+
+@keyframes detailSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 视频列表项 */
+.video-result-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.video-result-item:hover {
+    background: rgba(251, 114, 153, 0.05);
+    transform: translateX(5px);
+}
+
+[data-theme="dark"] .video-result-item:hover {
+    background: rgba(251, 114, 153, 0.1);
+}
+
+.video-result-item:last-child {
+    margin-bottom: 0;
+}
+
+.video-result-item .video-thumb {
+    width: 80px;
+    height: 50px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--bili-pink), #ff8fab);
+}
+
+.video-result-item .video-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.video-result-item .video-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.video-result-item .video-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.video-result-item .video-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* UP主列表项 */
+.up-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(35, 173, 229, 0.03);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.up-result-item:hover {
+    background: rgba(35, 173, 229, 0.08);
+    border-color: rgba(35, 173, 229, 0.2);
+    transform: scale(1.02);
+}
+
+.up-result-item:last-child {
+    margin-bottom: 0;
+}
+
+.up-result-item .up-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(35, 173, 229, 0.2);
+    flex-shrink: 0;
+}
+
+.up-result-item .up-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.up-result-item .up-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.up-result-item .up-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.up-result-item .up-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background: rgba(35, 173, 229, 0.1);
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--bili-blue);
+}
+
+/* 网络搜索结果项 */
+.web-result-item {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.02);
+    border-left: 3px solid var(--bili-blue);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.web-result-item:hover {
+    background: rgba(35, 173, 229, 0.05);
+    transform: translateX(3px);
+}
+
+.web-result-item:last-child {
+    margin-bottom: 0;
+}
+
+.web-result-item .web-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bili-blue);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.web-result-item .web-title a {
+    text-decoration: none;
+    word-break: break-word;
+}
+
+.web-result-item .web-title a:hover {
+    text-decoration: underline;
+}
+
+.web-result-item .web-snippet {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.web-result-item .web-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* 统计信息样式 */
+.result-stats {
+    display: flex;
+    gap: 16px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.stat-item .stat-value {
+    font-weight: 700;
+    color: var(--text-main);
+    font-family: 'Consolas', monospace;
+}
+
+/* 展开更多按钮 */
+.show-more-btn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+}
+
+.show-more-btn:hover {
+    background: var(--bili-pink);
+    color: white;
+    border-color: var(--bili-pink);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .video-result-item .video-thumb {
+        width: 60px;
+        height: 40px;
+    }
+    
+    .video-result-item {
+        padding: 8px;
+    }
+}
+
+/* ========================================
+   统一工具图标样式
+   ======================================== */
+
+.tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    background: rgba(251, 114, 153, 0.1);
+    border-radius: 6px;
+    color: var(--bili-pink);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .tool-icon {
+    background: rgba(251, 114, 153, 0.2);
+}
+
+.timeline-item.active .tool-icon {
+    animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+        background: rgba(251, 114, 153, 0.1);
+    }
+    50% {
+        transform: scale(1.1);
+        background: rgba(251, 114, 153, 0.2);
+    }
+}
+
+.timeline-item.completed .tool-icon {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    animation: none;
+}
+
+[data-theme="dark"] .timeline-item.completed .tool-icon {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+/* 思考类型特殊样式 */
+.timeline-item.type-thinking .tool-icon {
+    background: rgba(35, 173, 229, 0.1);
+    color: var(--bili-blue);
+}
+
+[data-theme="dark"] .timeline-item.type-thinking .tool-icon {
+    background: rgba(35, 173, 229, 0.2);
+}
+
+/* 图标容器与标题的对齐 */
+.timeline-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 思考 badge 样式更新 */
+.thinking-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: var(--bili-blue);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* ========== 批量分析进度样式 ========== */
+
+/* 批量分析进度容器 */
+.batch-progress {
+    padding: 12px;
+    background: var(--input-bg);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* 单条进度消息 */
+.progress-message {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 4px 0;
+    border-left: 2px solid var(--bili-blue);
+    padding-left: 8px;
+    margin-bottom: 4px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* 批量分析进度列表（右侧预览区） */
+.batch-progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* 单个进度项 */
+.progress-item {
+    font-size: 11px;
+    padding: 6px 8px;
+    background: var(--input-bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--bili-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    animation: slideIn 0.3s ease-out;
+}
+
+.progress-item:hover {
+    background: var(--nav-hover-bg);
+    transform: translateX(2px);
+}
+
+/* 状态图标 */
+.progress-item .status-icon {
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+/* 消息文本 */
+.progress-item .message-text {
+    flex: 1;
+    color: var(--text-main);
+    word-break: break-all;
+}
+
+/* 成功状态 */
+.progress-item:has(.status-icon:nth-child(1):contains('✅')) {
+    border-left-color: #4CAF50;
+}
+
+.progress-item:has(.status-icon:nth-child(1):contains('✅')) .status-icon {
+    color: #4CAF50;
+}
+
+/* 失败状态 */
+.progress-item:has(.status-icon:nth-child(1):contains('❌')) {
+    border-left-color: #F44336;
+}
+
+.progress-item:has(.status-icon:nth-child(1):contains('❌')) .status-icon {
+    color: #F44336;
+}
+
+/* 进行中状态 */
+.progress-item:has(.status-icon:nth-child(1):contains('⏳')) {
+    border-left-color: var(--bili-blue);
+}
+
+.progress-item:has(.status-icon:nth-child(1):contains('⏳')) .status-icon {
+    color: var(--bili-blue);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 深色模式适配 */
+.dark-theme .batch-progress {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dark-theme .progress-message {
+    color: var(--text-secondary);
+}
+
+.dark-theme .progress-item {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dark-theme .progress-item:hover {
+    background: var(--nav-hover-bg);
+}

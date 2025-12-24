@@ -21,16 +21,18 @@ class SmartUpAgent:
     自适应快速Q&A，深度复用工具，根据问题复杂度调整搜索和分析深度
     """
 
-    def __init__(self, client: OpenAI, model: str):
+    def __init__(self, client: OpenAI, model: str, enable_thinking: bool = False):
         """
         初始化智能小UP Agent
 
         Args:
             client: OpenAI客户端
             model: 使用的模型
+            enable_thinking: 是否启用思考模式（用于支持thinking的混合态模型）
         """
         self.client = client
         self.model = model
+        self.enable_thinking = enable_thinking
 
     def stream_chat(self, question: str, bilibili_service, history: List[Dict] = None) -> Generator[Dict, None, None]:
         """
@@ -74,13 +76,23 @@ class SmartUpAgent:
                         "content": "由于分析轮次已达上限（15次），请不要再调用任何工具，直接根据以上已收集到的所有信息，为用户提供最终的、最完整的回答。"
                     })
 
-                stream = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=tools,
-                    tool_choice="auto",
-                    stream=True
-                )
+                # 构建API请求参数
+                request_params = {
+                    "model": self.model,
+                    "messages": messages,
+                    "tools": tools,
+                    "tool_choice": "auto",
+                    "stream": True
+                }
+
+                # 如果启用思考模式，添加额外参数
+                # 注意：只有部分模型（如DeepSeek-V3、Kimi-K2）支持这些参数
+                if self.enable_thinking:
+                    # 对于支持的模型，启用思考模式通常不需要额外参数
+                    # 模型会自动返回 reasoning_content 字段
+                    pass  # 某些模型可能需要额外的 max_tokens 等参数
+
+                stream = self.client.chat.completions.create(**request_params)
 
                 tool_calls = []
                 full_content = ""
