@@ -161,3 +161,42 @@ class SearchService:
             return f"{hours}:{minutes:02d}:{secs:02d}"
         else:
             return f"{minutes:02d}:{secs:02d}"
+
+    async def get_search_suggestions(self, keyword: str) -> Dict:
+        """
+        获取搜索建议（联想词）
+
+        Args:
+            keyword: 用户输入的部分关键词
+
+        Returns:
+            {'success': bool, 'data': [建议词列表]} 或 {'success': False, 'error': str}
+        """
+        try:
+            suggestions = await search.get_suggest_keywords(keyword)
+            return {'success': True, 'data': suggestions}
+        except Exception as e:
+            logger.error(f"获取搜索建议失败: {str(e)}")
+            return {'success': False, 'error': f'获取搜索建议失败: {str(e)}'}
+
+    async def get_hot_search_keywords(self) -> Dict:
+        """
+        获取当前热搜关键词
+
+        Returns:
+            {'success': bool, 'data': [热搜词列表]} 或 {'success': False, 'error': str}
+        """
+        try:
+            hot_result = await search.get_hot_search_keywords()
+            # 提取热搜关键词列表
+            hot_keywords = []
+            for item in hot_result.get('list', []):
+                hot_keywords.append({
+                    'keyword': item.get('keyword'),
+                    'icon': item.get('icon'),
+                    'hot': item.get('hot')  # 热度值
+                })
+            return {'success': True, 'data': hot_keywords}
+        except Exception as e:
+            logger.error(f"获取热搜关键词失败: {str(e)}")
+            return {'success': False, 'error': f'获取热搜关键词失败: {str(e)}'}

@@ -101,6 +101,30 @@ class BilibiliService:
         """提取视频关键帧"""
         return await self.video.extract_frames(bvid, max_frames, interval)
 
+    async def get_video_tags(self, bvid: str):
+        """
+        获取视频标签及详细信息
+
+        Args:
+            bvid: 视频BVID
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        return await self.video.get_video_tags(bvid)
+
+    async def get_video_series(self, bvid: str):
+        """
+        获取视频所属的合集信息（系列视频）
+
+        Args:
+            bvid: 视频BVID
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        return await self.video.get_video_series(bvid)
+
     # ========== 用户相关方法（委托给 UserService）==========
 
     async def get_user_info(self, uid: int):
@@ -110,6 +134,19 @@ class BilibiliService:
     async def get_user_recent_videos(self, uid: int, limit: int = 10):
         """获取用户最近投稿"""
         return await self.user.get_recent_videos(uid, limit)
+
+    async def get_user_dynamics(self, uid: int, limit: int = 10):
+        """
+        获取用户的最新动态
+
+        Args:
+            uid: 用户UID
+            limit: 获取动态数量
+
+        Returns:
+            标准响应格式 {"success": bool, "data": dict, "error": str}
+        """
+        return await self.user.get_user_dynamics(uid, limit)
 
     # ========== 搜索相关方法（委托给 SearchService）==========
 
@@ -124,6 +161,27 @@ class BilibiliService:
     async def search_articles(self, keyword: str, limit: int = 5):
         """搜索专栏"""
         return await self.search.search_articles(keyword, limit)
+
+    async def get_search_suggestions(self, keyword: str):
+        """
+        获取搜索建议（联想词）
+
+        Args:
+            keyword: 用户输入的部分关键词
+
+        Returns:
+            标准响应格式 {"success": bool, "data": list, "error": str}
+        """
+        return await self.search.get_search_suggestions(keyword)
+
+    async def get_hot_search_keywords(self):
+        """
+        获取当前热搜关键词
+
+        Returns:
+            标准响应格式 {"success": bool, "data": list, "error": str}
+        """
+        return await self.search.get_hot_search_keywords()
 
     # ========== 内容相关方法（委托给 ContentService）==========
 
@@ -170,7 +228,25 @@ class BilibiliService:
         try:
             from bilibili_api import hot
             result = await hot.get_hot_buzzwords(page_num=page_num, page_size=page_size)
-            return {"success": True, "data": result}
+
+            # 提取热词列表，标准化数据格式
+            buzzwords = []
+            for item in result.get('list', []):
+                buzzwords.append({
+                    'keyword': item.get('keyword'),
+                    'icon': item.get('icon'),
+                    'score': item.get('score'),  # 热度分数
+                    'type': item.get('type')     # 类型标识
+                })
+
+            return {
+                "success": True,
+                "data": {
+                    'buzzwords': buzzwords,
+                    'total': len(buzzwords),
+                    'page': page_num
+                }
+            }
         except Exception as e:
             logger.error(f"获取热词图鉴失败: {str(e)}")
             return {"success": False, "error": str(e)}

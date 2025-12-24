@@ -245,6 +245,75 @@ class SmartUpAgent:
                         "required": ["mid"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_search_suggestions",
+                    "description": "获取搜索联想建议，优化搜索词以获得更精准的搜索结果",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "keyword": {"type": "string", "description": "部分搜索关键词"}
+                        },
+                        "required": ["keyword"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_hot_search_keywords",
+                    "description": "获取当前 B 站热搜关键词，把握热点趋势和用户关注焦点",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_video_tags",
+                    "description": "获取视频的标签信息，用于了解视频的分类、主题和关联内容",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "bvid": {"type": "string", "description": "视频的 BV 号"}
+                        },
+                        "required": ["bvid"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_video_series",
+                    "description": "获取视频所属的合集信息，用于系统性学习系列教程或了解完整的知识体系",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "bvid": {"type": "string", "description": "视频的 BV 号"}
+                        },
+                        "required": ["bvid"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_user_dynamics",
+                    "description": "获取 UP 主的最新动态，了解其日常运营、社交互动和最新想法",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "mid": {"type": "integer", "description": "UP 主的 UID (mid)", "default": 10},
+                            "limit": {"type": "integer", "description": "获取动态的数量，默认 10"}
+                        },
+                        "required": ["mid"]
+                    }
+                }
             }
         ]
 
@@ -359,5 +428,50 @@ class SmartUpAgent:
                 yield {'type': 'tool_result', 'tool': func_name, 'result': v_res['data']}
             else:
                 result = f"获取用户作品失败: {v_res['error']}"
+
+        elif func_name == "get_search_suggestions":
+            keyword = args.get("keyword")
+            sug_res = run_async(bilibili_service.get_search_suggestions(keyword))
+            if sug_res['success']:
+                result = json.dumps(sug_res['data'], ensure_ascii=False)
+                yield {'type': 'tool_result', 'tool': func_name, 'result': sug_res['data']}
+            else:
+                result = f"获取搜索建议失败: {sug_res['error']}"
+
+        elif func_name == "get_hot_search_keywords":
+            hot_res = run_async(bilibili_service.get_hot_search_keywords())
+            if hot_res['success']:
+                result = json.dumps(hot_res['data'], ensure_ascii=False)
+                yield {'type': 'tool_result', 'tool': func_name, 'result': hot_res['data']}
+            else:
+                result = f"获取热搜关键词失败: {hot_res['error']}"
+
+        elif func_name == "get_video_tags":
+            bvid = args.get("bvid")
+            tags_res = run_async(bilibili_service.get_video_tags(bvid))
+            if tags_res['success']:
+                result = json.dumps(tags_res['data'], ensure_ascii=False)
+                yield {'type': 'tool_result', 'tool': func_name, 'result': tags_res['data']}
+            else:
+                result = f"获取视频标签失败: {tags_res['error']}"
+
+        elif func_name == "get_video_series":
+            bvid = args.get("bvid")
+            series_res = run_async(bilibili_service.get_video_series(bvid))
+            if series_res['success']:
+                result = json.dumps(series_res['data'], ensure_ascii=False)
+                yield {'type': 'tool_result', 'tool': func_name, 'result': series_res['data']}
+            else:
+                result = f"获取视频合集失败: {series_res['error']}"
+
+        elif func_name == "get_user_dynamics":
+            mid = args.get("mid")
+            limit = args.get("limit", 10)
+            dynamics_res = run_async(bilibili_service.get_user_dynamics(mid, limit=limit))
+            if dynamics_res['success']:
+                result = json.dumps(dynamics_res['data'], ensure_ascii=False)
+                yield {'type': 'tool_result', 'tool': func_name, 'result': dynamics_res['data']}
+            else:
+                result = f"获取用户动态失败: {dynamics_res['error']}"
 
         return result
