@@ -73,7 +73,7 @@
                 <div class="search-box-container">
                     <!-- 模式切换器 -->
                     <div class="analysis-mode-switcher">
-                        <button class="mode-btn active" data-mode="smart_up">
+                        <button class="mode-btn" data-mode="smart_up">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="9" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle><path d="M12 13a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2z"></path></svg>
                             智能小UP
                         </button>
@@ -81,7 +81,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                             深度研究
                         </button>
-                        <button class="mode-btn" data-mode="video">
+                        <button class="mode-btn active" data-mode="video">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M10 8l6 4-6 4V8z"></path></svg>
                             视频分析
                         </button>
@@ -96,12 +96,12 @@
                     </div>
                     
                     <!-- 模式描述文本 (新) -->
-                    <div id="modeDescription" class="mode-description mode-smart_up animate-fade-in">
-                        智连全网，自适应你的每一个好奇。
+                    <div id="modeDescription" class="mode-description mode-video animate-fade-in">
+                        瞬息提炼，让每一帧光影都有迹可循。
                     </div>
-                    
+
                     <div class="search-box">
-                        <input type="text" id="videoUrl" placeholder="粘贴 Bilibili 视频链接或 BV 号..." autocomplete="off">
+                        <input type="text" id="videoUrl" placeholder="粘贴 Bilibili 视频链接或 BV 号，例如：https://www.bilibili.com/video/BV1xx411c7mD" autocomplete="off">
                         <button id="analyzeBtn" class="btn-primary">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -141,55 +141,6 @@
 
             <!-- 欢迎/功能展示区域 -->
             <div id="welcomeSection" class="welcome-hero">
-                <div class="hero-content">
-                    <div class="hero-icon-grid">
-                        <div class="hero-item animate-up" style="animation-delay: 0.1s;">
-                            <div class="hero-icon-box pink">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <path d="M9 15l2 2 4-4"></path>
-                                </svg>
-                            </div>
-                            <h4>AI 深度总结</h4>
-                            <p>秒级提炼视频章节与核心干货</p>
-                        </div>
-                        <div class="hero-item animate-up" style="animation-delay: 0.2s;">
-                            <div class="hero-icon-box blue">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                                    <polyline points="17 2 12 7 7 2"></polyline>
-                                    <path d="M12 11v6"></path>
-                                    <circle cx="12" cy="14.5" r="2.5"></circle>
-                                </svg>
-                            </div>
-                            <h4>视觉多模态</h4>
-                            <p>结合视频关键帧，画面细节不遗漏</p>
-                        </div>
-                        <div class="hero-item animate-up" style="animation-delay: 0.3s;">
-                            <div class="hero-icon-box purple">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    <circle cx="9" cy="10" r="0.5" fill="currentColor"></circle>
-                                    <circle cx="15" cy="10" r="0.5" fill="currentColor"></circle>
-                                </svg>
-                            </div>
-                            <h4>智能对话问答</h4>
-                            <p>针对视频内容，像聊天一样深挖细节</p>
-                        </div>
-                        <div class="hero-item animate-up" style="animation-delay: 0.4s;">
-                            <div class="hero-icon-box orange">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                    <polyline points="12 15 12 9 15 12"></polyline>
-                                </svg>
-                            </div>
-                            <h4>舆情价值分析</h4>
-                            <p>看透弹幕热梗与评论区高赞观点</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="init-recommendations">
                     <h3 class="section-title">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -538,11 +489,21 @@
                 <div class="chat-container">
                     <div id="chatMessages" class="chat-messages">
                         <div class="message assistant">
-                            <div class="message-content">你好！我是你的视频助手。我已经阅读了视频分析报告，你可以问我关于视频内容的任何问题。</div>
+                            <div class="message-content">你好！我是你的智能分析助手。🤖
+
+我已经完整阅读了这份分析报告，包括内容总结、弹幕舆情、评论观点等所有信息。
+
+你可以问我：
+• "这个内容的核心观点是什么？"
+• "弹幕/评论最关注哪些点？"
+• "详细解释一下某个章节"
+• "有什么数据亮点？"
+
+我会基于完整的分析报告为你提供精准、结构化的回答！</div>
                         </div>
                     </div>
                     <div class="chat-input-area">
-                        <textarea id="chatInput" placeholder="输入关于视频内容的问题..."></textarea>
+                        <textarea id="chatInput" placeholder="输入关于此内容的问题，我会基于分析报告为您解答..."></textarea>
                         <button id="sendMsgBtn" class="btn-primary">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>

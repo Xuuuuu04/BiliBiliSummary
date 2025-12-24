@@ -66,33 +66,50 @@ init_user_routes(app, bilibili_service, ai_service)  # 用户画像
 if __name__ == '__main__':
     from src.config import Config
 
-    # 终端颜色代码
-    # B站品牌色：粉色 #FB7299 和 蓝色 #23ADE5
-    BILI_PINK = '\033[38;2;251;114;153m'   # B站粉
-    BILI_BLUE = '\033[38;2;35;173;229m'    # B站蓝
-    CYAN = '\033[38;2;0;255;255m'
-    WHITE = '\033[38;2;255;255;255m'
-    GRADIENT = [
-        '\033[38;2;251;114;153m',  # B站粉
-        '\033[38;2;231;119;159m',
-        '\033[38;2;211;124;165m',
-        '\033[38;2;191;129;171m',
-        '\033[38;2;171;134;177m',
-        '\033[38;2;151;139;183m',
-        '\033[38;2;131;144;189m',
-        '\033[38;2;111;149;195m',
-        '\033[38;2;91;154;201m',
-        '\033[38;2;71;159;207m',
-        '\033[38;2;51;164;213m',
-        '\033[38;2;35;173;229m'    # B站蓝
-    ]
-    GOLD = '\033[38;5;220m'
-    DIM = '\033[2m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
+    # Flask 的重载机制：
+    # 父进程（监控进程）启动时会创建子进程（实际应用进程）
+    # 我们使用文件标记来确保只打印一次启动信息
+    import tempfile
 
-    # 精致的 B 站小电视 + BILIBILI 渐变 Logo
-    logo = f"""
+    # 创建临时标记文件
+    startup_flag_file = tempfile.gettempdir() + '/bili_app_startup_flag'
+    should_print_logo = not os.path.exists(startup_flag_file)
+
+    if should_print_logo:
+        # 创建标记文件
+        with open(startup_flag_file, 'w') as f:
+            f.write('started')
+
+        # 终端颜色代码
+        # B站品牌色：粉色 #FB7299 和 蓝色 #23ADE5
+        BILI_PINK = '\033[38;2;251;114;153m'   # B站粉
+        BILI_BLUE = '\033[38;2;35;173;229m'    # B站蓝
+        CYAN = '\033[38;2;0;255;255m'
+        WHITE = '\033[38;2;255;255;255m'
+        GRADIENT = [
+            '\033[38;2;251;114;153m',  # B站粉
+            '\033[38;2;231;119;159m',
+            '\033[38;2;211;124;165m',
+            '\033[38;2;191;129;171m',
+            '\033[38;2;171;134;177m',
+            '\033[38;2;151;139;183m',
+            '\033[38;2;131;144;189m',
+            '\033[38;2;111;149;195m',
+            '\033[38;2;91;154;201m',
+            '\033[38;2;71;159;207m',
+            '\033[38;2;51;164;213m',
+            '\033[38;2;35;173;229m'    # B站蓝
+        ]
+        GOLD = '\033[38;5;220m'
+        DIM = '\033[2m'
+        RESET = '\033[0m'
+        BOLD = '\033[1m'
+
+        # 显示地址：如果是 0.0.0.0 则显示为 127.0.0.1
+        display_host = '127.0.0.1' if Config.FLASK_HOST == '0.0.0.0' else Config.FLASK_HOST
+
+        # 精致的 B 站小电视 + BILIBILI 渐变 Logo
+        logo = f"""
 {BILI_PINK}    ╭─────────────────────╮{RESET}
 {BILI_PINK}   ╱                      ╲{RESET}
 {BILI_PINK}  │   ╭─────────────╮   │{RESET}       {BOLD}{GRADIENT[0]}B{GRADIENT[1]}I{GRADIENT[2]}L{GRADIENT[3]}I{GRADIENT[4]}B{GRADIENT[5]}I{GRADIENT[6]}L{GRADIENT[7]}I{RESET}{BOLD}
@@ -106,38 +123,47 @@ if __name__ == '__main__':
 {BILI_PINK}    ╰─────────────────────╯{RESET}
 """
 
-    print(logo)
-    print(f"{BOLD}🚀 BiliBili视频总结系统正在启动...{RESET}")
-    print(f"{'='*60}")
-    print(f"{BOLD}📡 运行配置:{RESET}")
-    print(f"  > {BOLD}服务地址:{RESET} {BILI_BLUE}http://{Config.FLASK_HOST}:{Config.FLASK_PORT}{RESET}")
-    print(f"  > {BOLD}调试模式:{RESET} {GOLD}{Config.FLASK_DEBUG}{RESET}")
-    print(f"\n{BOLD}🤖 AI 引擎配置:{RESET}")
-    print(f"  > {BOLD}基础模型:{RESET} {BILI_BLUE}{Config.OPENAI_MODEL}{RESET}")
-    print(f"  > {BOLD}问答模型:{RESET} {BILI_BLUE}{Config.QA_MODEL}{RESET}")
-    print(f"  > {BOLD}深度研究:{RESET} {GOLD}{Config.DEEP_RESEARCH_MODEL}{RESET}")
-    print(f"  > {BOLD}API 代理:{RESET} {Config.OPENAI_API_BASE}")
+        print(logo)
+        print(f"{BOLD}🚀 BiliBili视频总结系统正在启动...{RESET}")
+        print(f"{'='*60}")
+        print(f"{BOLD}📡 运行配置:{RESET}")
+        print(f"  > {BOLD}服务地址:{RESET} {BILI_BLUE}http://{display_host}:{Config.FLASK_PORT}{RESET}")
+        print(f"  > {BOLD}调试模式:{RESET} {GOLD}{Config.FLASK_DEBUG}{RESET}")
+        print(f"\n{BOLD}🤖 AI 引擎配置:{RESET}")
+        print(f"  > {BOLD}基础模型:{RESET} {BILI_BLUE}{Config.OPENAI_MODEL}{RESET}")
+        print(f"  > {BOLD}问答模型:{RESET} {BILI_BLUE}{Config.QA_MODEL}{RESET}")
+        print(f"  > {BOLD}深度研究:{RESET} {GOLD}{Config.DEEP_RESEARCH_MODEL}{RESET}")
+        print(f"  > {BOLD}API 代理:{RESET} {Config.OPENAI_API_BASE}")
 
-    # 检查 API Key 状态（脱敏显示）
-    api_key = Config.OPENAI_API_KEY
-    key_status = f"{BILI_PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
-    print(f"  > {BOLD}API Key :{RESET} {key_status}")
-    print(f"\n{BOLD}📝 日志系统:{RESET}")
-    print(f"  > {BOLD}日志目录:{RESET} {BILI_BLUE}{get_log_dir()}{RESET}")
-    print(f"  > {BOLD}当前日志:{RESET} {BILI_BLUE}{get_current_log_file().name}{RESET}")
+        # 检查 API Key 状态（脱敏显示）
+        api_key = Config.OPENAI_API_KEY
+        key_status = f"{BILI_PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
+        print(f"  > {BOLD}API Key :{RESET} {key_status}")
+        print(f"\n{BOLD}📝 日志系统:{RESET}")
+        print(f"  > {BOLD}日志目录:{RESET} {BILI_BLUE}{get_log_dir()}{RESET}")
+        print(f"  > {BOLD}当前日志:{RESET} {BILI_BLUE}{get_current_log_file().name}{RESET}")
+        print(f"{'='*60}")
 
-    print(f"{'='*60}")
-
+    # 记录启动信息到日志（只在第一次打印时记录）
     logger = get_logger(__name__)
-    logger.info("=" * 60)
-    logger.info("应用启动")
-    logger.info(f"Flask 服务: {Config.FLASK_HOST}:{Config.FLASK_PORT}")
-    logger.info(f"调试模式: {Config.FLASK_DEBUG}")
-    logger.info(f"AI 模型: {Config.OPENAI_MODEL}")
-    logger.info("=" * 60)
+    if should_print_logo:
+        logger.info("=" * 60)
+        logger.info("应用启动")
+        logger.info(f"Flask 服务: {Config.FLASK_HOST}:{Config.FLASK_PORT}")
+        logger.info(f"调试模式: {Config.FLASK_DEBUG}")
+        logger.info(f"AI 模型: {Config.OPENAI_MODEL}")
+        logger.info("=" * 60)
 
-    app.run(
-        host=Config.FLASK_HOST,
-        port=Config.FLASK_PORT,
-        debug=Config.FLASK_DEBUG
-    )
+    try:
+        app.run(
+            host=Config.FLASK_HOST,
+            port=Config.FLASK_PORT,
+            debug=Config.FLASK_DEBUG
+        )
+    finally:
+        # 清理标记文件
+        if os.path.exists(startup_flag_file):
+            try:
+                os.remove(startup_flag_file)
+            except:
+                pass

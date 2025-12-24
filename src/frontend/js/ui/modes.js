@@ -79,11 +79,11 @@ const MODE_DESCRIPTIONS = {
  * 各模式的输入框占位符
  */
 const MODE_PLACEHOLDERS = {
-    'video': '粘贴 Bilibili 视频链接或 BV 号...',
-    'article': '粘贴专栏链接或 CV 号...',
-    'user': '输入用户 UID 或空间链接...',
-    'research': '输入你想要研究的课题 (如: 2025 AI 发展趋势)',
-    'smart_up': '输入您的问题，智能小UP为您检索视频并作答...'
+    'video': '粘贴 Bilibili 视频链接或 BV 号，例如：https://www.bilibili.com/video/BV1xx411c7mD',
+    'article': '粘贴专栏链接或 CV 号，例如：https://www.bilibili.com/read/cv1234567890',
+    'user': '输入用户 UID 或空间链接，例如：https://space.bilibili.com/123456789',
+    'research': '输入你想要研究的课题，例如：2025年人工智能发展趋势、量子计算应用场景',
+    'smart_up': '输入您的问题，例如：推荐几个Python入门教程、如何学习机器学习'
 };
 
 // ============================================================================

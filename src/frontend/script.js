@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // State
-    let currentMode = 'smart_up'; // video, article, user, smart_up
+    let currentMode = 'video'; // video, article, user, smart_up, research - 默认为视频分析
     let manualModeLock = false; // Prevent auto-switch if user manually clicked
     let currentData = {
         summary: '',
@@ -416,6 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             card.onclick = () => {
                 elements.videoUrl.value = video.bvid;
+                switchMode('video');  // 先切换到视频分析模式
                 startAnalysis();
             };
             elements.initRelatedList.appendChild(card);
@@ -569,10 +570,20 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistory = [];
         
         // --- 核心修复：不同模式显示不同的对话初始消息 ---
-        const assistantGreeting = currentMode === 'smart_up' 
+        const assistantGreeting = currentMode === 'smart_up'
             ? '你好！我是你的智能小UP。有什么我可以帮你的吗？我会快速检索B站视频和全网资讯为您提供精准回答。'
-            : '你好！我是你的智能分析助手。我已经阅读了分析报告，你可以随时问我细节问题。';
-            
+            : `你好！我是你的智能分析助手。🤖
+
+我已经完整阅读了这份分析报告，包括内容总结、弹幕舆情、评论观点等所有信息。
+
+你可以问我：
+• "这个内容的核心观点是什么？"
+• "弹幕/评论最关注哪些点？"
+• "详细解释一下某个章节"
+• "有什么数据亮点？"
+
+我会基于完整的分析报告为你提供精准、结构化的回答！`;
+
         elements.chatMessages.innerHTML = `
             <div class="message assistant">
                 <div class="message-content">${assistantGreeting}</div>
@@ -2485,6 +2496,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             card.onclick = () => {
                 elements.videoUrl.value = video.bvid;
+                switchMode('video');  // 先切换到视频分析模式
                 startAnalysis();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
@@ -2495,6 +2507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose analyze function globally for inline onclick
     window.analyzeBvid = (bvid) => {
         elements.videoUrl.value = bvid;
+        switchMode('video');  // 先切换到视频分析模式
         startAnalysis();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -3676,6 +3689,6 @@ document.addEventListener('DOMContentLoaded', () => {
         BiliHelpers.downloadMarkdown(content, filename);
     }
 
-    // 初始化默认模式
-    switchMode('smart_up');
+    // 初始化默认模式为视频分析
+    switchMode('video');
 });

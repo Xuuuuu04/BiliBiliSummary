@@ -164,13 +164,6 @@ def setup_logging(
         file_handler.setFormatter(file_formatter)
         root_logger.addHandler(file_handler)
 
-        # 记录日志系统启动信息（使用全局 logger）
-        logging.info("=" * 80)
-        logging.info(f"应用启动: {START_TIME.strftime('%Y-%m-%d %H:%M:%S')}")
-        logging.info(f"日志文件: {CURRENT_LOG_FILE}")
-        logging.info(f"日志级别: {logging.getLevelName(level)}")
-        logging.info("=" * 80)
-
 
 # 日志器缓存
 _loggers = {}
