@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiliBili API 工具</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📺 B站 API 工具</h1>
+            <div class="status" id="status">⚪ 未连接</div>
+        </header>
+
+        <main>
+            <section class="current-page">
+                <h2>当前页面</h2>
+                <div id="page-info">
+                    <p>请在 B站视频页面使用本扩展</p>
+                </div>
+            </section>
+
+            <section class="quick-actions">
+                <h2>快捷操作</h2>
+                <button id="btn-info" class="btn btn-primary">📊 视频信息</button>
+                <button id="btn-comments" class="btn btn-secondary">💬 获取评论</button>
+                <button id="btn-danmaku" class="btn btn-secondary">📊 弹幕分析</button>
+            </section>
+
+            <section class="api-test">
+                <h2>API 测试</h2>
+                <div class="input-group">
+                    <input type="text" id="api-input" placeholder="输入 BVID 或视频链接">
+                    <button id="btn-test" class="btn btn-small">测试</button>
+                </div>
+                <pre id="api-result" class="result-box">等待测试...</pre>
+            </section>
+        </main>
+
+        <footer>
+            <p style="text-align: center; font-size: 12px; color: #999;">BiliBili API 转换器 v1.0.0</p>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

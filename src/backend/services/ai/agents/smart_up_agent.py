@@ -11,6 +11,14 @@ from src.backend.services.ai.prompts import get_smart_up_system_prompt
 from src.backend.services.ai.ai_helpers import web_search_exa
 from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
+from src.backend.services.ai.toolkit import ToolRegistry
+from src.backend.services.ai.toolkit.tools import (
+    SearchVideosTool,
+    AnalyzeVideoTool,
+    WebSearchTool,
+    SearchUsersTool,
+    GetUserRecentVideosTool
+)
 
 logger = get_logger(__name__)
 
@@ -35,6 +43,30 @@ class SmartUpAgent:
         self.model = model
         self.enable_thinking = enable_thinking
 
+        # 初始化工具注册中心
+        self._initialize_tools()
+
+    def _initialize_tools(self):
+        """初始化并注册所有工具"""
+        # 清空之前的注册
+        ToolRegistry.clear()
+
+        # 注册核心工具
+        tools = [
+            SearchVideosTool(),
+            AnalyzeVideoTool(),
+            WebSearchTool(),
+            SearchUsersTool(),
+            GetUserRecentVideosTool()
+        ]
+
+        for tool in tools:
+            ToolRegistry.register(tool)
+            # 设置AI客户端
+            tool.set_ai_client(self.client, self.model)
+
+        logger.info(f"[SmartUpAgent] 已注册 {ToolRegistry.count()} 个工具")
+
     def stream_chat(self, question: str, bilibili_service, history: List[Dict] = None) -> Generator[Dict, None, None]:
         """
         流式对话
@@ -48,9 +80,12 @@ class SmartUpAgent:
             Dict: 包含状态、内容、工具调用等信息的字典
         """
         try:
+            # 设置工具的bilibili_service
+            ToolRegistry.set_services(bilibili_service=bilibili_service)
+
             system_prompt = get_smart_up_system_prompt(question)
 
-            tools = self._get_tools_definition()
+            tools = ToolRegistry.list_tools_schema()
 
             # 组装消息列表，包含历史记录
             messages = [{"role": "system", "content": system_prompt}]
@@ -172,153 +207,12 @@ class SmartUpAgent:
             yield {'type': 'error', 'error': error_msg}
 
     def _get_tools_definition(self) -> List[Dict]:
-        """获取工具定义"""
-        return [
-            {
-                "type": "function",
-                "function": {
-                    "name": "search_videos",
-                    "description": "搜索 B 站视频以获取相关研究素材",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "keyword": {"type": "string", "description": "搜索关键词"}
-                        },
-                        "required": ["keyword"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "analyze_video",
-                    "description": "对指定的 B 站视频进行深度 AI 内容分析",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "bvid": {"type": "string", "description": "视频的 BV 号"}
-                        },
-                        "required": ["bvid"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "web_search",
-                    "description": "使用 Exa AI 进行全网深度搜索，获取最新资讯、技术文档或 B 站以外的补充信息",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "query": {"type": "string", "description": "搜索查询语句，建议使用自然语言描述你想要找的内容"}
-                        },
-                        "required": ["query"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "search_users",
-                    "description": "根据关键词/昵称模糊搜索 B 站 UP 主",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "keyword": {"type": "string", "description": "UP 主昵称或相关关键词"}
-                        },
-                        "required": ["keyword"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_user_recent_videos",
-                    "description": "获取指定 UP 主的最近投稿视频列表",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "mid": {"type": "integer", "description": "UP 主的 UID (mid)", "default": 10},
-                            "limit": {"type": "integer", "description": "获取视频的数量，默认 10"}
-                        },
-                        "required": ["mid"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_search_suggestions",
-                    "description": "获取搜索联想建议，优化搜索词以获得更精准的搜索结果",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "keyword": {"type": "string", "description": "部分搜索关键词"}
-                        },
-                        "required": ["keyword"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_hot_search_keywords",
-                    "description": "获取当前 B 站热搜关键词，把握热点趋势和用户关注焦点",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_video_tags",
-                    "description": "获取视频的标签信息，用于了解视频的分类、主题和关联内容",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "bvid": {"type": "string", "description": "视频的 BV 号"}
-                        },
-                        "required": ["bvid"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_video_series",
-                    "description": "获取视频所属的合集信息，用于系统性学习系列教程或了解完整的知识体系",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "bvid": {"type": "string", "description": "视频的 BV 号"}
-                        },
-                        "required": ["bvid"]
-                    }
-                }
-            },
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_user_dynamics",
-                    "description": "获取 UP 主的最新动态，了解其日常运营、社交互动和最新想法",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "mid": {"type": "integer", "description": "UP 主的 UID (mid)", "default": 10},
-                            "limit": {"type": "integer", "description": "获取动态的数量，默认 10"}
-                        },
-                        "required": ["mid"]
-                    }
-                }
-            }
-        ]
+        """获取工具定义（已废弃，使用ToolRegistry）"""
+        return ToolRegistry.list_tools_schema()
 
     def _execute_tool(self, func_name: str, args: Dict, bilibili_service, question: str):
         """
-        执行工具调用
+        执行工具调用（使用工具注册中心）
 
         Args:
             func_name: 工具名称
@@ -329,148 +223,53 @@ class SmartUpAgent:
         Yields:
             Dict: 工具执行结果
         """
-        from src.backend.services.bilibili.bilibili_service import run_async
+        # 检查工具是否已注册
+        if not ToolRegistry.has_tool(func_name):
+            yield {'type': 'error', 'error': f"工具 '{func_name}' 未注册"}
+            return
 
-        if func_name == "search_videos":
-            keyword = args.get("keyword")
-            search_res = run_async(bilibili_service.search_videos(keyword, limit=5))
-            if search_res['success']:
-                result = json.dumps(search_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data'][:3]}
+        # 获取工具实例
+        tool = ToolRegistry.get_tool(func_name)
+
+        # 如果是 analyze_video 工具，需要传递 question 参数
+        if func_name == "analyze_video":
+            args['question'] = question
+
+        # 执行工具
+        try:
+            # 检查是否是流式工具
+            from src.backend.services.ai.toolkit.base_tool import StreamableTool
+            if isinstance(tool, StreamableTool):
+                # 流式执行 - 创建一个辅助函数来收集所有结果
+                async def collect_stream_results():
+                    results = []
+                    async for item in tool.execute_stream(**args):
+                        results.append(item)
+                    return results
+
+                results = run_async(collect_stream_results())
+
+                # 逐个yield结果
+                for item in results:
+                    # 转换结果格式以兼容现有代码
+                    if item.get('type') == 'tool_result':
+                        yield {'type': 'tool_result', 'tool': func_name, 'result': item.get('data')}
+                    elif item.get('type') == 'tool_progress':
+                        yield item
+                    elif item.get('type') == 'error':
+                        yield item
             else:
-                result = f"搜索失败: {search_res['error']}"
+                # 非流式工具，直接执行
+                result = run_async(tool.execute(**args))
 
-        elif func_name == "web_search":
-            query = args.get("query")
-            search_res = web_search_exa(query)
-            if search_res['success']:
-                result = json.dumps(search_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data']}
-            else:
-                result = f"网络搜索失败: {search_res['error']}"
-                yield {'type': 'error', 'error': result}
+                if result.get('type') == 'error':
+                    yield {'type': 'error', 'error': result.get('error')}
+                else:
+                    yield {'type': 'tool_result', 'tool': func_name, 'result': result.get('data')}
 
-        elif func_name == "analyze_video":
-            bvid = args.get("bvid")
-            if bvid and ('bilibili.com' in bvid or 'http' in bvid):
-                from src.backend.utils.bilibili_helpers import extract_bvid
-                bvid = extract_bvid(bvid) or bvid
-
-            v_info_res = run_async(bilibili_service.get_video_info(bvid))
-            if not v_info_res['success']:
-                result = f"获取视频信息失败: {v_info_res['error']}"
-            else:
-                v_info = v_info_res['data']
-                v_title = v_info.get('title', bvid)
-                yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'title': v_title, 'message': f'正在搜集视频《{v_title}》的详情...'}
-
-                tasks = [
-                    bilibili_service.get_video_subtitles(bvid),
-                    bilibili_service.get_video_danmaku(bvid, limit=500),
-                    bilibili_service.get_video_comments(bvid, max_pages=5)
-                ]
-                sub_res, danmaku_res, comments_res = run_async(asyncio.gather(*tasks, return_exceptions=True))
-
-                subtitle_text = sub_res['data']['full_text'] if (not isinstance(sub_res, Exception) and sub_res.get('success') and sub_res['data'].get('has_subtitle')) else ""
-                danmaku_text = ""
-                if not isinstance(danmaku_res, Exception) and danmaku_res.get('success'):
-                    danmaku_text = f"\n\n【弹幕】\n" + "\n".join(danmaku_res['data']['danmakus'][:50])
-                comments_text = ""
-                if not isinstance(comments_res, Exception) and comments_res.get('success'):
-                    comments_list = [f"{c['username']}: {c['message']}" for c in comments_res['data']['comments'][:30]]
-                    comments_text = f"\n\n【评论】\n" + "\n".join(comments_list)
-
-                full_raw_content = subtitle_text if subtitle_text else f"简介: {v_info.get('desc', '无')}"
-                full_raw_content += danmaku_text + comments_text
-
-                yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'message': '正在提炼视频关键点...'}
-
-                from src.backend.services.ai.prompts import get_video_analyzer_for_agent_prompt
-                analysis_prompt = get_video_analyzer_for_agent_prompt(v_title, question, full_raw_content)
-
-                analysis_stream = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": "你是一个高效的视频内容提炼专家。"},
-                        {"role": "user", "content": f"视频内容：\n{full_raw_content[:15000]}\n\n任务：{analysis_prompt}"}
-                    ],
-                    stream=True
-                )
-
-                result_text = ""
-                for analysis_chunk in analysis_stream:
-                    if not analysis_chunk.choices:
-                        continue
-                    delta = analysis_chunk.choices[0].delta
-                    if delta.content:
-                        result_text += delta.content
-                        yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'tokens': len(result_text), 'content': delta.content}
-
-                result = result_text
-                yield {'type': 'tool_result', 'tool': func_name, 'result': {'bvid': bvid, 'title': v_title, 'summary': result}}
-
-        elif func_name == "search_users":
-            keyword = args.get("keyword")
-            search_res = run_async(bilibili_service.search_users(keyword, limit=5))
-            if search_res['success']:
-                result = json.dumps(search_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': search_res['data']}
-            else:
-                result = f"搜索用户失败: {search_res['error']}"
-
-        elif func_name == "get_user_recent_videos":
-            mid = args.get("mid")
-            limit = args.get("limit", 10)
-            v_res = run_async(bilibili_service.get_user_recent_videos(mid, limit=limit))
-            if v_res['success']:
-                result = json.dumps(v_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': v_res['data']}
-            else:
-                result = f"获取用户作品失败: {v_res['error']}"
-
-        elif func_name == "get_search_suggestions":
-            keyword = args.get("keyword")
-            sug_res = run_async(bilibili_service.get_search_suggestions(keyword))
-            if sug_res['success']:
-                result = json.dumps(sug_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': sug_res['data']}
-            else:
-                result = f"获取搜索建议失败: {sug_res['error']}"
-
-        elif func_name == "get_hot_search_keywords":
-            hot_res = run_async(bilibili_service.get_hot_search_keywords())
-            if hot_res['success']:
-                result = json.dumps(hot_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': hot_res['data']}
-            else:
-                result = f"获取热搜关键词失败: {hot_res['error']}"
-
-        elif func_name == "get_video_tags":
-            bvid = args.get("bvid")
-            tags_res = run_async(bilibili_service.get_video_tags(bvid))
-            if tags_res['success']:
-                result = json.dumps(tags_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': tags_res['data']}
-            else:
-                result = f"获取视频标签失败: {tags_res['error']}"
-
-        elif func_name == "get_video_series":
-            bvid = args.get("bvid")
-            series_res = run_async(bilibili_service.get_video_series(bvid))
-            if series_res['success']:
-                result = json.dumps(series_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': series_res['data']}
-            else:
-                result = f"获取视频合集失败: {series_res['error']}"
-
-        elif func_name == "get_user_dynamics":
-            mid = args.get("mid")
-            limit = args.get("limit", 10)
-            dynamics_res = run_async(bilibili_service.get_user_dynamics(mid, limit=limit))
-            if dynamics_res['success']:
-                result = json.dumps(dynamics_res['data'], ensure_ascii=False)
-                yield {'type': 'tool_result', 'tool': func_name, 'result': dynamics_res['data']}
-            else:
-                result = f"获取用户动态失败: {dynamics_res['error']}"
-
-        return result
+        except Exception as e:
+            error_msg = f"执行工具 '{func_name}' 出错: {str(e)}"
+            logger.error(error_msg)
+            import traceback
+            traceback.print_exc()
+            yield {'type': 'error', 'error': error_msg}

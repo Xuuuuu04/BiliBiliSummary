@@ -1,0 +1,56 @@
+# FastAPI 版本依赖
+# 异步 Web 框架迁移所需的核心依赖
+
+# ========== 核心框架 ==========
+fastapi>=0.104.0              # FastAPI 主框架
+uvicorn[standard]>=0.24.0     # ASGI 服务器（包含 websockets, httptools）
+sse-starlette>=1.8.0          # SSE（Server-Sent Events）支持
+
+# ========== 数据验证 ==========
+python-multipart>=0.0.6       # 表单数据解析
+pydantic>=2.0.0               # 数据验证（FastAPI 内置依赖）
+email-validator>=2.0.0         # 邮箱验证（可选）
+
+# ========== 测试工具 ==========
+pytest>=7.4.0                 # 测试框架
+pytest-asyncio>=0.21.0        # 异步测试支持
+httpx>=0.25.0                 # 异步 HTTP 客户端（测试用）
+
+# ========== 性能监控 ==========
+# prometheus-client>=0.19.0    # Prometheus 监控（可选）
+# opentelemetry-api>=1.20.0    # OpenTelemetry（可选）
+
+# ========== 保留的原有依赖 ==========
+# 以下依赖保持不变，确保业务逻辑兼容
+openai>=1.10.0
+bilibili-api-python>=17.4.0
+aiohttp>=3.9.0
+requests>=2.31.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+qrcode>=7.4.0
+python-dotenv>=1.0.0
+xhtml2pdf>=0.2.11
+markdown2>=2.4.10
+
+# ========== 注意事项 ==========
+#
+# 1. 移除的依赖：
+#    - flask (被 FastAPI 替代)
+#    - flask-cors (FastAPI 内置)
+#
+# 2. 新增的依赖：
+#    - fastapi: 异步 Web 框架
+#    - uvicorn: ASGI 服务器
+#    - sse-starlette: SSE 支持
+#    - pytest-asyncio: 异步测试
+#    - httpx: 异步 HTTP 客户端
+#
+# 3. 安装命令：
+#    pip install -r requirements-fastapi.txt
+#
+# 4. 虚拟环境建议：
+#    python -m venv venv-fastapi
+#    source venv-fastapi/bin/activate  # Linux/Mac
+#    venv-fastapi\Scripts\activate     # Windows

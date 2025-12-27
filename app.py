@@ -55,6 +55,20 @@ from src.backend.api.routes import (
 )
 from src.backend.api.routes.helpers import init_helper_routes
 
+# ========== 初始化中间件（必须在路由之前） ==========
+from src.backend.api.middleware import ErrorHandler, RequestLogger, RateLimiter
+from src.config import Config
+
+# 错误处理器（必须第一个初始化）
+ErrorHandler(app)
+
+# 请求日志中间件
+RequestLogger(app)
+
+# 限流中间件（如果启用）
+if Config.API_RATE_LIMIT_ENABLED:
+    RateLimiter(app)
+
 # 注册所有路由
 init_helper_routes(app)  # 首页和静态资源
 init_settings_routes(app, ai_service_ref)  # 设置管理
@@ -62,6 +76,10 @@ init_research_routes(app, ai_service, bilibili_service)  # 深度研究
 init_analyze_routes(app, bilibili_service, ai_service)  # 视频分析
 init_bilibili_routes(app, bilibili_service, login_service)  # B站数据和登录
 init_user_routes(app, bilibili_service, ai_service)  # 用户画像
+
+# ========== 初始化 API v1 路由 ==========
+from src.backend.api.routes.v1 import init_routes
+init_routes(app, bilibili_service, ai_service)  # API v1 路由
 
 if __name__ == '__main__':
     from src.config import Config

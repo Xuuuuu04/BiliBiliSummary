@@ -28,3 +28,21 @@ python-dotenv>=1.0.0
 # PDF Generation
 xhtml2pdf>=0.2.11
 markdown2>=2.4.10
+
+# ========== Testing Dependencies ==========
+# Testing Framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-flask>=1.2.0
+
+# Code Quality
+pylint>=2.17.0
+black>=23.0.0
+
+# ========== Optional Dependencies ==========
+# Rate Limiting (optional, can use built-in)
+# flask-limiter>=3.5.0
+
+# Redis Cache (optional, can use memory cache)
+# redis>=5.0.0

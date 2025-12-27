@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "BiliBili API 转换器",
+  "version": "1.0.0",
+  "description": "为 B站提供增强的 API 接口和数据分析功能",
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://*.bilibili.com/*",
+    "http://localhost:5000/*",
+    "http://127.0.0.1:5000/*"
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "BiliBili API 工具"
+  },
+
+  "background": {
+    "service_worker": "background/background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://*.bilibili.com/video/*"],
+      "js": ["content/video-enhancer.js"],
+      "run_at": "document_end"
+    }
+  ],
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["https://*.bilibili.com/*"]
+    }
+  ]
+}

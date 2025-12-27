@@ -11,6 +11,15 @@ from src.backend.services.ai.prompts import get_deep_research_system_prompt
 from src.backend.services.ai.ai_helpers import web_search_exa, save_research_report
 from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
+from src.backend.services.ai.toolkit import ToolRegistry
+from src.backend.services.ai.toolkit.tools import (
+    SearchVideosTool,
+    AnalyzeVideoTool,
+    WebSearchTool,
+    SearchUsersTool,
+    GetUserRecentVideosTool,
+    FinishResearchTool
+)
 
 logger = get_logger(__name__)
 
@@ -37,6 +46,31 @@ class DeepResearchAgent:
         self.vl_model = vl_model or model  # 如果未指定，使用普通模型
         self.enable_thinking = enable_thinking
 
+        # 初始化工具注册中心
+        self._initialize_tools()
+
+    def _initialize_tools(self):
+        """初始化并注册所有工具"""
+        # 清空之前的注册
+        ToolRegistry.clear()
+
+        # 注册核心工具
+        tools = [
+            SearchVideosTool(),
+            AnalyzeVideoTool(),
+            WebSearchTool(),
+            SearchUsersTool(),
+            GetUserRecentVideosTool(),
+            FinishResearchTool()
+        ]
+
+        for tool in tools:
+            ToolRegistry.register(tool)
+            # 设置AI客户端
+            tool.set_ai_client(self.client, self.model)
+
+        logger.info(f"[DeepResearchAgent] 已注册 {ToolRegistry.count()} 个工具")
+
     def stream_research(self, topic: str, bilibili_service) -> Generator[Dict, None, None]:
         """
         流式深度研究
@@ -49,6 +83,9 @@ class DeepResearchAgent:
             Dict: 包含状态、进度、内容等信息的字典
         """
         try:
+            # 设置工具的bilibili_service
+            ToolRegistry.set_services(bilibili_service=bilibili_service)
+
             system_prompt = get_deep_research_system_prompt(topic)
 
             tools = self._get_tools_definition()
