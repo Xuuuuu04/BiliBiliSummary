@@ -9,6 +9,7 @@ from openai import OpenAI
 from src.config import Config
 from src.backend.services.ai.prompts import get_smart_up_system_prompt
 from src.backend.services.ai.ai_helpers import web_search_exa
+from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -47,8 +48,6 @@ class SmartUpAgent:
             Dict: 包含状态、内容、工具调用等信息的字典
         """
         try:
-            from src.backend.services.bilibili.bilibili_service import run_async
-
             system_prompt = get_smart_up_system_prompt(question)
 
             tools = self._get_tools_definition()

@@ -2,7 +2,6 @@
 B站服务统一入口
 整合所有B站相关服务，提供向后兼容的接口
 """
-import asyncio
 from typing import Optional
 from src.backend.services.bilibili.credential_manager import CredentialManager
 from src.backend.services.bilibili.video_service import VideoService
@@ -14,6 +13,7 @@ from src.backend.utils.bilibili_helpers import (
     extract_article_id,
     format_duration
 )
+from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -29,7 +29,7 @@ class BilibiliService:
     # 静态工具方法（保持向后兼容）
     extract_bvid = staticmethod(extract_bvid)
     extract_article_id = staticmethod(extract_article_id)
-    run_async = staticmethod(lambda coro: asyncio.get_event_loop().run_until_complete(coro))
+    run_async = staticmethod(run_async)
 
     def __init__(self):
         """初始化B站服务，整合所有子服务"""
@@ -308,21 +308,3 @@ class BilibiliService:
     def _format_duration(self, seconds: int) -> str:
         """格式化时长（向后兼容）"""
         return format_duration(seconds)
-
-
-def run_async(coro):
-    """
-    运行异步函数的辅助函数（向后兼容）
-
-    Args:
-        coro: 协程对象
-
-    Returns:
-        协程的执行结果
-    """
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)

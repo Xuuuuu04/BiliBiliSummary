@@ -6,6 +6,8 @@ import asyncio
 import json
 from flask import request, jsonify, Response
 from src.backend.utils.logger import get_logger
+from src.backend.utils.validators import validate_question_input, validate_json_data, validate_bvid, ValidationError
+from src.backend.utils.error_handler import ErrorResponse, handle_errors
 
 logger = get_logger(__name__)
 
@@ -22,64 +24,59 @@ def init_analyze_routes(app, bilibili_service, ai_service):
     from src.backend.services.bilibili import BilibiliService, run_async
 
     @app.route('/api/smart_up/stream', methods=['POST'])
+    @handle_errors
     def smart_up_stream():
         """智能小UP 快速问答流"""
-        try:
-            data = request.json
-            question = data.get('question')
-            history = data.get('history', [])
-            if not question:
-                return jsonify({'success': False, 'error': '问题不能为空'}), 400
+        # 验证输入
+        data = validate_json_data(request.json, required_fields=['question'])
+        question = validate_question_input(data.get('question'))
+        history = data.get('history', [])
 
-            def generate():
+        def generate():
+            try:
                 for chunk in ai_service.smart_up_stream(question, bilibili_service, history):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+            except Exception as e:
+                logger.error(f"智能小UP流式输出错误: {str(e)}")
+                yield ErrorResponse.sse_error(f"分析过程中发生错误: {str(e)}")
 
-            return Response(generate(), mimetype='text/event-stream')
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
+        return Response(generate(), mimetype='text/event-stream')
 
     @app.route('/api/chat/stream', methods=['POST'])
+    @handle_errors
     def chat_video_stream():
         """视频内容流式问答"""
-        try:
-            data = request.get_json()
-            question = data.get('question')
-            context = data.get('context')
-            video_info = data.get('video_info', {})
-            history = data.get('history', [])
+        # 验证输入
+        data = validate_json_data(request.json, required_fields=['question', 'context'])
+        question = validate_question_input(data.get('question'))
+        context = validate_question_input(data.get('context'))
+        video_info = data.get('video_info', {})
+        history = data.get('history', [])
 
-            if not question or not context:
-                return jsonify({'success': False, 'error': '缺少必要参数'}), 400
-
-            def generate():
+        def generate():
+            try:
                 for chunk in ai_service.chat_stream(question, context, video_info, history):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+            except Exception as e:
+                logger.error(f"视频对话流式输出错误: {str(e)}")
+                yield ErrorResponse.sse_error(f"对话过程中发生错误: {str(e)}")
 
-            return Response(generate(), mimetype='text/event-stream')
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
+        return Response(generate(), mimetype='text/event-stream')
 
     @app.route('/api/analyze', methods=['POST'])
+    @handle_errors
     def analyze_video():
         """分析视频的主接口"""
+        # 验证输入
+        data = validate_json_data(request.json, required_fields=['url'])
+        url = data.get('url', '')
+
+        # 提取BVID
         try:
-            data = request.get_json()
-            url = data.get('url', '')
-
-            if not url:
-                return jsonify({
-                    'success': False,
-                    'error': '请提供B站视频链接'
-                }), 400
-
-            # 提取BVID
-            bvid = BilibiliService.extract_bvid(url)
-            if not bvid:
-                return jsonify({
-                    'success': False,
-                    'error': '无效的B站视频链接'
-                }), 400
+            bvid = validate_bvid(url)
+        except ValidationError as e:
+            logger.error(f"无效的B站链接: {url}")
+            return jsonify(ErrorResponse.error(str(e), error_code="INVALID_URL", status_code=400)[0]), 400
 
             # 获取视频信息
             video_info_result = run_async(bilibili_service.get_video_info(bvid))

@@ -135,10 +135,9 @@ if __name__ == '__main__':
         print(f"  > {BOLD}深度研究:{RESET} {GOLD}{Config.DEEP_RESEARCH_MODEL}{RESET}")
         print(f"  > {BOLD}API 代理:{RESET} {Config.OPENAI_API_BASE}")
 
-        # 检查 API Key 状态（脱敏显示）
-        api_key = Config.OPENAI_API_KEY
-        key_status = f"{BILI_PINK}已配置{RESET} ({api_key[:8]}...{api_key[-4:]})" if api_key else f"\033[31m未配置\033[0m"
-        print(f"  > {BOLD}API Key :{RESET} {key_status}")
+        # 检查 API Key 状态（仅显示是否配置，不泄露任何字符）
+        api_key_status = f"{BILI_PINK}✅ 已配置{RESET}" if Config.OPENAI_API_KEY else f"\033[31m❌ 未配置\033[0m"
+        print(f"  > {BOLD}API Key :{RESET} {api_key_status}")
         print(f"\n{BOLD}📝 日志系统:{RESET}")
         print(f"  > {BOLD}日志目录:{RESET} {BILI_BLUE}{get_log_dir()}{RESET}")
         print(f"  > {BOLD}当前日志:{RESET} {BILI_BLUE}{get_current_log_file().name}{RESET}")

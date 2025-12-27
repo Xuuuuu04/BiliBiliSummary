@@ -9,6 +9,7 @@ from openai import OpenAI
 from src.config import Config
 from src.backend.services.ai.prompts import get_deep_research_system_prompt
 from src.backend.services.ai.ai_helpers import web_search_exa, save_research_report
+from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -48,8 +49,6 @@ class DeepResearchAgent:
             Dict: 包含状态、进度、内容等信息的字典
         """
         try:
-            from src.backend.services.bilibili.bilibili_service import run_async
-
             system_prompt = get_deep_research_system_prompt(topic)
 
             tools = self._get_tools_definition()
