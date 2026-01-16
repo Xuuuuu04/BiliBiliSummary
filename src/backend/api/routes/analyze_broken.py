@@ -12,14 +12,14 @@ from src.backend.utils.error_handler import ErrorResponse, handle_errors
 logger = get_logger(__name__)
 
 
-def init_analyze_routes(app, bilibili_service, ai_service_ref):
+def init_analyze_routes(app, bilibili_service, ai_service):
     """
     初始化分析相关路由
 
     Args:
         app: Flask 应用实例
         bilibili_service: BilibiliService 实例
-        ai_service_ref: AI服务引用字典 {'service': AIService实例}
+        ai_service: AIService 实例
     """
     from src.backend.services.bilibili import BilibiliService, run_async
 
@@ -34,7 +34,6 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
 
         def generate():
             try:
-                ai_service = ai_service_ref['service']  # 动态获取最新的 AI 服务
                 for chunk in ai_service.smart_up_stream(question, bilibili_service, history):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
             except Exception as e:
@@ -56,7 +55,6 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
 
         def generate():
             try:
-                ai_service = ai_service_ref['service']  # 动态获取最新的 AI 服务
                 for chunk in ai_service.chat_stream(question, context, video_info, history):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
             except Exception as e:
@@ -80,100 +78,105 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
             logger.error(f"无效的B站链接: {url}")
             return jsonify(ErrorResponse.error(str(e), error_code="INVALID_URL", status_code=400)[0]), 400
 
-        # 获取视频信息
-        video_info_result = run_async(bilibili_service.get_video_info(bvid))
-        if not video_info_result['success']:
-            return jsonify(video_info_result), 400
+            # 获取视频信息
+            video_info_result = run_async(bilibili_service.get_video_info(bvid))
+            if not video_info_result['success']:
+                return jsonify(video_info_result), 400
 
-        video_info = video_info_result['data']
+            video_info = video_info_result['data']
 
-        # 获取字幕
-        logger.info("开始获取字幕...")
-        subtitle_result = run_async(bilibili_service.get_video_subtitles(bvid))
+            # 获取字幕
+            logger.info("开始获取字幕...")
+            subtitle_result = run_async(bilibili_service.get_video_subtitles(bvid))
 
-        # 获取弹幕（用于分析）
-        logger.info("开始获取弹幕...")
-        danmaku_result = run_async(bilibili_service.get_video_danmaku(bvid, limit=200))
-        danmaku_texts = []
-        if danmaku_result['success']:
-            danmaku_texts = danmaku_result['data']['danmakus']
-            logger.info("获取到 {} 条弹幕".format(len(danmaku_texts)))
+            # 获取弹幕（用于分析）
+            logger.info("开始获取弹幕...")
+            danmaku_result = run_async(bilibili_service.get_video_danmaku(bvid, limit=200))
+            danmaku_texts = []
+            if danmaku_result['success']:
+                danmaku_texts = danmaku_result['data']['danmakus']
+                logger.info("获取到 {} 条弹幕".format(len(danmaku_texts)))
 
-        # 获取评论（用于分析）
-        logger.info("开始获取评论...")
-        comments_result = run_async(bilibili_service.get_video_comments(bvid, max_pages=10))
-        comments_data = []
-        if comments_result['success']:
-            comments_data = comments_result['data']['comments']
-            logger.info("获取到 {} 条评论".format(len(comments_data)))
+            # 获取评论（用于分析）
+            logger.info("开始获取评论...")
+            comments_result = run_async(bilibili_service.get_video_comments(bvid, max_pages=10))
+            comments_data = []
+            if comments_result['success']:
+                comments_data = comments_result['data']['comments']
+                logger.info("获取到 {} 条评论".format(len(comments_data)))
 
-        # 获取统计数据
-        logger.info("开始获取统计数据...")
-        stats_result = run_async(bilibili_service.get_video_stats(bvid))
-        stats_data = stats_result['data'] if stats_result['success'] else {}
+            # 获取统计数据
+            logger.info("开始获取统计数据...")
+            stats_result = run_async(bilibili_service.get_video_stats(bvid))
+            stats_data = stats_result['data'] if stats_result['success'] else {}
 
-        # 构建内容
-        content = ''
-        has_subtitle = False
+            # 构建内容
+            content = ''
+            has_subtitle = False
 
-        if subtitle_result['success'] and subtitle_result['data'].get('has_subtitle'):
-            content = subtitle_result['data']['full_text']
-            has_subtitle = True
-            logger.info("使用字幕作为主要内容（{}字）".format(len(content)))
-        else:
-            # 使用弹幕和简介
-            if danmaku_texts:
-                content = '\n'.join(danmaku_texts)
-                content = f"【视频简介】\n{video_info.get('desc', '')}\n\n【弹幕内容】\n{content}"
-                logger.info("使用弹幕作为内容（{}条）".format(len(danmaku_texts)))
+            if subtitle_result['success'] and subtitle_result['data'].get('has_subtitle'):
+                content = subtitle_result['data']['full_text']
+                has_subtitle = True
+                logger.info("使用字幕作为主要内容（{}字）".format(len(content)))
             else:
-                content = f"【视频简介】\n{video_info.get('desc', '')}"
+                # 使用弹幕和简介
+                if danmaku_texts:
+                    content = '\n'.join(danmaku_texts)
+                    content = f"【视频简介】\n{video_info.get('desc', '')}\n\n【弹幕内容】\n{content}"
+                    logger.info("使用弹幕作为内容（{}条）".format(len(danmaku_texts)))
+                else:
+                    content = f"【视频简介】\n{video_info.get('desc', '')}"
 
-        if not content or len(content) < 50:
+            if not content or len(content) < 50:
+                return jsonify({
+                    'success': False,
+                    'error': '无法获取视频内容（无字幕且无有效弹幕）'
+                }), 400
+
+            # 获取视频帧进行多模态分析
+            logger.info("开始提取视频关键帧...")
+            frames_result = run_async(bilibili_service.extract_video_frames(bvid))
+
+            video_frames = None
+            if frames_result['success']:
+                video_frames = frames_result['data']['frames']
+                logger.info("成功提取 {} 帧画面".format(len(video_frames)))
+            else:
+                logger.warning("视频帧提取失败: {}".format(frames_result['error']))
+                logger.info("📝 将仅使用文本内容进行分析")
+
+            # 调用AI生成分析
+            analysis_result = ai_service.generate_full_analysis(video_info, content, video_frames)
+
+            if not analysis_result['success']:
+                return jsonify(analysis_result), 500
+
+            # 返回完整结果
+            return jsonify({
+                'success': True,
+                'data': {
+                    'video_info': video_info,
+                    'stats': stats_data,
+                    'has_subtitle': has_subtitle,
+                    'has_video_frames': bool(video_frames),
+                    'frame_count': len(video_frames) if video_frames else 0,
+                    'content': content,
+                    'content_length': len(content),
+                    'danmaku_count': len(danmaku_texts),
+                    'comment_count': len(comments_data),
+                    'danmaku_preview': danmaku_texts[:20] if danmaku_texts else [],
+                    'comments_preview': comments_data[:10] if comments_data else [],
+                    'analysis': analysis_result['data']['full_analysis'],
+                    'parsed': analysis_result['data']['parsed'],
+                    'tokens_used': analysis_result['data']['tokens_used']
+                }
+            })
+
+        except Exception as e:
             return jsonify({
                 'success': False,
-                'error': '无法获取视频内容（无字幕且无有效弹幕）'
-            }), 400
-
-        # 获取视频帧进行多模态分析
-        logger.info("开始提取视频关键帧...")
-        frames_result = run_async(bilibili_service.extract_video_frames(bvid))
-
-        video_frames = None
-        if frames_result['success']:
-            video_frames = frames_result['data']['frames']
-            logger.info("成功提取 {} 帧画面".format(len(video_frames)))
-        else:
-            logger.warning("视频帧提取失败: {}".format(frames_result['error']))
-            logger.info("📝 将仅使用文本内容进行分析")
-
-        # 调用AI生成分析
-        ai_service = ai_service_ref['service']
-        analysis_result = ai_service.generate_full_analysis(video_info, content, video_frames)
-
-        if not analysis_result['success']:
-            return jsonify(analysis_result), 500
-
-        # 返回完整结果
-        return jsonify({
-            'success': True,
-            'data': {
-                'video_info': video_info,
-                'stats': stats_data,
-                'has_subtitle': has_subtitle,
-                'has_video_frames': bool(video_frames),
-                'frame_count': len(video_frames) if video_frames else 0,
-                'content': content,
-                'content_length': len(content),
-                'danmaku_count': len(danmaku_texts),
-                'comment_count': len(comments_data),
-                'danmaku_preview': danmaku_texts[:20] if danmaku_texts else [],
-                'comments_preview': comments_data[:10] if comments_data else [],
-                'analysis': analysis_result['data']['full_analysis'],
-                'parsed': analysis_result['data']['parsed'],
-                'tokens_used': analysis_result['data']['tokens_used']
-            }
-        })
+                'error': f'服务器错误: {str(e)}'
+            }), 500
 
     @app.route('/api/analyze/stream', methods=['POST'])
     def analyze_video_stream():
@@ -232,14 +235,12 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
                             yield f"data: {json.dumps({'type': 'error', 'error': res['error']})}\n\n"
                             return
 
-                        title = res['data']['title']
-                        yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取内容: {title}', 'progress': 20, 'info': res['data']})}\n\n"
+                        yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取内容: {res['data']['title']}', 'progress': 20, 'info': res['data']})}\n\n"
                         yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析内容...', 'progress': 40})}\n\n"
 
                         article_full_content = res['data']['content']
                         article_res_data = res['data']
 
-                        ai_service = ai_service_ref['service']
                         for chunk in ai_service.generate_article_analysis_stream(res['data'], res['data']['content']):
                             yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
@@ -267,11 +268,15 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
                     # 阶段2: 获取内容数据
                     yield f"data: {json.dumps({'type': 'stage', 'stage': 'fetching_content', 'message': '获取字幕和弹幕...', 'progress': 20})}\n\n"
 
-                    # 逐个获取数据，避免 asyncio.gather 的嵌套事件循环问题
-                    subtitle_result = run_async(bilibili_service.get_video_subtitles(bvid))
-                    danmaku_result = run_async(bilibili_service.get_video_danmaku(bvid, limit=1000))
-                    comments_result = run_async(bilibili_service.get_video_comments(bvid, max_pages=30, target_count=500))
-                    stats_result = run_async(bilibili_service.get_video_stats(bvid))
+                    tasks = [
+                        bilibili_service.get_video_subtitles(bvid),
+                        bilibili_service.get_video_danmaku(bvid, limit=1000),
+                        bilibili_service.get_video_comments(bvid, max_pages=30, target_count=500),
+                        bilibili_service.get_video_stats(bvid)
+                    ]
+
+                    results = run_async(asyncio.gather(*tasks, return_exceptions=True))
+                    subtitle_result, danmaku_result, comments_result, stats_result = results
 
                     # 处理弹幕数据
                     danmaku_texts = []
@@ -337,7 +342,6 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
                     # 阶段4: 开始AI分析（流式）
                     yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '开始AI智能分析...', 'progress': 55})}\n\n"
 
-                    ai_service = ai_service_ref['service']
                     for chunk in ai_service.generate_full_analysis_stream(video_info, content, video_frames):
                         chunk_json = json.dumps(chunk, ensure_ascii=False)
                         yield f"data: {chunk_json}\n\n"

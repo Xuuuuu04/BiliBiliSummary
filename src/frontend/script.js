@@ -826,6 +826,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             const detail = lastItem.querySelector('.timeline-detail');
                             detail.textContent += data.content;
                         } else {
+                            // 在创建新的思考节点前，完成之前的所有思考节点
+                            const previousThinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
+                            previousThinkingItems.forEach(item => {
+                                item.classList.remove('active');
+                                item.classList.add('completed');
+                                const statusBadge = item.querySelector('.timeline-status-badge');
+                                const resultPreview = item.querySelector('.result-preview');
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = '✅ 已完成';
+                                }
+                                if (resultPreview) {
+                                    const detailDiv = item.querySelector('.timeline-detail');
+                                    const charCount = detailDiv ? detailDiv.textContent.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `💭 ${charCount} 字符`;
+                                }
+                            });
                             addTimelineItem('thinking', 'Agent 思考中...', data.content);
                         }
                     } else if (data.type === 'content') {
@@ -1143,6 +1161,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 }
                             } else if (data.type === 'tool_start') {
+                                // 完成所有思考节点（工具开始执行表示思考阶段结束）
+                                const activeThinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
+                                activeThinkingItems.forEach(item => {
+                                    item.classList.remove('active');
+                                    item.classList.add('completed');
+                                    const statusBadge = item.querySelector('.timeline-status-badge');
+                                    const resultPreview = item.querySelector('.result-preview');
+                                    if (statusBadge) {
+                                        statusBadge.className = 'timeline-status-badge completed';
+                                        statusBadge.innerHTML = '✅ 已完成';
+                                    }
+                                    if (resultPreview) {
+                                        const detailDiv = item.querySelector('.timeline-detail');
+                                        const charCount = detailDiv ? detailDiv.textContent.length : 0;
+                                        resultPreview.className = 'result-preview success';
+                                        resultPreview.innerHTML = `💭 ${charCount} 字符`;
+                                    }
+                                });
+
                                 let title = `执行工具: ${data.tool}`;
                                 let toolBvid = data.args ? data.args.bvid : null;
                                 let toolKeyword = data.args ? data.args.keyword : null;
@@ -2004,11 +2041,45 @@ document.addEventListener('DOMContentLoaded', () => {
                                     addTimelineItem('tool_result', fallbackTitle, data.result);
                                 }
                             } else if (data.type === 'error') {
+                        // 完成所有剩余的active节点（即使出错也要更新状态）
+                        const remainingActiveItems = elements.researchTimeline.querySelectorAll('.timeline-item.active');
+                        remainingActiveItems.forEach(item => {
+                            item.classList.remove('active');
+                            item.classList.add('completed');
+                            const statusBadge = item.querySelector('.timeline-status-badge');
+                            const resultPreview = item.querySelector('.result-preview');
+                            if (statusBadge) {
+                                statusBadge.className = 'timeline-status-badge error';
+                                statusBadge.innerHTML = '⚠️ 中断';
+                            }
+                            if (resultPreview && resultPreview.textContent === '等待结果...') {
+                                resultPreview.className = 'result-preview error';
+                                resultPreview.innerHTML = '⚠️ 流程中断';
+                            }
+                        });
+
                         addTimelineItem('error', `出现错误: ${data.error}`);
                     } else if (data.type === 'done') {
+                        // 完成所有剩余的active节点
+                        const remainingActiveItems = elements.researchTimeline.querySelectorAll('.timeline-item.active');
+                        remainingActiveItems.forEach(item => {
+                            item.classList.remove('active');
+                            item.classList.add('completed');
+                            const statusBadge = item.querySelector('.timeline-status-badge');
+                            const resultPreview = item.querySelector('.result-preview');
+                            if (statusBadge) {
+                                statusBadge.className = 'timeline-status-badge completed';
+                                statusBadge.innerHTML = '✅ 已完成';
+                            }
+                            if (resultPreview && resultPreview.textContent === '等待结果...') {
+                                resultPreview.className = 'result-preview success';
+                                resultPreview.innerHTML = '✓ 已完成';
+                            }
+                        });
+
                         BiliHelpers.showToast('深度研究已完成并持久化！', elements.toast);
                         updateProgress(100, '研究完成');
-                        addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧“研究报告”查看。');
+                        addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧"研究报告"查看。');
                         
                         // 尝试获取刚生成的文件ID以便立即下载 PDF
                         fetch('/api/research/history')
@@ -2156,7 +2227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'get_user_recent_videos': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M10 8l6 4-6 4V8z"></path></svg>`,
             'analyze_video': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M10 8l6 4-6 4V8z"></path></svg>`,
             'get_search_suggestions': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
-            'get_hot_search_keywords': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.5-2.5-5-2.5-5 0-2.5 2-5 5-5 4.5 0 8 2.9 8 8 0 2.5-2 4.5-5 4.5-.5 0-1-.5-1.5-.5"></path><path d="M15.5 14.5A2.5 2.5 0 0 0 18 12c0-1.38-.5-2-1-3-1.5-2.5-5-2.5-5 0-2.5 2-5 5-5 4.5 0 8 2.9 8 8 0 2.5-2 4.5-5 4.5-.5 0-1-.5-1.5-.5"></path></svg>`,
+            'get_hot_search_keywords': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 2 6 6 6 9c0 3 2 5 2 8s-2 5-2 5h12s-2-2-2-5 2-5 2-8c0-3-2-7-6-7z"></path><line x1="12" y1="22" x2="12" y2="22"></line></svg>`,
             'get_video_tags': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`,
             'get_video_series': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><rect x="8" y="6" width="12" height="12" rx="1"></rect><line x1="10" y1="9" x2="14" y2="9"></line><line x1="10" y1="13" x2="14" y2="13"></line><line x1="10" y1="17" x2="14" y2="17"></line></svg>`,
             'get_user_dynamics': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path><path d="M16 9v.01"></path><path d="M12 13v.01"></path><path d="M8 17v.01"></path></svg>`,

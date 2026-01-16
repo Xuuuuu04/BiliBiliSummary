@@ -7,7 +7,7 @@ import asyncio
 from typing import Generator, Dict
 from openai import OpenAI
 from src.config import Config
-from src.backend.services.ai.prompts import get_deep_research_system_prompt
+from src.backend.services.ai.prompts import get_deep_research_system_prompt, get_video_analysis_prompt
 from src.backend.services.ai.ai_helpers import web_search_exa, save_research_report
 from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
@@ -191,8 +191,8 @@ class DeepResearchAgent:
                     # 并行执行所有视频分析
                     from asyncio import gather
 
-                    async def analyze_single_video(bvid):
-                        """分析单个视频（复用现有逻辑）"""
+                    def analyze_single_video(bvid):
+                        """分析单个视频（复用现有逻辑）- 同步版本"""
                         # 清理BVID
                         if bvid and ('bilibili.com' in bvid or 'http' in bvid):
                             bvid = extract_bvid(bvid) or bvid
@@ -205,16 +205,11 @@ class DeepResearchAgent:
                         v_info = v_info_res['data']
                         v_title = v_info.get('title', bvid)
 
-                        # 2. 并行获取所有多维内容
-                        tasks = [
-                            bilibili_service.get_video_subtitles(bvid),
-                            bilibili_service.get_video_danmaku(bvid, limit=1000),
-                            bilibili_service.get_video_comments(bvid, max_pages=10),
-                            bilibili_service.extract_video_frames(bvid)
-                        ]
-
-                        # 并发执行
-                        sub_res, danmaku_res, comments_res, frames_res = run_async(asyncio.gather(*tasks, return_exceptions=True))
+                        # 2. 逐个获取所有多维内容（避免嵌套事件循环）
+                        sub_res = run_async(bilibili_service.get_video_subtitles(bvid))
+                        danmaku_res = run_async(bilibili_service.get_video_danmaku(bvid, limit=1000))
+                        comments_res = run_async(bilibili_service.get_video_comments(bvid, max_pages=10))
+                        frames_res = run_async(bilibili_service.extract_video_frames(bvid))
 
                         # 数据解析
                         subtitle_text = sub_res['data']['full_text'] if (not isinstance(sub_res, Exception) and sub_res.get('success') and sub_res['data'].get('has_subtitle')) else ""
@@ -256,6 +251,7 @@ class DeepResearchAgent:
                                 })
 
                         # 调用AI分析
+                        logger.info(f"[批量分析] 开始AI分析: {bvid} ({v_title})")
                         analysis_response = self.client.chat.completions.create(
                             model=self.vl_model,
                             messages=[
@@ -267,9 +263,11 @@ class DeepResearchAgent:
                             ],
                             stream=True
                         )
+                        logger.info(f"[批量分析] AI分析响应已接收: {bvid}")
 
                         result_text = ""
                         current_analysis_tokens = 0
+                        token_count = 0  # 初始化
 
                         for chunk in analysis_response:
                             if not chunk.choices:
@@ -277,10 +275,23 @@ class DeepResearchAgent:
                             delta = chunk.choices[0].delta
                             if delta.content:
                                 result_text += delta.content
+                            # 流式响应的最后一个chunk包含usage信息
+                            if chunk.usage:
+                                token_count = chunk.usage.total_tokens
+                                # 不要立即break，继续处理可能的剩余内容
 
-                        # 获取真实的 Token 使用情况
-                        usage = analysis_response.usage
-                        token_count = usage.total_tokens if usage else len(result_text)
+                        # 如果没有获取到usage，使用文本长度估算
+                        if not token_count:
+                            token_count = len(result_text)
+
+                        # 调试日志：检查result_text实际内容
+                        logger.info(f"[批量分析] AI分析完成: {bvid} ({v_title}), tokens: {token_count}, result_text长度: {len(result_text)}")
+                        if len(result_text) == 0:
+                            logger.error(f"[批量分析] ⚠️ result_text为空! bvid={bvid}, title={v_title}")
+                        elif len(result_text) < 100:
+                            logger.warning(f"[批量分析] ⚠️ result_text异常短: {len(result_text)}字符, 内容预览: {result_text[:200]}")
+                        else:
+                            logger.info(f"[批量分析] result_text内容预览（前200字符）: {result_text[:200]}")
 
                         return {
                             'bvid': bvid,
@@ -290,9 +301,27 @@ class DeepResearchAgent:
                             'tokens': token_count
                         }
 
-                    # 并行执行所有视频分析
+                    # 并行执行所有视频分析（使用线程池）
                     bvids = [json.loads(tc["function"]["arguments"]).get("bvid") for tc in tool_calls]
-                    results = run_async(asyncio.gather(*[analyze_single_video(bvid) for bvid in bvids], return_exceptions=True))
+                    logger.info(f"[批量分析] 准备并行分析 {len(bvids)} 个视频: {bvids}")
+
+                    # 使用 ThreadPoolExecutor 并行执行同步函数
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(bvids), 5)) as executor:
+                        future_to_bvid = {executor.submit(analyze_single_video, bvid): bvid for bvid in bvids}
+                        results = []
+                        for future in concurrent.futures.as_completed(future_to_bvid):
+                            try:
+                                result = future.result()
+                                results.append(result)
+                                logger.info(f"[批量分析] 单个视频分析完成: {result.get('bvid', 'unknown')}")
+                            except Exception as e:
+                                logger.error(f"[批量分析] 视频分析异常: {str(e)}")
+                                import traceback
+                                traceback.print_exc()
+                                results.append(e)
+
+                    logger.info(f"[批量分析] 所有视频分析完成，共 {len(results)} 个结果")
 
                     # 处理并返回结果
                     total_tokens = 0
@@ -306,11 +335,21 @@ class DeepResearchAgent:
                             })
                         elif result.get('success'):
                             total_tokens += result.get('tokens', 0)
+                            summary = result.get('summary', '')
+                            # 🔍 调试日志：检查传递给AI的工具内容
+                            logger.info(f"[批量分析] 构造工具消息: bvid={result['bvid']}, summary长度={len(summary)}")
+                            if len(summary) == 0:
+                                logger.error(f"[批量分析] ❌ summary为空! bvid={result['bvid']}, result keys={list(result.keys())}")
+                            elif len(summary) < 100:
+                                logger.warning(f"[批量分析] ⚠️ summary异常短: {len(summary)}字符, 内容: {summary[:200]}")
+                            else:
+                                logger.info(f"[批量分析] ✅ summary正常: {len(summary)}字符, 前100字符: {summary[:100]}")
+
                             messages.append({
                                 "role": "tool",
                                 "tool_call_id": tool_calls[i]["id"],
                                 "name": "analyze_video",
-                                "content": f"视频分析完成: {result.get('title', result['bvid'])}\n\n分析结果:\n{result['summary']}"
+                                "content": f"视频分析完成: {result.get('title', result['bvid'])}\n\n分析结果:\n{summary}"
                             })
                             # 发送进度更新
                             yield {
@@ -331,10 +370,13 @@ class DeepResearchAgent:
                             })
 
                     # 发送完成通知
+                    success_count = sum(1 for r in results if not isinstance(r, Exception) and r.get('success'))
+                    logger.info(f"[批量分析] 发送完成通知: total={len(tool_calls)}, success={success_count}, tokens={total_tokens}")
+
                     yield {
                         'type': 'batch_analyze_complete',
                         'total': len(tool_calls),
-                        'success': sum(1 for r in results if not isinstance(r, Exception) and r.get('success')),
+                        'success': success_count,
                         'tokens': total_tokens
                     }
                     continue  # 跳过普通的工具调用处理
@@ -356,8 +398,12 @@ class DeepResearchAgent:
                             func_name, args, bilibili_service, topic
                         )
                     except Exception as e:
-                        result = f"执行工具出错: {str(e)}"
-                        yield {'type': 'error', 'error': result}
+                        error_msg = str(e)
+                        # 友好的401错误提示
+                        if "401" in error_msg or "Invalid token" in error_msg:
+                            error_msg = "API Key 校验失败（401 - Invalid token）。请在设置中检查您的 OpenAI API Key 和 API Base 是否正确。"
+                        result = f"执行工具出错: {error_msg}"
+                        yield {'type': 'error', 'error': error_msg}
 
                     messages.append({
                         "role": "tool",
@@ -408,10 +454,14 @@ class DeepResearchAgent:
             yield {'type': 'done'}
 
         except Exception as e:
-            logger.error(f"深度研究失败: {str(e)}")
+            error_msg = str(e)
+            # 友好的401错误提示
+            if "401" in error_msg or "Invalid token" in error_msg:
+                error_msg = "API Key 校验失败（401 - Invalid token）。请在设置中检查您的 OpenAI API Key 和 API Base 是否正确。"
+            logger.error(f"深度研究失败: {error_msg}")
             import traceback
             traceback.print_exc()
-            yield {'type': 'error', 'error': str(e)}
+            yield {'type': 'error', 'error': error_msg}
 
     def _get_tools_definition(self) -> list:
         """获取工具定义"""
@@ -694,18 +744,13 @@ class DeepResearchAgent:
                 v_info = v_info_res['data']
                 v_title = v_info.get('title', bvid)
 
-                # 2. 并行获取所有多维内容
+                # 2. 逐个获取所有多维内容（避免嵌套事件循环）
                 yield {'type': 'tool_progress', 'tool': func_name, 'bvid': bvid, 'title': v_title, 'message': f'已获取视频标题: {v_title}。正在搜集全维信息...'}
 
-                tasks = [
-                    bilibili_service.get_video_subtitles(bvid),
-                    bilibili_service.get_video_danmaku(bvid, limit=1000),
-                    bilibili_service.get_video_comments(bvid, max_pages=10),
-                    bilibili_service.extract_video_frames(bvid)
-                ]
-
-                # 并发执行
-                sub_res, danmaku_res, comments_res, frames_res = run_async(asyncio.gather(*tasks, return_exceptions=True))
+                sub_res = run_async(bilibili_service.get_video_subtitles(bvid))
+                danmaku_res = run_async(bilibili_service.get_video_danmaku(bvid, limit=1000))
+                comments_res = run_async(bilibili_service.get_video_comments(bvid, max_pages=10))
+                frames_res = run_async(bilibili_service.extract_video_frames(bvid))
 
                 # 数据解析
                 subtitle_text = sub_res['data']['full_text'] if (not isinstance(sub_res, Exception) and sub_res.get('success') and sub_res['data'].get('has_subtitle')) else ""

@@ -72,10 +72,10 @@ if Config.API_RATE_LIMIT_ENABLED:
 # 注册所有路由
 init_helper_routes(app)  # 首页和静态资源
 init_settings_routes(app, ai_service_ref)  # 设置管理
-init_research_routes(app, ai_service, bilibili_service)  # 深度研究
-init_analyze_routes(app, bilibili_service, ai_service)  # 视频分析
+init_research_routes(app, ai_service_ref, bilibili_service)  # 深度研究
+init_analyze_routes(app, bilibili_service, ai_service_ref)  # 视频分析
 init_bilibili_routes(app, bilibili_service, login_service)  # B站数据和登录
-init_user_routes(app, bilibili_service, ai_service)  # 用户画像
+init_user_routes(app, bilibili_service, ai_service_ref)  # 用户画像
 
 # ========== 初始化 API v1 路由 ==========
 from src.backend.api.routes.v1 import init_routes
