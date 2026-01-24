@@ -87,7 +87,7 @@ from src.backend.services.data_sources.adapter import (
 
 # 版本信息
 __version__ = "1.0.0"
-__author__ = "BiliBili Summarize Team"
+__author__ = "BiliInsight Team"
 
 # 公共接口导出
 __all__ = [

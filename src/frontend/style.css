@@ -10,7 +10,8 @@
     --border-color: #E3E5E7;
     --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     --hover-shadow: 0 12px 32px rgba(251, 114, 153, 0.15);
-    --border-radius: 16px; /* 更圆润的边角 */
+    --border-radius: 16px;
+    /* 更圆润的边角 */
     --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     --input-bg: #F1F2F3;
     --toolbar-bg: rgba(251, 252, 253, 0.8);
@@ -60,7 +61,7 @@
 body {
     font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bili-bg);
-    background-image: 
+    background-image:
         radial-gradient(circle at 10% 20%, rgba(251, 114, 153, 0.03) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(35, 173, 229, 0.03) 0%, transparent 20%),
         url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 16H28V26H12V16Z' fill='%23FB7299' fill-opacity='0.08'/%3E%3Cpath d='M14 12L17 15' stroke='%23FB7299' stroke-opacity='0.08' stroke-width='2'/%3E%3Cpath d='M26 12L23 15' stroke='%23FB7299' stroke-opacity='0.08' stroke-width='2'/%3E%3C/svg%3E");
@@ -80,7 +81,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -166,16 +167,43 @@ body {
 }
 
 @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes tada {
-    from { transform: scale3d(1, 1, 1); }
-    10%, 20% { transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg); }
-    30%, 50%, 70%, 90% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg); }
-    40%, 60%, 80% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg); }
-    to { transform: scale3d(1, 1, 1); }
+    from {
+        transform: scale3d(1, 1, 1);
+    }
+
+    10%,
+    20% {
+        transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg);
+    }
+
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+    }
+
+    40%,
+    60%,
+    80% {
+        transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+    }
+
+    to {
+        transform: scale3d(1, 1, 1);
+    }
 }
 
 /* Initial Recommendations (Scrolling Version) */
@@ -218,16 +246,20 @@ body {
     overflow-x: auto;
     padding: 20px 40px;
     scroll-behavior: smooth;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
 }
 
 .init-related-scroll::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .init-related-scroll .related-card {
-    flex: 0 0 280px; /* Fixed width for cards in scroll */
+    flex: 0 0 280px;
+    /* Fixed width for cards in scroll */
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     box-shadow: var(--card-shadow);
@@ -318,9 +350,11 @@ button {
 .btn-primary::before {
     content: '';
     position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: 0.5s;
 }
 
@@ -339,9 +373,17 @@ button {
 
 /* Pulse animation for analyzeBtn */
 @keyframes pulse-pink {
-    0% { box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(251, 114, 153, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(251, 114, 153, 0); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(251, 114, 153, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0);
+    }
 }
 
 #analyzeBtn:not(:disabled) {
@@ -491,11 +533,13 @@ button {
     display: flex;
     width: 100%;
     max-width: 1400px;
-    background: var(--card-bg) !important; /* 强制使用变量 */
+    background: var(--card-bg) !important;
+    /* 强制使用变量 */
     padding: 10px;
     border-radius: 24px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-    border: 2px solid var(--border-color); /* 增加默认边框避免视觉误差 */
+    border: 2px solid var(--border-color);
+    /* 增加默认边框避免视觉误差 */
     transition: var(--transition);
     position: relative;
     overflow: hidden;
@@ -521,13 +565,14 @@ button {
     color: var(--text-main) !important;
     background: transparent !important;
     outline: none;
-    -webkit-box-shadow: 0 0 0px 1000px transparent inset !important; /* 尝试覆盖 Webkit 自动填充 */
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+    /* 尝试覆盖 Webkit 自动填充 */
 }
 
 /* 彻底禁用 Webkit 自动填充的背景色 */
 #videoUrl:-webkit-autofill,
-#videoUrl:-webkit-autofill:hover, 
-#videoUrl:-webkit-autofill:focus, 
+#videoUrl:-webkit-autofill:hover,
+#videoUrl:-webkit-autofill:focus,
 #videoUrl:-webkit-autofill:active {
     -webkit-transition: background-color 50000s ease-in-out 0s;
     transition: background-color 50000s ease-in-out 0s;
@@ -616,8 +661,15 @@ button {
 }
 
 @keyframes slideInDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Loading State */
@@ -641,8 +693,15 @@ button {
 }
 
 @keyframes tvFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-15px) rotate(2deg); }
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-15px) rotate(2deg);
+    }
 }
 
 .loading-bar-container {
@@ -706,8 +765,15 @@ button {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .loading-content-box {
@@ -776,7 +842,8 @@ button {
 }
 
 .step.completed .step-icon {
-    font-size: 0; /* Hide number */
+    font-size: 0;
+    /* Hide number */
 }
 
 .step-text {
@@ -786,9 +853,20 @@ button {
 }
 
 @keyframes pulse-step {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(251, 114, 153, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 114, 153, 0); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4);
+    }
+
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(251, 114, 153, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0);
+    }
 }
 
 
@@ -804,12 +882,14 @@ button {
     grid-template-columns: 280px 1fr;
     gap: 24px;
     align-items: stretch;
-    overflow-x: visible; /* 允许幻影预览溢出 */
+    overflow-x: visible;
+    /* 允许幻影预览溢出 */
 }
 
 .main-content-column {
     min-width: 0;
-    overflow-x: visible; /* 允许幻影预览溢出 */
+    overflow-x: visible;
+    /* 允许幻影预览溢出 */
 }
 
 /* Video Info Card */
@@ -833,12 +913,13 @@ button {
 .video-cover-wrapper {
     position: relative;
     width: 180px;
-    height: 112px; /* 16:10 aspect */
+    height: 112px;
+    /* 16:10 aspect */
     flex-shrink: 0;
     border-radius: 8px;
     overflow: hidden;
     background: var(--input-bg);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .video-cover {
@@ -856,7 +937,7 @@ button {
     position: absolute;
     bottom: 6px;
     right: 6px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     font-size: 11px;
     padding: 2px 6px;
@@ -1028,7 +1109,7 @@ button {
     position: absolute;
     bottom: 2px;
     right: 2px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     font-size: 9px;
     padding: 1px 3px;
@@ -1067,7 +1148,8 @@ button {
     gap: 4px;
 }
 
-.related-author, .related-views {
+.related-author,
+.related-views {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1199,7 +1281,8 @@ button {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border-color);
-    overflow-x: visible; /* 允许右侧幻影预览溢出 */
+    overflow-x: visible;
+    /* 允许右侧幻影预览溢出 */
 }
 
 .toolbar {
@@ -1280,7 +1363,8 @@ button {
 .tab-pane {
     display: none;
     animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    overflow-x: visible; /* 允许右侧内容溢出 */
+    overflow-x: visible;
+    /* 允许右侧内容溢出 */
 }
 
 .tab-pane.active {
@@ -1288,8 +1372,15 @@ button {
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Markdown Styles Override for Bili Theme */
@@ -1299,7 +1390,8 @@ button {
     color: var(--text-main);
 }
 
-.markdown-body h1, .markdown-body h2 {
+.markdown-body h1,
+.markdown-body h2 {
     border-bottom: none;
     margin-bottom: 20px;
     margin-top: 32px;
@@ -1376,12 +1468,13 @@ button {
     border: 1px solid var(--border-color);
     max-height: 700px;
     overflow-y: auto;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 /* Modal Styles - 修复并美化 */
 .modal {
-    display: flex; /* Flex布局居中 */
+    display: flex;
+    /* Flex布局居中 */
     justify-content: center;
     align-items: center;
     position: fixed;
@@ -1390,8 +1483,10 @@ button {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--modal-overlay); /* 半透明遮罩 */
-    backdrop-filter: blur(4px); /* 背景模糊 */
+    background-color: var(--modal-overlay);
+    /* 半透明遮罩 */
+    backdrop-filter: blur(4px);
+    /* 背景模糊 */
     opacity: 1;
     transition: opacity 0.3s ease;
 }
@@ -1416,8 +1511,15 @@ button {
 }
 
 @keyframes modalPop {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .close-modal {
@@ -1456,7 +1558,8 @@ button {
 .qrcode-img {
     width: 200px;
     height: 200px;
-    background: white; /* Always white for QR readability */
+    background: white;
+    /* Always white for QR readability */
     margin: 0 auto 16px;
     padding: 10px;
     border-radius: 8px;
@@ -1521,7 +1624,8 @@ button {
     background: var(--card-bg);
 }
 
-#chatInput, #smartUpInput {
+#chatInput,
+#smartUpInput {
     flex: 1;
     background: transparent;
     border: none;
@@ -1536,7 +1640,8 @@ button {
     line-height: 1.5;
 }
 
-#sendMsgBtn, #smartUpSendBtn {
+#sendMsgBtn,
+#smartUpSendBtn {
     padding: 0;
     width: 44px;
     height: 44px;
@@ -1556,10 +1661,24 @@ button {
 }
 
 @keyframes dots {
-    0%, 20% { content: ''; }
-    40% { content: '.'; }
-    60% { content: '..'; }
-    80%, 100% { content: '...'; }
+
+    0%,
+    20% {
+        content: '';
+    }
+
+    40% {
+        content: '.';
+    }
+
+    60% {
+        content: '..';
+    }
+
+    80%,
+    100% {
+        content: '...';
+    }
 }
 
 /* UP Portrait Card */
@@ -1672,22 +1791,55 @@ button {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.mode-btn.active[data-mode="smart_up"] { color: var(--bili-purple); background: var(--bili-purple-soft); }
-.mode-btn.active[data-mode="research"] { color: var(--bili-yellow); background: var(--bili-yellow-soft); }
-.mode-btn.active[data-mode="video"] { color: var(--bili-pink); background: var(--nav-active-bg); }
-.mode-btn.active[data-mode="article"] { color: var(--bili-lavender); background: var(--bili-lavender-soft); }
-.mode-btn.active[data-mode="user"] { color: var(--bili-blue); background: rgba(35, 173, 229, 0.1); }
+.mode-btn.active[data-mode="smart_up"] {
+    color: var(--bili-purple);
+    background: var(--bili-purple-soft);
+}
+
+.mode-btn.active[data-mode="research"] {
+    color: var(--bili-yellow);
+    background: var(--bili-yellow-soft);
+}
+
+.mode-btn.active[data-mode="video"] {
+    color: var(--bili-pink);
+    background: var(--nav-active-bg);
+}
+
+.mode-btn.active[data-mode="article"] {
+    color: var(--bili-lavender);
+    background: var(--bili-lavender-soft);
+}
+
+.mode-btn.active[data-mode="user"] {
+    color: var(--bili-blue);
+    background: rgba(35, 173, 229, 0.1);
+}
 
 .dark-theme .mode-btn.active {
     background: #232526;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark-theme .mode-btn.active[data-mode="smart_up"] { background: rgba(147, 112, 219, 0.15); }
-.dark-theme .mode-btn.active[data-mode="research"] { background: rgba(255, 160, 0, 0.15); }
-.dark-theme .mode-btn.active[data-mode="video"] { background: rgba(251, 114, 153, 0.15); }
-.dark-theme .mode-btn.active[data-mode="article"] { background: rgba(187, 107, 217, 0.15); }
-.dark-theme .mode-btn.active[data-mode="user"] { background: rgba(35, 173, 229, 0.15); }
+.dark-theme .mode-btn.active[data-mode="smart_up"] {
+    background: rgba(147, 112, 219, 0.15);
+}
+
+.dark-theme .mode-btn.active[data-mode="research"] {
+    background: rgba(255, 160, 0, 0.15);
+}
+
+.dark-theme .mode-btn.active[data-mode="video"] {
+    background: rgba(251, 114, 153, 0.15);
+}
+
+.dark-theme .mode-btn.active[data-mode="article"] {
+    background: rgba(187, 107, 217, 0.15);
+}
+
+.dark-theme .mode-btn.active[data-mode="user"] {
+    background: rgba(35, 173, 229, 0.15);
+}
 
 /* 模式描述文本 */
 .mode-description {
@@ -1713,26 +1865,67 @@ button {
     opacity: 0.6;
 }
 
-.mode-description.mode-smart_up { color: var(--bili-purple); }
-.mode-description.mode-research { color: var(--bili-yellow); }
-.mode-description.mode-video { color: var(--bili-pink); }
-.mode-description.mode-article { color: var(--bili-lavender); }
-.mode-description.mode-user { color: var(--bili-blue); }
+.mode-description.mode-smart_up {
+    color: var(--bili-purple);
+}
+
+.mode-description.mode-research {
+    color: var(--bili-yellow);
+}
+
+.mode-description.mode-video {
+    color: var(--bili-pink);
+}
+
+.mode-description.mode-article {
+    color: var(--bili-lavender);
+}
+
+.mode-description.mode-user {
+    color: var(--bili-blue);
+}
 
 /* 搜索框动态边框与阴影 */
 .search-box {
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
-.search-box.mode-video { border-color: var(--bili-pink); box-shadow: 0 0 0 4px rgba(251, 114, 153, 0.05); }
-.search-box.mode-article { border-color: var(--bili-lavender); box-shadow: 0 0 0 4px rgba(187, 107, 217, 0.05); }
-.search-box.mode-user { border-color: var(--bili-blue); box-shadow: 0 0 0 4px rgba(35, 173, 229, 0.05); }
-.search-box.mode-research { border-color: var(--bili-yellow); box-shadow: 0 0 0 4px rgba(255, 179, 0, 0.05); }
-.search-box.mode-smart_up { border-color: var(--bili-purple); box-shadow: 0 0 0 4px rgba(123, 104, 238, 0.05); }
+
+.search-box.mode-video {
+    border-color: var(--bili-pink);
+    box-shadow: 0 0 0 4px rgba(251, 114, 153, 0.05);
+}
+
+.search-box.mode-article {
+    border-color: var(--bili-lavender);
+    box-shadow: 0 0 0 4px rgba(187, 107, 217, 0.05);
+}
+
+.search-box.mode-user {
+    border-color: var(--bili-blue);
+    box-shadow: 0 0 0 4px rgba(35, 173, 229, 0.05);
+}
+
+.search-box.mode-research {
+    border-color: var(--bili-yellow);
+    box-shadow: 0 0 0 4px rgba(255, 179, 0, 0.05);
+}
+
+.search-box.mode-smart_up {
+    border-color: var(--bili-purple);
+    box-shadow: 0 0 0 4px rgba(123, 104, 238, 0.05);
+}
 
 /* 动画 */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
@@ -1740,11 +1933,30 @@ button {
 }
 
 /* 按钮渐变色统一处理 */
-.btn-primary.mode-video { background: linear-gradient(135deg, var(--bili-pink) 0%, #FF85AD 100%); box-shadow: 0 8px 20px rgba(251, 114, 153, 0.3); }
-.btn-primary.mode-article { background: linear-gradient(135deg, var(--bili-lavender) 0%, #bb6bd9 100%); box-shadow: 0 8px 20px rgba(155, 81, 224, 0.3); }
-.btn-primary.mode-user { background: linear-gradient(135deg, var(--bili-blue) 0%, #3EBAD5 100%); box-shadow: 0 8px 20px rgba(35, 173, 229, 0.3); }
-.btn-primary.mode-research { background: linear-gradient(135deg, var(--bili-yellow) 0%, #FFD54F 100%); box-shadow: 0 8px 20px rgba(255, 179, 0, 0.3); }
-.btn-primary.mode-smart_up { background: linear-gradient(135deg, var(--bili-purple) 0%, #9370DB 100%); box-shadow: 0 8px 20px rgba(123, 104, 238, 0.3); }
+.btn-primary.mode-video {
+    background: linear-gradient(135deg, var(--bili-pink) 0%, #FF85AD 100%);
+    box-shadow: 0 8px 20px rgba(251, 114, 153, 0.3);
+}
+
+.btn-primary.mode-article {
+    background: linear-gradient(135deg, var(--bili-lavender) 0%, #bb6bd9 100%);
+    box-shadow: 0 8px 20px rgba(155, 81, 224, 0.3);
+}
+
+.btn-primary.mode-user {
+    background: linear-gradient(135deg, var(--bili-blue) 0%, #3EBAD5 100%);
+    box-shadow: 0 8px 20px rgba(35, 173, 229, 0.3);
+}
+
+.btn-primary.mode-research {
+    background: linear-gradient(135deg, var(--bili-yellow) 0%, #FFD54F 100%);
+    box-shadow: 0 8px 20px rgba(255, 179, 0, 0.3);
+}
+
+.btn-primary.mode-smart_up {
+    background: linear-gradient(135deg, var(--bili-purple) 0%, #9370DB 100%);
+    box-shadow: 0 8px 20px rgba(123, 104, 238, 0.3);
+}
 
 /* 内容区切换动效 */
 /* 已合并到前面的.tab-pane定义 */
@@ -1868,7 +2080,9 @@ button {
     border-bottom: 1px solid var(--border-color);
 }
 
-.result-item:last-child { border-bottom: none; }
+.result-item:last-child {
+    border-bottom: none;
+}
 
 .result-item:hover {
     background: var(--nav-active-bg);
@@ -1915,7 +2129,9 @@ button {
     padding: 0 8px;
 }
 
-.btn-icon-small:hover { color: var(--bili-pink); }
+.btn-icon-small:hover {
+    color: var(--bili-pink);
+}
 
 /* Guide Modal Styles */
 .guide-modal-content {
@@ -2120,7 +2336,9 @@ button {
 }
 
 /* Utilities */
-.hidden { display: none !important; }
+.hidden {
+    display: none !important;
+}
 
 /* Toast */
 .toast {
@@ -2134,7 +2352,7 @@ button {
     border-radius: 8px;
     z-index: 2000;
     font-size: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     align-items: center;
@@ -2142,8 +2360,15 @@ button {
 }
 
 @keyframes slideUp {
-    from { transform: translate(-50%, 40px); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
+    from {
+        transform: translate(-50%, 40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
 }
 
 /* Settings Drawer */
@@ -2281,7 +2506,9 @@ button {
     text-decoration: underline;
 }
 
-.setting-item select, .setting-item input[type="text"], .setting-item input[type="password"] {
+.setting-item select,
+.setting-item input[type="text"],
+.setting-item input[type="password"] {
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
@@ -2292,7 +2519,8 @@ button {
     transition: var(--transition);
 }
 
-.setting-item select:focus, .setting-item input:focus {
+.setting-item select:focus,
+.setting-item input:focus {
     border-color: var(--bili-blue);
     background: var(--card-bg);
 }
@@ -2335,11 +2563,11 @@ button {
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--bili-pink);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(24px);
 }
 
@@ -2525,9 +2753,11 @@ input:checked + .slider:before {
     flex-direction: column;
     gap: 0;
     padding: 20px;
-    padding-right: 20px; /* 恢复正常 padding，气泡将占满宽度 */
+    padding-right: 20px;
+    /* 恢复正常 padding，气泡将占满宽度 */
     overflow-y: auto;
-    overflow-x: hidden; /* 深度研究内部不再需要溢出 */
+    overflow-x: hidden;
+    /* 深度研究内部不再需要溢出 */
     max-height: 750px;
     position: relative;
 }
@@ -2600,7 +2830,8 @@ input:checked + .slider:before {
     padding: 16px 20px;
     border: 1px solid var(--border-color);
     transition: var(--transition);
-    width: 100%; /* 确保气泡占满剩余宽度 */
+    width: 100%;
+    /* 确保气泡占满剩余宽度 */
     box-sizing: border-box;
 }
 
@@ -2658,8 +2889,15 @@ input:checked + .slider:before {
 }
 
 @keyframes timelineItemIn {
-    from { opacity: 0; transform: translateX(-15px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* 导航行为按钮 (不涉及 TAB 切换) */
@@ -2768,7 +3006,7 @@ input:checked + .slider:before {
     max-width: 600px;
     background: var(--card-bg);
     border-radius: 16px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
     overflow: hidden;
 }
@@ -2823,11 +3061,13 @@ input:checked + .slider:before {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     padding: 16px;
-    padding-right: 320px; /* 为内部右侧预览留出空间 */
+    padding-right: 320px;
+    /* 为内部右侧预览留出空间 */
     margin-top: 8px;
     position: relative;
     min-height: 120px;
-    overflow: hidden; /* 确保内部预览不溢出 */
+    overflow: hidden;
+    /* 确保内部预览不溢出 */
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -2835,6 +3075,7 @@ input:checked + .slider:before {
     .tool-call-card {
         padding-right: 16px;
     }
+
     .ghost-content {
         display: none;
     }
@@ -2872,7 +3113,8 @@ input:checked + .slider:before {
     font-size: 11px;
     line-height: 1.7;
     color: var(--text-secondary);
-    background: rgba(0, 0, 0, 0.15); /* 内部预览背景稍深 */
+    background: rgba(0, 0, 0, 0.15);
+    /* 内部预览背景稍深 */
     border-left: 1px dashed rgba(251, 114, 153, 0.2);
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2891,6 +3133,7 @@ input:checked + .slider:before {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 0.6;
     }
@@ -2928,7 +3171,8 @@ input:checked + .slider:before {
     opacity: 0.65 !important;
     border-color: rgba(251, 114, 153, 0.25);
     box-shadow: 0 8px 30px rgba(251, 114, 153, 0.08);
-    animation-play-state: paused; /* hover时暂停浮动动画 */
+    animation-play-state: paused;
+    /* hover时暂停浮动动画 */
 }
 
 .ghost-content::-webkit-scrollbar {
@@ -3024,7 +3268,8 @@ body.smart-up-full-overflow {
 }
 
 .smart-up-true-fullscreen #smartUpMessages {
-    padding: 40px 15% !important; /* 全屏下增加左右留白，保持阅读舒适 */
+    padding: 40px 15% !important;
+    /* 全屏下增加左右留白，保持阅读舒适 */
 }
 
 .smart-up-true-fullscreen .chat-input-area {
@@ -3149,7 +3394,7 @@ body.smart-up-full-overflow {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     background: var(--white);
     border: 1px solid var(--border-color);
 }
@@ -3167,15 +3412,17 @@ body.smart-up-full-overflow {
 }
 
 .message-content {
-    width: 85%; /* 固定宽度百分比 */
-    max-width: 900px; /* 但设定一个上限 */
+    width: 85%;
+    /* 固定宽度百分比 */
+    max-width: 900px;
+    /* 但设定一个上限 */
     padding: 12px 16px;
     border-radius: 12px;
     font-size: 15px;
     line-height: 1.6;
     position: relative;
     word-break: break-word;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
@@ -3202,8 +3449,13 @@ body.smart-up-full-overflow {
 }
 
 @keyframes scan {
-    0% { left: -100%; }
-    100% { left: 200%; }
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
 }
 
 .message.assistant.is-exploring .main-text:empty::after {
@@ -3352,7 +3604,8 @@ body.smart-up-full-overflow {
 
 .exploration-layout {
     display: grid !important;
-    grid-template-columns: 180px 1fr !important; /* 严格固定侧边栏宽度 */
+    grid-template-columns: 180px 1fr !important;
+    /* 严格固定侧边栏宽度 */
     height: 360px;
     background: var(--card-bg);
     animation: slideDown 0.3s ease;
@@ -3546,19 +3799,44 @@ body.smart-up-full-overflow {
 
 /* 动画 */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(251, 114, 153, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7); }
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(251, 114, 153, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7);
+    }
 }
 
 /* 响应式设计 */
@@ -3566,7 +3844,7 @@ body.smart-up-full-overflow {
     .content-wrapper {
         grid-template-columns: 1fr;
     }
-    
+
     .sidebar-nav {
         position: static;
         flex-direction: row;
@@ -3576,7 +3854,7 @@ body.smart-up-full-overflow {
         z-index: 10;
         margin-bottom: 16px;
     }
-    
+
     .nav-btn {
         white-space: nowrap;
         padding: 10px 14px;
@@ -3605,7 +3883,8 @@ body.smart-up-full-overflow {
     }
 
     .exploration-sidebar {
-        display: none; /* 移动端隐藏侧边栏 */
+        display: none;
+        /* 移动端隐藏侧边栏 */
     }
 
     .message-content {
@@ -3893,62 +4172,284 @@ body.smart-up-full-overflow {
    全局折叠控制按钮
    ======================================== */
 
+/* ========================================
+   时间线控制栏优化
+   ======================================== */
+
 .timeline-controls {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+    padding: 8px 0;
+    margin-bottom: 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
 }
 
 .timeline-controls-title {
     font-size: 14px;
-    font-weight: 700;
-    color: var(--text-main);
+    font-weight: 600;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
+    opacity: 0.9;
 }
 
 .timeline-controls-buttons {
     display: flex;
     gap: 8px;
+    background: var(--nav-hover-bg);
+    /* Group background */
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .timeline-control-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: var(--nav-hover-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--text-main);
+    gap: 4px;
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    /* Smaller font */
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    height: 26px;
+    /* Fixed height */
 }
 
+/* Remove individual borders since they are in a group */
 .timeline-control-btn:hover {
-    background: var(--bili-pink);
-    color: white;
-    border-color: var(--bili-pink);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(251, 114, 153, 0.2);
+    background: var(--card-bg);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: none;
+    /* Override default hover border */
+    transform: none;
+    /* Subtle interaction */
+}
+
+[data-theme="dark"] .timeline-control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .timeline-control-btn:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
+
+.timeline-control-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* ========================================
+   时间线节点样式优化
+   ======================================== */
+
+.research-timeline {
+    padding-left: 10px;
+    /* Offset for timeline line */
+}
+
+/* Time label */
+.timeline-time {
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    margin-bottom: 4px;
+    padding-left: 2px;
+}
+
+/* Content Box Container */
+.timeline-content-box {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.timeline-item.active .timeline-content-box {
+    border-color: var(--bili-pink);
+    box-shadow: 0 0 0 1px rgba(251, 114, 153, 0.2), 0 4px 12px rgba(251, 114, 153, 0.1);
+    background: linear-gradient(to right, rgba(251, 114, 153, 0.02), transparent);
+}
+
+[data-theme="dark"] .timeline-content-box {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: none;
+}
+
+/* Timeline Title Area */
+.timeline-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    /* Space before content */
+}
+
+.title-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tool Icon Container */
+.tool-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--nav-hover-bg);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.timeline-item.active .tool-icon {
+    background: rgba(251, 114, 153, 0.1);
+    color: var(--bili-pink);
+}
+
+.timeline-item.completed .tool-icon {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+/* Status Badges - Smaller & Cleaner */
+.timeline-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    height: 20px;
+    line-height: 1;
+}
+
+.loading-dots {
+    transform: scale(0.7);
+    /* Smaller loading dots */
+    transform-origin: left center;
+}
+
+/* ========================================
+   思考过程 & 工具卡片样式优化
+   ======================================== */
+
+/* Thinking Node specific */
+.timeline-item.type-thinking .timeline-content-box {
+    border-left: 3px solid var(--bili-blue);
+    background: linear-gradient(to right, rgba(35, 173, 229, 0.02), transparent);
+}
+
+.timeline-item.type-thinking .tool-icon {
+    background: rgba(35, 173, 229, 0.1);
+    color: var(--bili-blue);
+    border-radius: 50%;
+    /* Circle for thinking */
+}
+
+.thinking-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    font-family: var(--font-main);
+}
+
+/* Tool Call Card (Inner Details) */
+.tool-call-card {
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--nav-hover-bg);
+    /* Softer background */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+}
+
+[data-theme="dark"] .tool-call-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.tool-call-card .tool-name {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+    opacity: 0.9;
+}
+
+.tool-call-card .search-keyword {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(251, 114, 153, 0.1);
+    color: var(--bili-pink);
+    border: 1px solid rgba(251, 114, 153, 0.2);
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+}
+
+/* Result Preview Badge */
+.result-preview {
+    font-size: 11px;
+    padding: 2px 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+}
+
+.result-preview.success {
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.08);
+    border-radius: 4px;
+}
+
+/* Collapse Summary Layout */
+.timeline-collapse-summary {
+    background: transparent;
+    /* Remove background */
+    padding: 4px 0 0 0;
+    border-radius: 0;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border-color);
+    /* Separator */
+}
+
+.timeline-item.collapsed .timeline-collapse-summary {
+    display: flex;
+    border-top: none;
+    /* No border when collapsed content is hidden */
+}
+
+
 
 /* 图标旋转动画 */
 @keyframes rotateDown {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(-90deg);
     }
@@ -3956,9 +4457,12 @@ body.smart-up-full-overflow {
 
 /* 脉冲动画优化 */
 @keyframes pulse-pink {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.4);
     }
+
     50% {
         box-shadow: 0 0 0 8px rgba(251, 114, 153, 0);
     }
@@ -3970,6 +4474,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateX(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -3982,6 +4487,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -4000,17 +4506,17 @@ body.smart-up-full-overflow {
     .tool-group-container.parallel {
         grid-template-columns: 1fr;
     }
-    
+
     .timeline-controls {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .timeline-controls-buttons {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .timeline-control-btn {
         flex: 1;
         justify-content: center;
@@ -4021,78 +4527,7 @@ body.smart-up-full-overflow {
    折叠摘要左右布局样式
    ======================================== */
 
-.timeline-collapse-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 8px;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 8px;
-}
 
-[data-theme="dark"] .timeline-collapse-summary {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.summary-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.summary-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 1;
-    gap: 8px;
-}
-
-.result-preview {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-}
-
-[data-theme="dark"] .result-preview {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.result-preview.success {
-    color: #4CAF50;
-    background: rgba(76, 175, 80, 0.1);
-    border-color: rgba(76, 175, 80, 0.2);
-}
-
-[data-theme="dark"] .result-preview.success {
-    background: rgba(76, 175, 80, 0.15);
-}
-
-.result-preview .count {
-    font-family: 'Consolas', monospace;
-    font-weight: 700;
-    font-size: 13px;
-}
-
-/* 标题文本样式 */
-.title-text {
-    flex: 1;
-}
-
-/* 优化折叠按钮位置 */
-.timeline-collapse-btn {
-    margin-right: 8px;
-}
 
 /* ========================================
    响应式优化
@@ -4104,7 +4539,7 @@ body.smart-up-full-overflow {
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .summary-right {
         width: 100%;
         justify-content: flex-start;
@@ -4126,7 +4561,7 @@ body.smart-up-full-overflow {
     background: var(--bili-pink);
     border-radius: 50%;
     box-shadow: 0 0 6px 2px var(--bili-pink),
-                0 0 12px 4px rgba(251, 114, 153, 0.5);
+        0 0 12px 4px rgba(251, 114, 153, 0.5);
     z-index: 2;
     animation: flowDown 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     opacity: 0;
@@ -4134,7 +4569,7 @@ body.smart-up-full-overflow {
 
 [data-theme="dark"] .research-timeline::after {
     box-shadow: 0 0 8px 3px var(--bili-pink),
-                0 0 16px 6px rgba(251, 114, 153, 0.6);
+        0 0 16px 6px rgba(251, 114, 153, 0.6);
 }
 
 /* 流动动画 */
@@ -4143,12 +4578,15 @@ body.smart-up-full-overflow {
         top: 40px;
         opacity: 0;
     }
+
     10% {
         opacity: 1;
     }
+
     90% {
         opacity: 1;
     }
+
     100% {
         top: calc(100% - 40px);
         opacity: 0;
@@ -4163,15 +4601,16 @@ body.smart-up-full-overflow {
 .timeline-item::after {
     content: '';
     position: absolute;
-    left: -28px; /* 连接到时间线 */
+    left: -28px;
+    /* 连接到时间线 */
     top: 0;
     width: 0;
     height: 100%;
     border-left: 2px solid transparent;
     background: linear-gradient(to bottom,
-        var(--bili-pink) 0%,
-        rgba(251, 114, 153, 0.3) 50%,
-        transparent 100%);
+            var(--bili-pink) 0%,
+            rgba(251, 114, 153, 0.3) 50%,
+            transparent 100%);
     background-size: 0 2px;
     background-repeat: no-repeat;
     background-position: left top;
@@ -4190,6 +4629,7 @@ body.smart-up-full-overflow {
         background-size: 0 2px;
         opacity: 0;
     }
+
     100% {
         background-size: 100% 2px;
         opacity: 0.5;
@@ -4201,9 +4641,11 @@ body.smart-up-full-overflow {
         background-size: 0 2px;
         opacity: 0;
     }
+
     50% {
         opacity: 0.8;
     }
+
     100% {
         background-size: 100% 2px;
         opacity: 0.3;
@@ -4213,13 +4655,16 @@ body.smart-up-full-overflow {
 /* 节点圆圈的脉冲流动效果 */
 .timeline-item.active::before {
     animation: nodePulse 2s ease-in-out infinite,
-               pulseRing 1.5s ease-out infinite;
+        pulseRing 1.5s ease-out infinite;
 }
 
 @keyframes nodePulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
@@ -4229,9 +4674,11 @@ body.smart-up-full-overflow {
     0% {
         box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.7);
     }
+
     70% {
         box-shadow: 0 0 0 10px rgba(251, 114, 153, 0);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(251, 114, 153, 0);
     }
@@ -4251,8 +4698,8 @@ body.smart-up-full-overflow {
     width: 4px;
     height: 100%;
     background: linear-gradient(to bottom,
-        var(--bili-pink),
-        transparent);
+            var(--bili-pink),
+            transparent);
     opacity: 0;
     animation: slideInBorder 0.4s ease-out forwards;
 }
@@ -4262,9 +4709,11 @@ body.smart-up-full-overflow {
         height: 0;
         opacity: 0;
     }
+
     50% {
         opacity: 0.8;
     }
+
     100% {
         height: 100%;
         opacity: 0;
@@ -4281,9 +4730,11 @@ body.smart-up-full-overflow {
         transform: translateX(-10px);
         opacity: 0;
     }
+
     50% {
         transform: translateX(5px);
     }
+
     100% {
         transform: translateX(0);
         opacity: 1;
@@ -4301,10 +4752,12 @@ body.smart-up-full-overflow {
         border-color: #4CAF50;
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.3);
         box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
     }
+
     100% {
         background: #4CAF50;
         border-color: #4CAF50;
@@ -4315,17 +4768,20 @@ body.smart-up-full-overflow {
 /* 增强时间线连接线本身 */
 .research-timeline::before {
     background: linear-gradient(to bottom,
-        var(--border-color) 0%,
-        var(--bili-pink) 50%,
-        var(--border-color) 100%);
+            var(--border-color) 0%,
+            var(--bili-pink) 50%,
+            var(--border-color) 100%);
     background-size: 100% 200%;
     animation: lineGlow 3s ease-in-out infinite;
 }
 
 @keyframes lineGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         background-position: 0% 0%;
     }
+
     50% {
         background-position: 0% 100%;
     }
@@ -4355,10 +4811,12 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: scale(0.5);
     }
+
     50% {
         opacity: 0.8;
         transform: scale(1);
     }
+
     100% {
         top: calc(100% + 10px);
         opacity: 0;
@@ -4385,7 +4843,7 @@ body.smart-up-full-overflow {
 
 .timeline-item {
     animation: timelineItemEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-               fadeIn 0.3s ease-out forwards;
+        fadeIn 0.3s ease-out forwards;
 }
 
 @keyframes timelineItemEnter {
@@ -4393,9 +4851,11 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateX(-30px) scale(0.9);
     }
+
     60% {
         transform: translateX(5px) scale(1.02);
     }
+
     100% {
         opacity: 1;
         transform: translateX(0) scale(1);
@@ -4406,31 +4866,51 @@ body.smart-up-full-overflow {
     0% {
         opacity: 0;
     }
+
     100% {
         opacity: 1;
     }
 }
 
 /* 依次进入动画延迟 */
-.timeline-item:nth-child(1) { animation-delay: 0.05s; }
-.timeline-item:nth-child(2) { animation-delay: 0.1s; }
-.timeline-item:nth-child(3) { animation-delay: 0.15s; }
-.timeline-item:nth-child(4) { animation-delay: 0.2s; }
-.timeline-item:nth-child(5) { animation-delay: 0.25s; }
-.timeline-item:nth-child(n+6) { animation-delay: 0.3s; }
+.timeline-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.timeline-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.timeline-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.timeline-item:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.timeline-item:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.timeline-item:nth-child(n+6) {
+    animation-delay: 0.3s;
+}
 
 /* ========================================
    响应式优化
    ======================================== */
 
 @media (max-width: 768px) {
+
     /* 移动端减弱动画效果以提升性能 */
     .research-timeline::after {
         animation: flowDown 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
-    
+
     .timeline-item::after {
-        display: none; /* 移动端隐藏粒子效果 */
+        display: none;
+        /* 移动端隐藏粒子效果 */
     }
 }
 
@@ -4463,6 +4943,7 @@ body.smart-up-full-overflow {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -4496,10 +4977,14 @@ body.smart-up-full-overflow {
 }
 
 @keyframes dotBounce {
-    0%, 80%, 100% {
+
+    0%,
+    80%,
+    100% {
         transform: scale(0.6);
         opacity: 0.5;
     }
+
     40% {
         transform: scale(1);
         opacity: 1;
@@ -4528,10 +5013,12 @@ body.smart-up-full-overflow {
         transform: scale(1);
         background: rgba(0, 0, 0, 0.03);
     }
+
     50% {
         transform: scale(1.1);
         background: rgba(251, 114, 153, 0.1);
     }
+
     100% {
         transform: scale(1);
         background: rgba(0, 0, 0, 0.03);
@@ -4552,9 +5039,9 @@ body.smart-up-full-overflow {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent);
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
     animation: badgeShine 2s ease-in-out infinite;
 }
 
@@ -4562,7 +5049,9 @@ body.smart-up-full-overflow {
     0% {
         left: -100%;
     }
-    50%, 100% {
+
+    50%,
+    100% {
         left: 100%;
     }
 }
@@ -4583,7 +5072,7 @@ body.smart-up-full-overflow {
     background: var(--card-bg);
     border: 3px solid var(--bili-pink);
     z-index: 1;
-    animation: 
+    animation:
         nodePulse 2s ease-in-out infinite,
         ripple 1.5s ease-out infinite;
 }
@@ -4592,6 +5081,7 @@ body.smart-up-full-overflow {
     0% {
         box-shadow: 0 0 0 0 rgba(251, 114, 153, 0.8);
     }
+
     100% {
         box-shadow: 0 0 0 12px rgba(251, 114, 153, 0);
     }
@@ -4605,15 +5095,15 @@ body.smart-up-full-overflow {
     width: 20px;
     height: 2px;
     background: linear-gradient(90deg,
-        transparent,
-        var(--bili-pink));
+            transparent,
+            var(--bili-pink));
     transform: translateY(-50%);
     opacity: 0;
 }
 
 .timeline-item.active .data-flow-line {
     animation: dataFlowIn 0.5s ease-out forwards,
-               dataFlowPulse 1s ease-in-out infinite 0.5s;
+        dataFlowPulse 1s ease-in-out infinite 0.5s;
 }
 
 @keyframes dataFlowIn {
@@ -4621,6 +5111,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         width: 0;
     }
+
     100% {
         opacity: 1;
         width: 20px;
@@ -4628,9 +5119,12 @@ body.smart-up-full-overflow {
 }
 
 @keyframes dataFlowPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.3;
     }
+
     50% {
         opacity: 1;
     }
@@ -4649,18 +5143,21 @@ body.smart-up-full-overflow {
     inset: -2px;
     border-radius: 14px;
     background: linear-gradient(45deg,
-        var(--bili-pink),
-        transparent,
-        var(--bili-pink));
+            var(--bili-pink),
+            transparent,
+            var(--bili-pink));
     z-index: -1;
     opacity: 0;
     animation: cardGlow 2s ease-in-out infinite;
 }
 
 @keyframes cardGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0;
     }
+
     50% {
         opacity: 0.5;
     }
@@ -4678,9 +5175,12 @@ body.smart-up-full-overflow {
 }
 
 @keyframes statusBlink {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.6;
     }
@@ -4702,9 +5202,11 @@ body.smart-up-full-overflow {
     0% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.3);
     }
+
     100% {
         transform: scale(1);
     }
@@ -4725,9 +5227,9 @@ body.smart-up-full-overflow {
     width: 4px;
     height: 0;
     background: linear-gradient(to bottom,
-        var(--bili-pink),
-        #ff8fab,
-        var(--bili-pink));
+            var(--bili-pink),
+            #ff8fab,
+            var(--bili-pink));
     animation: borderSlide 2s ease-in-out infinite;
 }
 
@@ -4736,15 +5238,18 @@ body.smart-up-full-overflow {
         height: 0;
         top: 0;
     }
+
     50% {
         height: 100%;
         top: 0;
     }
+
     51% {
         height: 100%;
         top: auto;
         bottom: 0;
     }
+
     100% {
         height: 0;
         top: auto;
@@ -4766,16 +5271,19 @@ body.smart-up-full-overflow {
     width: 4px;
     height: 100%;
     background: linear-gradient(to bottom,
-        transparent,
-        var(--bili-blue),
-        transparent);
+            transparent,
+            var(--bili-blue),
+            transparent);
     animation: thinkingPulse 3s ease-in-out infinite;
 }
 
 @keyframes thinkingPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.3;
     }
+
     50% {
         opacity: 1;
     }
@@ -4790,9 +5298,11 @@ body.smart-up-full-overflow {
     0% {
         box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
     }
+
     50% {
         box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
     }
@@ -4819,10 +5329,12 @@ body.smart-up-full-overflow {
         transform: scale(1);
         background: rgba(35, 173, 229, 0.1);
     }
+
     50% {
         transform: scale(1.15);
         background: rgba(35, 173, 229, 0.25);
     }
+
     100% {
         transform: scale(1);
         background: rgba(35, 173, 229, 0.1);
@@ -4845,16 +5357,33 @@ body.smart-up-full-overflow {
     animation: wave 1.2s ease-in-out infinite;
 }
 
-.wave-loader span:nth-child(1) { animation-delay: 0s; }
-.wave-loader span:nth-child(2) { animation-delay: 0.1s; }
-.wave-loader span:nth-child(3) { animation-delay: 0.2s; }
-.wave-loader span:nth-child(4) { animation-delay: 0.3s; }
-.wave-loader span:nth-child(5) { animation-delay: 0.4s; }
+.wave-loader span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.wave-loader span:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.wave-loader span:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.wave-loader span:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.wave-loader span:nth-child(5) {
+    animation-delay: 0.4s;
+}
 
 @keyframes wave {
-    0%, 100% {
+
+    0%,
+    100% {
         height: 4px;
     }
+
     50% {
         height: 12px;
     }
@@ -4862,11 +5391,12 @@ body.smart-up-full-overflow {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+
     /* 移动端简化动画 */
     .timeline-item.active .timeline-content-box::before {
         display: none;
     }
-    
+
     .timeline-item.type-tool_start.active .timeline-content-box::after {
         display: none;
     }
@@ -4891,6 +5421,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateY(-5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -5129,7 +5660,7 @@ body.smart-up-full-overflow {
         width: 60px;
         height: 40px;
     }
-    
+
     .video-result-item {
         padding: 8px;
     }
@@ -5161,10 +5692,13 @@ body.smart-up-full-overflow {
 }
 
 @keyframes iconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         background: rgba(251, 114, 153, 0.1);
     }
+
     50% {
         transform: scale(1.1);
         background: rgba(251, 114, 153, 0.2);
@@ -5307,6 +5841,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateY(-4px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -5318,6 +5853,7 @@ body.smart-up-full-overflow {
         opacity: 0;
         transform: translateX(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -5341,4 +5877,251 @@ body.smart-up-full-overflow {
 
 .dark-theme .progress-item:hover {
     background: var(--nav-hover-bg);
+}
+
+/* ============================================================================
+   Deep Research Improvements
+   ============================================================================ */
+
+/* 1. Stop/Cancel Button */
+.btn-stop {
+    background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+    box-shadow: 0 4px 15px rgba(255, 77, 79, 0.3);
+}
+
+.btn-stop:hover {
+    box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-stop:active {
+    transform: translateY(1px);
+}
+
+/* 2. Resource Pool (Sidebar) */
+.resource-pool {
+    position: sticky;
+    top: 80px;
+    width: 300px;
+    /* Adjust based on layout */
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    box-shadow: var(--card-shadow);
+    margin-left: 20px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Adaptive layout for research process */
+#researchProcessContent {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+#researchTimeline {
+    flex: 1;
+}
+
+.resource-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.resource-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.resource-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resource-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    background: var(--icon-box-bg);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    transition: var(--transition);
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.resource-item:hover {
+    background: var(--nav-hover-bg);
+    transform: translateX(4px);
+    color: var(--bili-pink);
+}
+
+.resource-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.resource-title {
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.empty-resource-state {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 20px 0;
+}
+
+/* 3. Report TOC (Table of Contents) */
+.report-toc {
+    position: fixed;
+    right: 20px;
+    top: 100px;
+    width: 240px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    box-shadow: var(--card-shadow);
+    z-index: 90;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.report-toc.hidden {
+    transform: translateX(20px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toc-header h4 {
+    font-size: 0.95rem;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toc-item {
+    display: block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    line-height: 1.4;
+}
+
+.toc-item:hover,
+.toc-item.active {
+    color: var(--bili-pink);
+    background: var(--bili-pink-soft, rgba(251, 114, 153, 0.1));
+}
+
+.toc-item.h2 {
+    font-weight: 600;
+}
+
+.toc-item.h3 {
+    padding-left: 20px;
+    font-size: 0.8rem;
+}
+
+/* 4. Thinking Process UI */
+.thinking-block {
+    margin: 10px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--icon-box-bg);
+    overflow: hidden;
+}
+
+.thinking-header {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.thinking-header:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.thinking-content {
+    padding: 12px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    line-height: 1.6;
+    border-top: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    background: var(--card-bg);
+}
+
+.thinking-block.collapsed .thinking-content {
+    display: none;
+}
+
+.thinking-icon {
+    transition: transform 0.2s;
+}
+
+.thinking-block:not(.collapsed) .thinking-icon {
+    transform: rotate(90deg);
+}
+
+/* Dark Mode Adaptations */
+.dark-theme .btn-stop {
+    box-shadow: 0 4px 15px rgba(255, 77, 79, 0.4);
+}
+
+.dark-theme .thinking-header {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .thinking-header:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .toc-item.active {
+    background: rgba(251, 114, 153, 0.15);
 }

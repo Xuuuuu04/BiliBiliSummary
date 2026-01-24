@@ -65,7 +65,7 @@
  *   onError: (error) => console.error('错误', error)
  * });
  */
-async function startDeepResearch(topic, callbacks) {
+async function startDeepResearch(topic, callbacks, signal = null) {
     const {
         onRoundStart,
         onToolStart,
@@ -82,7 +82,8 @@ async function startDeepResearch(topic, callbacks) {
         const response = await fetch('/api/research', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic: topic })
+            body: JSON.stringify({ topic: topic }),
+            signal: signal
         });
 
         if (!response.ok) {

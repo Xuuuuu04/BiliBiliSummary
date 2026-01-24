@@ -23,25 +23,7 @@ def init_analyze_routes(app, bilibili_service, ai_service_ref):
     """
     from src.backend.services.bilibili import BilibiliService, run_async
 
-    @app.route('/api/smart_up/stream', methods=['POST'])
-    @handle_errors
-    def smart_up_stream():
-        """智能小UP 快速问答流"""
-        # 验证输入
-        data = validate_json_data(request.json, required_fields=['question'])
-        question = validate_question_input(data.get('question'))
-        history = data.get('history', [])
 
-        def generate():
-            try:
-                ai_service = ai_service_ref['service']  # 动态获取最新的 AI 服务
-                for chunk in ai_service.smart_up_stream(question, bilibili_service, history):
-                    yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
-            except Exception as e:
-                logger.error(f"智能小UP流式输出错误: {str(e)}")
-                yield ErrorResponse.sse_error(f"分析过程中发生错误: {str(e)}")
-
-        return Response(generate(), mimetype='text/event-stream')
 
     @app.route('/api/chat/stream', methods=['POST'])
     @handle_errors

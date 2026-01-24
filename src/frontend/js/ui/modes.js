@@ -45,11 +45,6 @@ const MODE_META = {
         { id: 'metaSearch', title: '搜索次数', icon: '🔍', default: '0 次' },
         { id: 'metaAnalysis', title: '分析次数', icon: '📽️', default: '0 次' },
         { id: 'metaTokens', title: '累计 Tokens', icon: '🪙', default: '0' }
-    ],
-    smart_up: [
-        { id: 'metaRounds', title: '思考深度', icon: '🧠', default: '深度思考' },
-        { id: 'metaSearch', title: '检索次数', icon: '🔍', default: '0 次' },
-        { id: 'metaTokens', title: '消耗 Tokens', icon: '🪙', default: '0' }
     ]
 };
 
@@ -57,7 +52,6 @@ const MODE_META = {
  * 各模式的按钮文字配置
  */
 const MODE_BUTTON_TEXTS = {
-    smart_up: '开始对话',
     research: '深度研究',
     video: '开始分析',
     article: '解析专栏',
@@ -68,7 +62,6 @@ const MODE_BUTTON_TEXTS = {
  * 各模式的描述文字
  */
 const MODE_DESCRIPTIONS = {
-    'smart_up': '智连全网，自适应你的每一个好奇。',
     'research': '多维拆解，在海量信息中捕捉深度洞见。',
     'video': '瞬息提炼，让每一帧光影都有迹可循。',
     'article': '结构重组，深度转译专栏背后的文字灵魂。',
@@ -82,8 +75,7 @@ const MODE_PLACEHOLDERS = {
     'video': '粘贴 Bilibili 视频链接或 BV 号，例如：https://www.bilibili.com/video/BV1xx411c7mD',
     'article': '粘贴专栏链接或 CV 号，例如：https://www.bilibili.com/read/cv1234567890',
     'user': '输入用户 UID 或空间链接，例如：https://space.bilibili.com/123456789',
-    'research': '输入你想要研究的课题，例如：2025年人工智能发展趋势、量子计算应用场景',
-    'smart_up': '输入您的问题，例如：推荐几个Python入门教程、如何学习机器学习'
+    'research': '输入你想要研究的课题，例如：2025年人工智能发展趋势、量子计算应用场景'
 };
 
 // ============================================================================
@@ -237,7 +229,7 @@ function switchMode(mode, params) {
     const btnText = elements.analyzeBtn.lastChild;
 
     // 退出智能小UP全屏模式（恢复通用布局）
-    if (mode !== 'smart_up') {
+    if (true) {
         // 退出真正全屏
         if (elements.resultArea.classList.contains('smart-up-true-fullscreen')) {
             elements.resultArea.classList.remove('smart-up-true-fullscreen');
@@ -276,9 +268,6 @@ function switchMode(mode, params) {
         if (elements.resultArea.classList.contains('hidden') && showToastFn) {
             showToastFn('💡 您可以点击输入框下方的按钮查看以往的研究报告');
         }
-    } else if (mode === 'smart_up') {
-        elements.videoUrl.placeholder = MODE_PLACEHOLDERS.smart_up;
-        btnText.textContent = ' 智能对话';
     }
 
     // 非研究模式隐藏历史入口

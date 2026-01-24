@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar: document.getElementById('progressBar'),
         loadingText: document.getElementById('loadingText'),
         loadingSteps: document.getElementById('loadingSteps'),
-        
+
         // Video Info
         videoCover: document.getElementById('videoCover'),
         videoTitle: document.getElementById('videoTitle'),
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         likeCount: document.getElementById('likeCount'),
         commentCount: document.getElementById('commentCount'),
         videoDuration: document.getElementById('videoDuration'),
-        
+
         // Tabs & Content
         navBtns: document.querySelectorAll('.nav-btn'),
         tabContents: document.querySelectorAll('.tab-pane'),
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         analysisMeta: document.getElementById('analysisMeta'),
         copyBtn: document.getElementById('copyBtn'),
         downloadBtn: document.getElementById('downloadBtn'),
-        
+
         // Modal & Toast
         loginModal: document.getElementById('loginModal'),
         closeModal: document.querySelector('.close-modal'),
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         qaModelInput: document.getElementById('qaModelInput'),
         deepResearchModelInput: document.getElementById('deepResearchModelInput'),
         exaApiKeyInput: document.getElementById('exaApiKeyInput'),
-        enableSmartUpThinking: document.getElementById('enableSmartUpThinking'),
+
         enableResearchThinking: document.getElementById('enableResearchThinking'),
         darkModeToggle: document.getElementById('darkModeToggle'),
         saveSettingsBtn: document.getElementById('saveSettingsBtn'),
@@ -101,13 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         userPortraitContentPane: document.getElementById('userPortraitContentPane'),
         userWorksContent: document.getElementById('userWorksContent'),
         userWorksList: document.getElementById('userWorksList'),
-        
-        // Smart UP
-        smartUpChatContent: document.getElementById('smartUpChatContent'),
-        smartUpMessages: document.getElementById('smartUpMessages'),
-        smartUpProgress: document.getElementById('smartUpProgress'),
-        smartUpInput: document.getElementById('smartUpInput'),
-        smartUpSendBtn: document.getElementById('smartUpSendBtn'),
+
+
 
         // Search Results Panel
         searchResultsPanel: document.getElementById('searchResultsPanel'),
@@ -123,6 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
         historyList: document.getElementById('historyList'),
         downloadPdfBtn: document.getElementById('downloadPdfBtn'),
         researchHistoryShortcut: document.getElementById('researchHistoryShortcut'),
+        // Deep Research UI
+        resourcePool: document.getElementById('resourcePool'),
+        resourceList: document.getElementById('resourceList'),
+        resourceCount: document.getElementById('resourceCount'),
+        reportTOC: document.getElementById('reportTOC'),
+        tocList: document.getElementById('tocList'),
+        tocToggleBtn: document.getElementById('tocToggleBtn'),
 
         // Guide & Donate
         guideBtn: document.getElementById('guideBtn'),
@@ -132,11 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
         guideDonateBtn: document.getElementById('guideDonateBtn'),
         donateModal: document.getElementById('donateModal'),
         closeDonateBtn: document.getElementById('closeDonateBtn'),
-        homeBtn: document.getElementById('homeBtn')
+        homeBtn: document.getElementById('homeBtn'),
+
+        // Smart Up Chat
+        smartUpMessages: document.getElementById('smartUpMessages'),
+        smartUpInput: document.getElementById('smartUpInput'),
+        smartUpSendBtn: document.getElementById('smartUpSendBtn'),
+        smartUpProgress: document.getElementById('smartUpProgress')
     };
 
     // State
-    let currentMode = 'video'; // video, article, user, smart_up, research - 默认为视频分析
+    let currentMode = 'video'; // video, article, user, research - 默认为视频分析
     let manualModeLock = false; // Prevent auto-switch if user manually clicked
     let currentData = {
         summary: '',
@@ -152,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnalyzing = false;
     let isChatting = false;
     let chatHistory = [];
-    let smartUpHistory = []; // 智能小UP 专用上下文记忆
+
     let popularVideosCache = null; // 缓存热门视频数据
     let loginPollInterval = null;
 
@@ -162,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.modeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetMode = btn.dataset.mode;
-            
+
             // 如果点击的是当前模式，不触发切换提示
             if (targetMode === currentMode && !elements.resultArea.classList.contains('hidden')) {
                 return;
@@ -190,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             manualModeLock = false;
             return;
         }
-        
+
         // If locked by manual click, skip auto-detect
         if (manualModeLock) return;
 
@@ -221,11 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Analyze Button
     elements.analyzeBtn.addEventListener('click', startAnalysis);
-    
+
     // Guide Modal
     const guideMarkdown = `
 ### 🚀 快速开始
-欢迎使用 BiliBili Summarize！这是一个强大的 AI 驱动内容分析工具。本次更新带来了全新的 **智能小UP** 与 **深度研究** 模式。
+欢迎使用 BiliInsight！这是一个强大的 AI 驱动内容分析工具。本次更新带来了全新的 **深度研究** 模式。
 
 #### 1. 🤖 智能小UP (全新)
 - **定位**：自适应全能助手。
@@ -272,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     elements.closeGuideBtn.onclick = () => elements.guideModal.classList.add('hidden');
-    
+
     elements.guideDonateBtn.onclick = () => {
         elements.guideModal.classList.add('hidden');
         elements.donateModal.classList.remove('hidden');
@@ -323,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.resultArea.classList.contains('hidden') && elements.loadingState.classList.contains('hidden')) {
                 logoClicks++;
                 if (logoClicks === 5) {
-                    BiliHelpers.showToast('🎉 你发现了隐藏彩蛋！感谢支持 BiliBili Summarize！', elements.toast);
+                    BiliHelpers.showToast('🎉 你发现了隐藏彩蛋！感谢支持 BiliInsight！', elements.toast);
                     logoArea.style.animation = 'tada 1s';
                     setTimeout(() => logoArea.style.animation = '', 1000);
                     logoClicks = 0;
@@ -444,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.exaApiKeyInput.type = 'text';
 
                 // 加载思考模式开关状态
-                elements.enableSmartUpThinking.checked = data.enable_smart_up_thinking || false;
+
                 elements.enableResearchThinking.checked = data.enable_research_thinking || false;
 
                 // If backend says dark mode and local storage is empty, use backend
@@ -467,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qa_model: elements.qaModelInput.value.trim(),
             deep_research_model: elements.deepResearchModelInput.value.trim(),
             exa_api_key: elements.exaApiKeyInput.value.trim(),
-            enable_smart_up_thinking: elements.enableSmartUpThinking.checked,
+
             enable_research_thinking: elements.enableResearchThinking.checked,
             dark_mode: elements.darkModeToggle.checked
         };
@@ -514,8 +522,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function startAnalysis() {
         if (isAnalyzing) return;
-        
+
         const input = elements.videoUrl.value.trim();
+
+        // 🟢 停止逻辑：如果正在分析，点击按钮则为停止
+        if (isAnalyzing) {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+                BiliHelpers.showToast('已请求停止分析 Task...', elements.toast);
+                // UI状态将在 catch AbortError 中重置
+            }
+            return;
+        }
+
         if (!input) {
             BiliHelpers.showToast('请输入B站链接或关键词', elements.toast);
             return;
@@ -528,9 +548,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isBvid = input.includes('BV') || input.includes('video/');
         const isCvid = input.includes('cv') || input.includes('read/') || input.includes('opus/');
         const isUid = input.includes('space.bilibili.com') || (input.match(/^\d+$/) && input.length > 5);
-        
-        // --- 核心修复：如果是智能小UP或深度研究模式，不要触发模糊搜索下拉框，直接开始任务 ---
-        if (currentMode !== 'research' && currentMode !== 'smart_up') {
+
+        // --- 核心修复：如果是深度研究模式，不要触发模糊搜索下拉框，直接开始任务 ---
+        if (currentMode !== 'research') {
             // If it's a keyword (not a link/ID), perform search first
             if (!isBvid && !isCvid && !isUid && !input.startsWith('http')) {
                 await performSearch(input);
@@ -540,12 +560,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Standard Analysis Flow ---
         isAnalyzing = true;
-        elements.analyzeBtn.disabled = true;
+        // 🔴 切换为停止按钮
+        elements.analyzeBtn.classList.add('btn-stop');
+        elements.analyzeBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            </svg> 停止任务
+        `;
+        // elements.analyzeBtn.disabled = true; // 不再禁用，允许点击停止
         elements.homeBtn.classList.remove('hidden');
-        
-        // --- 核心修复：智能小UP和深度研究采用平滑动画过渡，不显示 TV 加载动画 ---
-        const isFastMode = currentMode === 'smart_up' || currentMode === 'research';
-        
+
+        // --- 核心修复：深度研究采用平滑动画过渡，不显示 TV 加载动画 ---
+        const isFastMode = currentMode === 'research';
+
         if (isFastMode) {
             elements.welcomeSection.classList.add('fade-out-down');
             // 延迟一小会儿显示结果区，等欢迎区退场
@@ -564,41 +591,13 @@ document.addEventListener('DOMContentLoaded', () => {
         resetMeta(currentMode); // 传入当前模式进行重置
         initStepper(currentMode);
         updateSidebarUI(); // 在此处真正切换功能入口
-        
+
         // Reset Data
         currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [], articleData: null, userData: null };
         chatHistory = [];
-        
-        // --- 核心修复：不同模式显示不同的对话初始消息 ---
-        const assistantGreeting = currentMode === 'smart_up'
-            ? '你好！我是你的智能小UP。有什么我可以帮你的吗？我会快速检索B站视频和全网资讯为您提供精准回答。'
-            : `你好！我是你的智能分析助手。🤖
 
-我已经完整阅读了这份分析报告，包括内容总结、弹幕舆情、评论观点等所有信息。
 
-你可以问我：
-• "这个内容的核心观点是什么？"
-• "弹幕/评论最关注哪些点？"
-• "详细解释一下某个章节"
-• "有什么数据亮点？"
 
-我会基于完整的分析报告为你提供精准、结构化的回答！`;
-
-        elements.chatMessages.innerHTML = `
-            <div class="message assistant">
-                <div class="message-content">${assistantGreeting}</div>
-            </div>
-        `;
-        
-        // 同时也要更新智能小UP专属的对话框
-        if (elements.smartUpMessages) {
-            elements.smartUpMessages.innerHTML = `
-                <div class="message assistant">
-                    <div class="message-content">你好！我是你的智能小UP。有什么我可以帮你的吗？我会快速检索B站视频和全网资讯为您提供精准回答。</div>
-                </div>
-            `;
-        }
-        
         // Reset contents
         elements.summaryContent.innerHTML = '<div class="empty-state"><p>正在生成视频分析...</p></div>';
         elements.danmakuAnalysisResult.innerHTML = '<div class="empty-state"><p>正在分析弹幕...</p></div>';
@@ -613,9 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (currentMode === 'research') {
                 // Research mode: special streaming
                 await processResearchStream(input);
-            } else if (currentMode === 'smart_up') {
-                // 智能小UP：平滑过渡并进入问答
-                await startSmartUpQA(input);
             } else {
                 // Video/Article mode: streaming API
                 await processStreamAnalysis(input);
@@ -635,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input.includes('space.bilibili.com/')) {
             uid = input.match(/space\.bilibili\.com\/(\d+)/)[1];
         }
-        
+
         updateStepper('info', 'active');
         updateProgress(20, '正在获取UP主资料...');
         const res = await fetch('/api/user/portrait', {
@@ -644,23 +640,23 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ uid: uid })
         });
         const json = await res.json();
-        
+
         if (json.success) {
             updateStepper('info', 'completed');
             updateStepper('content', 'active');
             updateProgress(60, '分析作品趋势...');
-            
+
             // Artificial delay for better UX feel
             await new Promise(r => setTimeout(r, 800));
-            
+
             updateStepper('content', 'completed');
             updateStepper('ai', 'active');
             updateProgress(90, '生成AI深度画像...');
-            
+
             renderUserPortrait(json.data);
             updateStepper('ai', 'completed');
             updateProgress(100, '分析完成');
-            
+
             isAnalyzing = false;
             elements.analyzeBtn.disabled = false;
             elements.loadingState.classList.add('hidden');
@@ -675,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentData.userData = data;
         currentData.fullMarkdown = data.portrait; // For chat
         currentData.videoInfo = { title: data.info.name, author: data.info.name }; // Mock for chat
-        
+
         // Update Token Count
         if (data.tokens_used) {
             elements.tokenCount.textContent = data.tokens_used;
@@ -690,17 +686,17 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.commentCount.textContent = '-';
         elements.videoDuration.textContent = 'UID: ' + data.info.mid;
         elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(data.info.face)}`;
-        
+
         // Update both the Portrait Card and the Tab Pane
         const portraitHTML = marked.parse(data.portrait);
         if (elements.upPortraitContent) elements.upPortraitContent.innerHTML = portraitHTML;
         if (elements.userPortraitContentPane) elements.userPortraitContentPane.innerHTML = portraitHTML;
-        
+
         // Update Meta for User
         updateMetaValue('metaUserLevel', 'L' + data.info.level);
         updateMetaValue('metaFollowers', BiliHelpers.formatNumber(data.info.follower || 0));
         updateMetaValue('metaWorksCount', data.recent_videos ? data.recent_videos.length : 0);
-        
+
         // Update Works Tab
         elements.userWorksList.innerHTML = '';
         if (data.recent_videos && data.recent_videos.length > 0) {
@@ -766,21 +762,28 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.videoTitle.textContent = `课题研究：${topic}`;
         elements.upName.textContent = 'Deep Research Agent';
         // 使用一个更合适的图标
-        elements.videoCover.src = 'https://www.bilibili.com/favicon.ico'; 
+        elements.videoCover.src = 'https://www.bilibili.com/favicon.ico';
         elements.videoDuration.textContent = '深度研究模式';
-        
+
         // 更新大卡片统计
-        elements.viewCount.textContent = '🔄 轮0';
-        elements.danmakuCount.textContent = '🔍 次0';
-        elements.likeCount.textContent = '📽️ 次0';
+        elements.viewCount.textContent = '轮次: 0';
+        elements.danmakuCount.textContent = '搜索: 0';
+        elements.likeCount.textContent = '分析: 0';
         elements.commentCount.textContent = '🪙 0';
 
         let roundCount = 0;
         let searchCount = 0;
         let analysisCount = 0;
 
-        // 初始节点
-        addTimelineItem('tool_start', '初始化研究计划', '深度研究 Agent 已启动，正在拆解研究课题...');
+        // Set videoInfo for chat context
+        currentData.videoInfo = {
+            title: `深度研究：${topic}`,
+            author: 'Deep Research Agent',
+            bvid: 'research_mode'
+        };
+
+        // 初始节点 - 已根据用户要求移除
+        // addTimelineItem('tool_start', '初始化研究计划', '深度研究 Agent 已启动，正在拆解研究课题...');
 
         updateStepper('ai', 'active');
         updateProgress(50, '深度研究 Agent 启动中...');
@@ -803,58 +806,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         data = JSON.parse(jsonStr);
                     } catch (e) { continue; }
-                    
-                            if (data.type === 'round_start') {
-                                roundCount = data.round;
-                                elements.viewCount.textContent = `🔄 轮${roundCount}`;
-                                updateMetaValue('metaRounds', roundCount, '轮');
-                            } else if (data.type === 'report_start') {
-                                // 收到正式报告开始信号，清空之前的研究过程/计划文本，确保报告纯净
-                                fullReport = '';
-                                // 核心修复：Token 消耗应全程叠加，不再此处清零
-                                elements.researchReportContent.innerHTML = '';
-                            } else if (data.type === 'thinking') {
+
+                    if (data.type === 'round_start') {
+                        roundCount = data.round;
+                        elements.viewCount.textContent = `轮次: ${roundCount}`;
+                        updateMetaValue('metaRounds', roundCount, '轮');
+                    } else if (data.type === 'report_start') {
+                        // 收到正式报告开始信号，清空之前的研究过程/计划文本，确保报告纯净
+                        fullReport = '';
+                        // 核心修复：Token 消耗应全程叠加，不再此处清零
+                        elements.researchReportContent.innerHTML = '';
+                    } else if (data.type === 'thinking') {
                         thinkingTokens += data.content.length;
                         const totalTokens = totalResearchTokens + thinkingTokens;
                         updateStreamingBadge(totalTokens);
-                        elements.commentCount.textContent = `🪙 ${totalTokens}`;
+                        elements.commentCount.textContent = `Tokens: ${totalTokens}`;
                         elements.tokenCount.textContent = totalTokens;
                         updateMetaValue('metaTokens', totalTokens);
-                        
+
+                        // 🟢 思考过程 UI 优化
                         const lastItem = elements.researchTimeline.lastElementChild;
                         if (lastItem && lastItem.classList.contains('type-thinking') && lastItem.classList.contains('active')) {
-                            const detail = lastItem.querySelector('.timeline-detail');
-                            detail.textContent += data.content;
+                            const detail = lastItem.querySelector('.thinking-content');
+                            if (detail) {
+                                detail.textContent += data.content;
+                            } else {
+                                // 兼容旧结构
+                                const oldDetail = lastItem.querySelector('.timeline-detail');
+                                if (oldDetail) oldDetail.textContent += data.content;
+                            }
                         } else {
-                            // 在创建新的思考节点前，完成之前的所有思考节点
+                            // 关闭之前的所有思考节点
                             const previousThinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
                             previousThinkingItems.forEach(item => {
                                 item.classList.remove('active');
                                 item.classList.add('completed');
+                                item.classList.add('collapsed');
                                 const statusBadge = item.querySelector('.timeline-status-badge');
-                                const resultPreview = item.querySelector('.result-preview');
                                 if (statusBadge) {
                                     statusBadge.className = 'timeline-status-badge completed';
-                                    statusBadge.innerHTML = '✅ 已完成';
-                                }
-                                if (resultPreview) {
-                                    const detailDiv = item.querySelector('.timeline-detail');
-                                    const charCount = detailDiv ? detailDiv.textContent.length : 0;
-                                    resultPreview.className = 'result-preview success';
-                                    resultPreview.innerHTML = `💭 ${charCount} 字符`;
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                                 }
                             });
-                            addTimelineItem('thinking', 'Agent 思考中...', data.content);
+                            // 创建新的思考节点
+                            addThinkingNode(data.content);
                         }
                     } else if (data.type === 'content') {
                         fullReport += data.content;
                         totalResearchTokens += data.content.length;
                         const totalTokens = totalResearchTokens + thinkingTokens;
-                        elements.commentCount.textContent = `🪙 ${totalTokens}`;
+                        elements.commentCount.textContent = `Tokens: ${totalTokens}`;
                         elements.tokenCount.textContent = totalTokens;
                         updateMetaValue('metaTokens', totalTokens);
 
                         renderMarkdown(elements.researchReportContent, fullReport);
+                        // 🟢 生成目录
+                        generateTOC(elements.researchReportContent);
                         currentData.fullMarkdown = fullReport;
 
                         // 完成所有thinking节点
@@ -869,13 +876,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             if (statusBadge) {
                                 statusBadge.className = 'timeline-status-badge completed';
-                                statusBadge.innerHTML = '✅ 已完成';
+                                statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                             }
                             if (resultPreview) {
-                                const detailDiv = item.querySelector('.timeline-detail');
+                                const detailDiv = item.querySelector('.thinking-content, .timeline-detail');
                                 const charCount = detailDiv ? detailDiv.textContent.length : 0;
                                 resultPreview.className = 'result-preview success';
-                                resultPreview.innerHTML = `💭 ${charCount} 字符`;
+                                resultPreview.innerHTML = `${StatusIcons.chars} ${charCount} 字符`;
                             }
                         });
 
@@ -894,1153 +901,1150 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 if (statusBadge) {
                                     statusBadge.className = 'timeline-status-badge completed';
-                                    statusBadge.innerHTML = '✅ 已完成';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                                 }
                                 if (resultPreview) {
                                     resultPreview.className = 'result-preview success';
-                                    resultPreview.innerHTML = '✓ 已就绪';
+                                    resultPreview.innerHTML = `${StatusIcons.completed} 已就绪`;
                                 }
                             }
                         });
 
                         updateStreamingBadge(totalTokens);
-                            } else if (data.type === 'batch_analyze_start') {
-                                // 智能并行分析开始 - 为每个视频创建独立的时间轴节点
-                                const count = data.count || 1;
-                                const batchId = `batch-${Date.now()}`;
+                    } else if (data.type === 'batch_analyze_start') {
+                        // 智能并行分析开始 - 为每个视频创建独立的时间轴节点
+                        const count = data.count || 1;
+                        const batchId = `batch-${Date.now()}`;
 
-                                // 为每个视频创建独立的时间轴节点
-                                for (let i = 0; i < count; i++) {
-                                    const videoIndex = i + 1;
-                                    const toolId = `batch-video-${batchId}-${i}`;
-                                    const tempBvid = `BV analyzing...${videoIndex}`;
+                        // 为每个视频创建独立的时间轴节点
+                        for (let i = 0; i < count; i++) {
+                            const videoIndex = i + 1;
+                            const toolId = `batch-video-${batchId}-${i}`;
+                            const tempBvid = `BV analyzing...${videoIndex}`;
 
-                                    // 创建独立的视频分析节点
-                                    addTimelineItem('tool_start', `⚡ 分析视频 ${videoIndex} 中...`, {
-                                        bvid: tempBvid,
-                                        _status: 'analyzing',
-                                        _toolId: toolId,
-                                        _toolType: 'analyze_video',
-                                        _batchIndex: i,
-                                        _batchId: batchId
-                                    }, toolId);
+                            // 创建独立的视频分析节点
+                            addTimelineItem('tool_start', `⚡ 分析视频 ${videoIndex} 中...`, {
+                                bvid: tempBvid,
+                                _status: 'analyzing',
+                                _toolId: toolId,
+                                _toolType: 'analyze_video',
+                                _batchIndex: i,
+                                _batchId: batchId
+                            }, toolId);
 
-                                    // 更新分析次数
-                                    analysisCount++;
-                                    elements.likeCount.textContent = `📽️ 次${analysisCount}`;
-                                    updateMetaValue('metaAnalysis', analysisCount, '次');
+                            // 更新分析次数
+                            analysisCount++;
+                            elements.likeCount.textContent = `分析: ${analysisCount}`;
+                            updateMetaValue('metaAnalysis', analysisCount, '次');
+                        }
+
+                        // 保存批量分析信息到全局变量
+                        if (typeof window.currentBatchAnalysis === 'undefined') {
+                            window.currentBatchAnalysis = {};
+                        }
+                        window.currentBatchAnalysis[batchId] = {
+                            count: count,
+                            completed: 0
+                        };
+
+                    } else if (data.type === 'batch_analyze_complete') {
+                        // 批量分析全部完成
+                        const total = data.total || 0;
+                        const success = data.success || 0;
+                        const tokens = data.tokens || 0;
+
+                        // 完成所有待完成的视频分析节点
+                        const pendingItems = elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active');
+                        pendingItems.forEach(item => {
+                            const toolType = item.getAttribute('data-tool-type');
+                            if (toolType === 'analyze_video') {
+                                const statusBadge = item.querySelector('.timeline-status-badge');
+                                const resultPreview = item.querySelector('.result-preview');
+                                const titleText = item.querySelector('.title-text');
+
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(76, 175, 80, 0.1)';
+                                    statusBadge.style.color = '#4CAF50';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                                 }
 
-                                // 保存批量分析信息到全局变量
-                                if (typeof window.currentBatchAnalysis === 'undefined') {
-                                    window.currentBatchAnalysis = {};
+                                if (resultPreview) {
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${tokens}</span> Tokens 总消耗`;
                                 }
-                                window.currentBatchAnalysis[batchId] = {
-                                    count: count,
-                                    completed: 0
-                                };
 
-                            } else if (data.type === 'batch_analyze_complete') {
-                                // 批量分析全部完成
-                                const total = data.total || 0;
-                                const success = data.success || 0;
-                                const tokens = data.tokens || 0;
-
-                                // 完成所有待完成的视频分析节点
-                                const pendingItems = elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active');
-                                pendingItems.forEach(item => {
-                                    const toolType = item.getAttribute('data-tool-type');
-                                    if (toolType === 'analyze_video') {
-                                        const statusBadge = item.querySelector('.timeline-status-badge');
-                                        const resultPreview = item.querySelector('.result-preview');
-                                        const titleText = item.querySelector('.title-text');
-
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(76, 175, 80, 0.1)';
-                                            statusBadge.style.color = '#4CAF50';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-
-                                        if (resultPreview) {
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${tokens}</span> Tokens 总消耗`;
-                                        }
-
-                                        if (titleText) {
-                                            titleText.textContent = titleText.textContent.replace('分析中...', '分析完成');
-                                        }
-
-                                        item.classList.remove('active');
-                                        item.classList.add('completed');
-                                    }
-                                });
-
-                                // 完成初始节点
-                                completeInitialNodes();
-
-                            } else if (data.type === 'tool_progress') {
-                                if (data.tool === 'analyze_video') {
-                                    // 处理批量分析中的单个视频进度更新
-                                    const batchItems = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    let targetItem = null;
-
-                                    // 查找对应的批量分析节点
-                                    for (const item of batchItems) {
-                                        const titleText = item.querySelector('.title-text');
-                                        if (titleText && titleText.textContent.includes('分析视频')) {
-                                            // 这是一个批量分析的视频节点
-                                            targetItem = item;
-                                            break;
-                                        }
-                                    }
-
-                                    if (targetItem) {
-                                        // 更新该视频节点的状态
-                                        const titleText = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-                                        const detailDiv = targetItem.querySelector('.timeline-detail');
-
-                                        // 更新标题显示真实的BVID
-                                        if (titleText && data.bvid) {
-                                            titleText.textContent = `⚡ 分析视频: ${data.bvid}`;
-                                        }
-
-                                        // 更新状态徽章
-                                        if (data.message && data.message.includes('✅')) {
-                                            if (statusBadge) {
-                                                statusBadge.className = 'timeline-status-badge completed';
-                                                statusBadge.style.background = 'rgba(76, 175, 80, 0.1)';
-                                                statusBadge.style.color = '#4CAF50';
-                                                statusBadge.innerHTML = '✅ 已完成';
-                                            }
-
-                                            if (resultPreview && data.video_tokens !== undefined) {
-                                                resultPreview.className = 'result-preview success';
-                                                resultPreview.innerHTML = `<span class="count">${data.video_tokens}</span> Tokens`;
-                                            }
-
-                                            // 标记该节点为完成
-                                            targetItem.classList.remove('active');
-                                            targetItem.classList.add('completed');
-                                        }
-                                    }
-
-                                    // 原有的单个视频分析逻辑（兼容非批量模式）
-                                    const msgEl = document.getElementById(`msg-${data.bvid}`);
-                                    const tokenEl = document.getElementById(`tokens-${data.bvid}`);
-                                    const ghostEl = document.getElementById(`ghost-${data.bvid}`);
-                                    const titleEl = document.getElementById(`title-${data.bvid}`);
-
-                                    if (msgEl && data.message) {
-                                        msgEl.textContent = data.message;
-                                    }
-
-                                    if (titleEl && data.title) {
-                                        titleEl.textContent = `正在分析视频: ${data.title}`;
-                                        titleEl.title = data.title;
-                                    }
-
-                                    if (tokenEl && data.tokens !== undefined) {
-                                        const currentTokens = data.tokens || 0;
-                                        tokenEl.textContent = `正在建模: ${currentTokens} Tokens`;
-
-                                        const totalSoFar = totalResearchTokens + thinkingTokens + currentTokens;
-                                        elements.commentCount.textContent = `🪙 ${totalSoFar}`;
-                                        elements.tokenCount.textContent = totalSoFar;
-                                        updateMetaValue('metaTokens', totalSoFar);
-                                    }
-
-                                    if (ghostEl && data.content) {
-                                        ghostEl.textContent += data.content;
-                                        ghostEl.scrollTop = ghostEl.scrollHeight;
-                                    }
-                                } else if (data.tool === 'analyze_videos_batch') {
-                                    // 批量分析进度更新
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-batch-analyze-');
-                                    });
-
-                                    if (targetItem) {
-                                        const detailEl = targetItem.querySelector('.timeline-detail');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        // 更新总Token显示
-                                        if (data.tokens !== undefined) {
-                                            const totalTokensEl = targetItem.querySelector('#batch-total-tokens');
-                                            if (totalTokensEl) {
-                                                totalTokensEl.textContent = `${data.tokens} Tokens`;
-                                            }
-                                        }
-
-                                        // 更新当前视频Token显示
-                                        if (data.bvid && data.video_tokens !== undefined) {
-                                            const currentVideoContainer = targetItem.querySelector('#batch-current-video-container');
-                                            const currentVideoEl = targetItem.querySelector('#batch-current-video');
-
-                                            if (currentVideoContainer && currentVideoEl) {
-                                                currentVideoContainer.style.display = 'flex';
-                                                const title = data.title || data.bvid;
-                                                currentVideoEl.textContent = `${title}: ${data.video_tokens} Tokens`;
-                                            }
-
-                                            // 更新视频列表中的状态
-                                            const videoItem = targetItem.querySelector(`.batch-video-item[data-bvid="${data.bvid}"]`);
-                                            if (videoItem) {
-                                                const statusEl = videoItem.querySelector('.batch-video-status');
-                                                if (statusEl) {
-                                                    statusEl.textContent = `✅ ${data.video_tokens} T`;
-                                                    statusEl.style.color = '#4CAF50';
-                                                }
-                                            }
-                                        }
-
-                                        // 创建或更新进度显示区域
-                                        if (detailEl) {
-                                            let progressDiv = detailEl.querySelector('.batch-progress');
-                                            if (!progressDiv) {
-                                                progressDiv = document.createElement('div');
-                                                progressDiv.className = 'batch-progress';
-                                                detailEl.appendChild(progressDiv);
-                                            }
-
-                                            // 添加进度消息
-                                            if (data.message) {
-                                                const msg = document.createElement('div');
-                                                msg.className = 'progress-message';
-                                                msg.textContent = data.message;
-                                                progressDiv.appendChild(msg);
-
-                                                // 限制显示的进度消息数量
-                                                while (progressDiv.children.length > 5) {
-                                                    progressDiv.removeChild(progressDiv.firstChild);
-                                                }
-                                            }
-                                        }
-
-                                        // 更新结果预览（显示完成进度）
-                                        if (resultPreview && data.bvid) {
-                                            // 创建进度列表
-                                            let progressList = resultPreview.querySelector('.batch-progress-list');
-                                            if (!progressList) {
-                                                progressList = document.createElement('div');
-                                                progressList.className = 'batch-progress-list';
-                                                resultPreview.innerHTML = '';
-                                                resultPreview.appendChild(progressList);
-                                            }
-
-                                            // 检查是否已存在该视频的进度项
-                                            let existingItem = progressList.querySelector(`[data-bvid="${data.bvid}"]`);
-                                            if (!existingItem) {
-                                                existingItem = document.createElement('div');
-                                                existingItem.className = 'progress-item';
-                                                existingItem.setAttribute('data-bvid', data.bvid);
-                                                progressList.appendChild(existingItem);
-                                            }
-
-                                            // 更新进度项内容
-                                            const statusIcon = data.message.includes('✅') ? '✅' : (data.message.includes('❌') ? '❌' : '⏳');
-                                            let messageText = data.message;
-
-                                            // 如果有单个视频的 Token 信息，添加到消息中
-                                            if (data.video_tokens !== undefined) {
-                                                messageText += ` (${data.video_tokens} Tokens)`;
-                                            } else if (data.tokens !== undefined) {
-                                                // 兼容旧格式（只有累计 Token）
-                                                messageText += ` (${data.tokens} Tokens)`;
-                                            }
-
-                                            existingItem.innerHTML = `<span class="status-icon">${statusIcon}</span> <span class="message-text">${messageText}</span>`;
-
-                                            // 自动滚动到底部
-                                            progressList.scrollTop = progressList.scrollHeight;
-                                        }
-                                    }
+                                if (titleText) {
+                                    titleText.textContent = titleText.textContent.replace('分析中...', '分析完成');
                                 }
-                            } else if (data.type === 'tool_start') {
-                                // 完成所有思考节点（工具开始执行表示思考阶段结束）
-                                const activeThinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
-                                activeThinkingItems.forEach(item => {
-                                    item.classList.remove('active');
-                                    item.classList.add('completed');
-                                    const statusBadge = item.querySelector('.timeline-status-badge');
-                                    const resultPreview = item.querySelector('.result-preview');
+
+                                item.classList.remove('active');
+                                item.classList.add('completed');
+                            }
+                        });
+
+                        // 完成初始节点
+                        completeInitialNodes();
+
+                    } else if (data.type === 'tool_progress') {
+                        if (data.tool === 'analyze_video') {
+                            // 处理批量分析中的单个视频进度更新
+                            const batchItems = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            let targetItem = null;
+
+                            // 查找对应的批量分析节点
+                            for (const item of batchItems) {
+                                const titleText = item.querySelector('.title-text');
+                                if (titleText && titleText.textContent.includes('分析视频')) {
+                                    // 这是一个批量分析的视频节点
+                                    targetItem = item;
+                                    break;
+                                }
+                            }
+
+                            if (targetItem) {
+                                // 更新该视频节点的状态
+                                const titleText = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+                                const detailDiv = targetItem.querySelector('.timeline-detail');
+
+                                // 更新标题显示真实的BVID
+                                if (titleText && data.bvid) {
+                                    titleText.textContent = `⚡ 分析视频: ${data.bvid}`;
+                                }
+
+                                // 更新状态徽章
+                                if (data.message && data.message.includes('✅')) {
                                     if (statusBadge) {
                                         statusBadge.className = 'timeline-status-badge completed';
-                                        statusBadge.innerHTML = '✅ 已完成';
+                                        statusBadge.style.background = 'rgba(76, 175, 80, 0.1)';
+                                        statusBadge.style.color = '#4CAF50';
+                                        statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                                     }
-                                    if (resultPreview) {
-                                        const detailDiv = item.querySelector('.timeline-detail');
-                                        const charCount = detailDiv ? detailDiv.textContent.length : 0;
+
+                                    if (resultPreview && data.video_tokens !== undefined) {
                                         resultPreview.className = 'result-preview success';
-                                        resultPreview.innerHTML = `💭 ${charCount} 字符`;
+                                        resultPreview.innerHTML = `<span class="count">${data.video_tokens}</span> Tokens`;
                                     }
-                                });
 
-                                let title = `执行工具: ${data.tool}`;
-                                let toolBvid = data.args ? data.args.bvid : null;
-                                let toolKeyword = data.args ? data.args.keyword : null;
-                                let toolMid = data.args ? data.args.mid : null;
-                                
-                                if (data.tool === 'search_videos') {
-                                    title = `搜索相关视频: ${toolKeyword}`;
-                                    const toolId = `tool-search-${Date.now()}`;
-                                    searchCount++;
-                                    elements.danmakuCount.textContent = `🔍 次${searchCount}`;
-                                    updateMetaValue('metaSearch', searchCount, '次');
+                                    // 标记该节点为完成
+                                    targetItem.classList.remove('active');
+                                    targetItem.classList.add('completed');
+                                }
+                            }
 
-                                    // 丰富搜索参数显示，并增加等待状态
-                                    data.args._status = 'loading';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'search_videos'; // 工具类型
-                                } else if (data.tool === 'web_search') {
-                                    title = `全网深度搜索: ${toolKeyword}`;
-                                    const toolId = `tool-web-${Date.now()}`;
-                                    data.args._status = 'searching';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'web_search';
-                                } else if (data.tool === 'analyze_video') {
-                                    title = `分析视频中...`;
-                                    const toolId = `tool-analyze-${data.args.bvid}`;
-                                    analysisCount++;
-                                    elements.likeCount.textContent = `📽️ 次${analysisCount}`;
-                                    updateMetaValue('metaAnalysis', analysisCount, '次');
+                            // 原有的单个视频分析逻辑（兼容非批量模式）
+                            const msgEl = document.getElementById(`msg-${data.bvid}`);
+                            const tokenEl = document.getElementById(`tokens-${data.bvid}`);
+                            const ghostEl = document.getElementById(`ghost-${data.bvid}`);
+                            const titleEl = document.getElementById(`title-${data.bvid}`);
 
-                                    const oldTitle = document.getElementById(`title-${toolBvid}`);
-                                    if (oldTitle) {
-                                        const oldItem = oldTitle.closest('.timeline-item');
-                                        if (oldItem) oldItem.remove();
+                            if (msgEl && data.message) {
+                                msgEl.textContent = data.message;
+                            }
+
+                            if (titleEl && data.title) {
+                                titleEl.textContent = `正在分析视频: ${data.title}`;
+                                titleEl.title = data.title;
+                            }
+
+                            if (tokenEl && data.tokens !== undefined) {
+                                const currentTokens = data.tokens || 0;
+                                tokenEl.textContent = `正在建模: ${currentTokens} Tokens`;
+
+                                const totalSoFar = totalResearchTokens + thinkingTokens + currentTokens;
+                                elements.commentCount.textContent = `🪙 ${totalSoFar}`;
+                                elements.tokenCount.textContent = totalSoFar;
+                                updateMetaValue('metaTokens', totalSoFar);
+                            }
+
+                            if (ghostEl && data.content) {
+                                ghostEl.textContent += data.content;
+                                ghostEl.scrollTop = ghostEl.scrollHeight;
+                            }
+                        } else if (data.tool === 'analyze_videos_batch') {
+                            // 批量分析进度更新
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-batch-analyze-');
+                            });
+
+                            if (targetItem) {
+                                const detailEl = targetItem.querySelector('.timeline-detail');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                // 更新总Token显示
+                                if (data.tokens !== undefined) {
+                                    const totalTokensEl = targetItem.querySelector('#batch-total-tokens');
+                                    if (totalTokensEl) {
+                                        totalTokensEl.textContent = `${data.tokens} Tokens`;
                                     }
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'analyze_video';
-                                } else if (data.tool === 'analyze_videos_batch') {
-                                    const bvids = data.args ? data.args.bvids : [];
-                                    const count = Array.isArray(bvids) ? bvids.length : 0;
-                                    title = `⚡ 批量并行分析 ${count} 个视频`;
-                                    const toolId = `tool-batch-analyze-${Date.now()}`;
-                                    analysisCount += count;
-                                    elements.likeCount.textContent = `📽️ 次${analysisCount}`;
-                                    updateMetaValue('metaAnalysis', analysisCount, '次');
-                                    data.args._status = 'batch_analyzing';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'analyze_videos_batch';
-                                    data.args._batchBvids = bvids; // 保存BVID列表
-                                } else if (data.tool === 'search_users') {
-                                    title = `搜索 B 站 UP 主: ${toolKeyword}`;
-                                    const toolId = `tool-search-users-${Date.now()}`;
-                                    data.args._status = 'searching_user';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'search_users';
-                                } else if (data.tool === 'get_user_recent_videos') {
-                                    title = `获取 UP 主作品 (UID: ${toolMid})`;
-                                    const toolId = `tool-user-videos-${toolMid}`;
-                                    data.args._status = 'fetching_works';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_user_recent_videos';
-                                } else if (data.tool === 'get_hot_videos') {
-                                    title = `🔥 获取当前热门视频`;
-                                    const toolId = `tool-hot-videos-${Date.now()}`;
-                                    data.args._status = 'fetching_hot';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_hot_videos';
-                                } else if (data.tool === 'get_hot_buzzwords') {
-                                    title = `📊 获取热词图鉴`;
-                                    const toolId = `tool-buzzwords-${Date.now()}`;
-                                    data.args._status = 'fetching_buzzwords';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_hot_buzzwords';
-                                } else if (data.tool === 'get_weekly_hot_videos') {
-                                    const week = data.args ? data.args.week : 1;
-                                    title = `⭐ 获取每周必看 (第${week}周)`;
-                                    const toolId = `tool-weekly-hot-${Date.now()}`;
-                                    data.args._status = 'fetching_weekly';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_weekly_hot_videos';
-                                } else if (data.tool === 'get_history_popular_videos') {
-                                    title = `🏆 获取入站必刷经典视频`;
-                                    const toolId = `tool-history-hot-${Date.now()}`;
-                                    data.args._status = 'fetching_history';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_history_popular_videos';
-                                } else if (data.tool === 'get_rank_videos') {
-                                    const category = data.args ? data.args.category : '未知';
-                                    const day = data.args ? data.args.day : 3;
-                                    const dayText = day === 3 ? '三日' : '周';
-                                    title = `📈 获取${category}分区排行榜 (${dayText})`;
-                                    const toolId = `tool-rank-${category}-${Date.now()}`;
-                                    data.args._status = 'fetching_rank';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_rank_videos';
-                                } else if (data.tool === 'get_search_suggestions') {
-                                    title = `💡 获取搜索建议: ${toolKeyword || '搜索联想'}`;
-                                    const toolId = `tool-search-suggestions-${Date.now()}`;
-                                    data.args._status = 'fetching_suggestions';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_search_suggestions';
-                                } else if (data.tool === 'get_hot_search_keywords') {
-                                    title = `🔥 获取当前热搜关键词`;
-                                    const toolId = `tool-hot-keywords-${Date.now()}`;
-                                    data.args._status = 'fetching_hot_keywords';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_hot_search_keywords';
-                                } else if (data.tool === 'get_video_tags') {
-                                    title = `🏷️ 获取视频标签: ${toolBvid || '视频'}`;
-                                    const toolId = `tool-video-tags-${Date.now()}`;
-                                    data.args._status = 'fetching_tags';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_video_tags';
-                                } else if (data.tool === 'get_video_series') {
-                                    title = `📚 获取视频合集: ${toolBvid || '视频'}`;
-                                    const toolId = `tool-video-series-${Date.now()}`;
-                                    data.args._status = 'fetching_series';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_video_series';
-                                } else if (data.tool === 'get_user_dynamics') {
-                                    title = `💬 获取用户动态 (UID: ${toolMid})`;
-                                    const toolId = `tool-user-dynamics-${toolMid}-${Date.now()}`;
-                                    data.args._status = 'fetching_dynamics';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'get_user_dynamics';
-                                } else if (data.tool === 'finish_research_and_write_report') {
-                                    title = '开始撰写深度研究报告';
-                                    const toolId = 'tool-finish-report';
-                                    elements.downloadPdfBtn.classList.add('hidden');
-                                    data.args._status = 'writing';
-                                    data.args._toolId = toolId;
-                                    data.args._toolType = 'finish_research_and_write_report';
                                 }
 
-                                // 传递 toolId 给 addTimelineItem
-                                const toolId = data.args._toolId || null;
-                                addTimelineItem('tool_start', title, data.args, toolId);
-                            } else if (data.type === 'tool_result') {
-                                // 通用工具更新逻辑：所有工具都更新现有节点而不是创建新节点
-                                let shouldCreateNewNode = true; // 默认需要创建新节点（兜底）
+                                // 更新当前视频Token显示
+                                if (data.bvid && data.video_tokens !== undefined) {
+                                    const currentVideoContainer = targetItem.querySelector('#batch-current-video-container');
+                                    const currentVideoEl = targetItem.querySelector('#batch-current-video');
 
-                                if (data.tool === 'search_videos') {
-                                    // 查找对应的 search_videos 节点
-                                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                            const targetItem = items.find(item => {
-                                                const toolId = item.getAttribute('data-tool-id');
-                                                return toolId && toolId.startsWith('tool-search-');
-                                            });
-
-                                            if (targetItem) {
-                                                const statusEl = targetItem.querySelector('.search-status');
-                                                const titleEl = targetItem.querySelector('.title-text');
-                                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                                const resultPreview = targetItem.querySelector('.result-preview');
-
-                                                if (statusEl) {
-                                                    statusEl.textContent = '✅ 搜索已就绪';
-                                                    statusEl.style.color = '#4CAF50';
-                                                }
-                                                if (titleEl) {
-                                                    titleEl.textContent = `✅ 视频搜索完成`;
-                                                }
-                                                if (statusBadge) {
-                                                    statusBadge.className = 'timeline-status-badge completed';
-                                                    statusBadge.innerHTML = '✅ 已完成';
-                                                }
-                                                if (resultPreview && data.result) {
-                                                    const count = Array.isArray(data.result) ? data.result.length : 0;
-                                                    resultPreview.className = 'result-preview success';
-
-                                                    // 数字滚动动画
-                                                    animateNumber(resultPreview, count, '个视频');
-                                                }
-
-                                                // 添加完成动画类
-                                                setTimeout(() => {
-                                                    targetItem.classList.remove('active');
-                                                    targetItem.classList.add('completed');
-                                                }, 300);
-
-                                                shouldCreateNewNode = false;
-                                            }
-
-                                            // 完成所有初始节点（如"初始化研究计划"）
-                                            completeInitialNodes();
-
-                                } else if (data.tool === 'web_search') {
-                                    // 查找对应的 web_search 节点
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-web-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 联网检索已完成';
-                                            statusEl.style.color = 'var(--bili-blue)';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = `✅ 全网搜索完成`;
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(35, 173, 229, 0.1)';
-                                            statusBadge.style.color = 'var(--bili-blue)';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.style.color = 'var(--bili-blue)';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 条结果`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
+                                    if (currentVideoContainer && currentVideoEl) {
+                                        currentVideoContainer.style.display = 'flex';
+                                        const title = data.title || data.bvid;
+                                        currentVideoEl.textContent = `${title}: ${data.video_tokens} Tokens`;
                                     }
 
-                                    // 完成所有初始节点
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'analyze_videos_batch') {
-                                    // 批量视频分析工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-batch-analyze-');
-                                    });
-
-                                    // 先完成初始节点（在修改targetItem状态之前）
-                                    completeInitialNodes();
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
+                                    // 更新视频列表中的状态
+                                    const videoItem = targetItem.querySelector(`.batch-video-item[data-bvid="${data.bvid}"]`);
+                                    if (videoItem) {
+                                        const statusEl = videoItem.querySelector('.batch-video-status');
                                         if (statusEl) {
-                                            const total = data.result ? data.result.total || 0 : 0;
-                                            const success = data.result ? data.result.success || 0 : 0;
-                                            statusEl.textContent = `✅ 批量分析完成 (${success}/${total})`;
-                                            statusEl.style.color = '#00BCD4';
-                                        }
-                                        if (titleEl) {
-                                            const total = data.result ? data.result.total || 0 : 0;
-                                            const success = data.result ? data.result.success || 0 : 0;
-                                            titleEl.textContent = `✅ 批量分析完成 (${success}/${total}成功)`;
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(0, 188, 212, 0.1)';
-                                            statusBadge.style.color = '#00BCD4';
-                                            statusBadge.innerHTML = '⚡ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const total = data.result.total || 0;
-                                            const success = data.result.success || 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${success}/${total}</span> 个视频分析完成`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-
-                                } else if (data.tool === 'search_users') {
-                                    // 查找对应的 search_users 节点
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-search-users-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ UP 主搜索完成';
-                                            statusEl.style.color = 'var(--bili-blue)';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = `✅ UP 主搜索完成`;
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(35, 173, 229, 0.1)';
-                                            statusBadge.style.color = 'var(--bili-blue)';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.style.color = 'var(--bili-blue)';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 位 UP 主`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-
-                                    // 完成所有初始节点
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_user_recent_videos') {
-                                    // 查找对应的 get_user_recent_videos 节点
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-user-videos-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 作品集获取完成';
+                                            statusEl.textContent = `✅ ${data.video_tokens} T`;
                                             statusEl.style.color = '#4CAF50';
                                         }
-                                        if (titleEl) {
-                                            titleEl.textContent = `✅ 作品集获取成功`;
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const videos = data.result.videos || [];
-                                            const count = Array.isArray(videos) ? videos.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个视频`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
                                     }
-
-                                    // 完成所有初始节点
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_hot_videos') {
-                                    // 热门视频工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-hot-videos-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 热门视频获取完成';
-                                            statusEl.style.color = '#FF6B6B';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 热门视频获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(255, 107, 107, 0.1)';
-                                            statusBadge.style.color = '#FF6B6B';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个热门视频`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_hot_buzzwords') {
-                                    // 热词图鉴工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-buzzwords-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 热词图鉴获取完成';
-                                            statusEl.style.color = '#9C27B0';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 热词图鉴获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(156, 39, 176, 0.1)';
-                                            statusBadge.style.color = '#9C27B0';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            // 支持两种数据格式：原始数组 {buzzwords: []} 或包装后的对象 {total: X}
-                                            const buzzwords = data.result.buzzwords || data.result;
-                                            const count = Array.isArray(buzzwords) ? buzzwords.length : (data.result.total || 0);
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个热词`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_weekly_hot_videos') {
-                                    // 每周必看工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-weekly-hot-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 每周必看获取完成';
-                                            statusEl.style.color = '#FFB74D';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 每周必看获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(255, 183, 77, 0.1)';
-                                            statusBadge.style.color = '#FFB74D';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个精选视频`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_history_popular_videos') {
-                                    // 入站必刷工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-history-hot-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 入站必刷获取完成';
-                                            statusEl.style.color = '#FFD700';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 入站必刷获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(255, 215, 0, 0.1)';
-                                            statusBadge.style.color = '#FFD700';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个经典视频`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_rank_videos') {
-                                    // 排行榜工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-rank-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 排行榜获取完成';
-                                            statusEl.style.color = '#4FC3F7';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 排行榜获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.style.background = 'rgba(79, 195, 247, 0.1)';
-                                            statusBadge.style.color = '#4FC3F7';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个排行榜视频`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'finish_research_and_write_report') {
-                                    // 查找对应的 finish_research 节点
-                                    const targetItem = elements.researchTimeline.querySelector('.timeline-item[data-tool-id="tool-finish-report"].active');
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '⏳ AI 正在撰写报告内容...';
-                                            statusEl.style.color = 'var(--bili-pink)';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '⏳ 正在生成深度研究报告';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge active';
-                                            statusBadge.style.background = 'rgba(251, 114, 153, 0.1)';
-                                            statusBadge.style.color = 'var(--bili-pink)';
-                                            statusBadge.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 生成中';
-                                        }
-                                        if (resultPreview) {
-                                            resultPreview.className = 'result-preview';
-                                            resultPreview.style.color = 'var(--bili-pink)';
-                                            resultPreview.innerHTML = '⏳ AI正在思考并撰写...';
-                                        }
-
-                                        // 保持 active 状态，因为报告还在生成中
-                                        shouldCreateNewNode = false;
-                                    }
-
-                                } else if (data.tool === 'get_search_suggestions') {
-                                    // 搜索建议工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-search-suggestions-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 搜索建议获取完成';
-                                            statusEl.style.color = '#4CAF50';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 搜索建议获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : (data.result?.suggestions?.length || 0);
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 条建议`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_hot_search_keywords') {
-                                    // 热搜关键词工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-hot-keywords-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 热搜关键词获取完成';
-                                            statusEl.style.color = '#FF6B6B';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 热搜关键词获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = Array.isArray(data.result) ? data.result.length : 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个热搜词`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_video_tags') {
-                                    // 视频标签工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-video-tags-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 视频标签获取完成';
-                                            statusEl.style.color = '#FFB74D';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 视频标签获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = data.result?.tag_count || 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 个标签`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_video_series') {
-                                    // 视频合集工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-video-series-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 视频合集获取完成';
-                                            statusEl.style.color = '#9C27B0';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 视频合集获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const hasSeries = data.result?.has_series;
-                                            const count = data.result?.video_count || 0;
-                                            resultPreview.className = 'result-preview success';
-                                            if (hasSeries) {
-                                                resultPreview.innerHTML = `<span class="count">${count}</span> 个视频`;
-                                            } else {
-                                                resultPreview.innerHTML = `<span class="count">-</span> 无合集`;
-                                            }
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'get_user_dynamics') {
-                                    // 用户动态工具结果处理
-                                    const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
-                                    const targetItem = items.find(item => {
-                                        const toolId = item.getAttribute('data-tool-id');
-                                        return toolId && toolId.startsWith('tool-user-dynamics-');
-                                    });
-
-                                    if (targetItem) {
-                                        const statusEl = targetItem.querySelector('.search-status');
-                                        const titleEl = targetItem.querySelector('.title-text');
-                                        const statusBadge = targetItem.querySelector('.timeline-status-badge');
-                                        const resultPreview = targetItem.querySelector('.result-preview');
-
-                                        if (statusEl) {
-                                            statusEl.textContent = '✅ 用户动态获取完成';
-                                            statusEl.style.color = '#4FC3F7';
-                                        }
-                                        if (titleEl) {
-                                            titleEl.textContent = '✅ 用户动态获取完成';
-                                        }
-                                        if (statusBadge) {
-                                            statusBadge.className = 'timeline-status-badge completed';
-                                            statusBadge.innerHTML = '✅ 已完成';
-                                        }
-                                        if (resultPreview && data.result) {
-                                            const count = data.result?.total || 0;
-                                            resultPreview.className = 'result-preview success';
-                                            resultPreview.innerHTML = `<span class="count">${count}</span> 条动态`;
-                                        }
-
-                                        targetItem.classList.remove('active');
-                                        targetItem.classList.add('completed');
-                                        shouldCreateNewNode = false;
-                                    }
-                                    completeInitialNodes();
-
-                                } else if (data.tool === 'analyze_video') {
-                                    // 智能更新 UI：如果已经有这个视频的进度框，直接更新它，不要新建节点
-                                    const msgEl = document.getElementById(`msg-${data.result.bvid}`);
-                                    const tokenEl = document.getElementById(`tokens-${data.result.bvid}`);
-                                    const containerEl = document.getElementById(`tokens-container-${data.result.bvid}`);
-                                    const titleEl = document.getElementById(`title-${data.result.bvid}`);
-
-                                    if (msgEl) {
-                                        msgEl.textContent = '分析建模已完成';
-                                        msgEl.style.color = '#4CAF50';
-                                        
-                                        if (tokenEl && data.tokens) {
-                                            tokenEl.textContent = `✨ 消耗: ${data.tokens} Tokens`;
-                                            tokenEl.style.color = '#2E7D32'; // 更深一点的绿色
-                                            tokenEl.style.fontWeight = 'bold';
-                                            
-                                            if (containerEl) {
-                                                containerEl.style.background = 'rgba(76, 175, 80, 0.1)';
-                                                containerEl.style.border = '1px solid rgba(76, 175, 80, 0.2)';
-                                            }
-                                            
-                                            totalResearchTokens += data.tokens;
-                                            const totalTokens = totalResearchTokens + thinkingTokens;
-                                            elements.commentCount.textContent = `🪙 ${totalTokens}`;
-                                            elements.tokenCount.textContent = totalTokens;
-                                            updateMetaValue('metaTokens', totalTokens);
-                                        }
-                                        
-                                        if (containerEl) {
-                                            const dot = containerEl.querySelector('.pulse-dot');
-                                            if (dot) dot.style.display = 'none';
-                                        }
-
-                                        // 清理幻影内容（完成后保持清爽，或保留一点余韵）
-                                        const ghostEl = document.getElementById(`ghost-${data.result.bvid}`);
-                                        if (ghostEl) {
-                                            ghostEl.style.opacity = '0.05'; // 进一步变淡
-                                        }
-                                        
-                                        if (titleEl) {
-                                            // 只显示标题，不显示BV号
-                                            const displayTitle = data.result.title || '视频';
-                                            titleEl.textContent = `✅ 分析完成: ${displayTitle}`;
-                                            titleEl.title = displayTitle;
-                                        }
-                                        
-                                        // 标记该时间轴节点为完成状态
-                                        const item = msgEl.closest('.timeline-item');
-                                        if (item) {
-                                            item.classList.remove('active');
-                                            item.classList.add('completed');
-                                        }
-
-                                        // 完成所有初始节点
-                                        completeInitialNodes();
-
-                                        continue; // 关键：不再向下执行 addTimelineItem，而是继续处理下一条流数据
-                                    }
-                                    // 没找到对应节点，设置兜底标志
-                                    shouldCreateNewNode = true;
                                 }
 
-                                // 只有在找不到对应节点时才创建新节点（兜底逻辑）
-                                if (shouldCreateNewNode) {
-                                    let fallbackTitle = `✅ 工具完成: ${data.tool}`;
-                                    if (data.tool === 'search_videos') fallbackTitle = '✅ 视频搜索完成';
-                                    else if (data.tool === 'web_search') fallbackTitle = '✅ 全网搜索完成';
-                                    else if (data.tool === 'analyze_video') fallbackTitle = '✅ 视频分析完成';
-                                    else if (data.tool === 'analyze_videos_batch') fallbackTitle = '✅ 批量分析完成';
-                                    else if (data.tool === 'search_users') fallbackTitle = '✅ UP 主搜索完成';
-                                    else if (data.tool === 'get_user_recent_videos') fallbackTitle = '✅ 作品集获取完成';
-                                    else if (data.tool === 'get_hot_videos') fallbackTitle = '✅ 热门视频获取完成';
-                                    else if (data.tool === 'get_hot_buzzwords') fallbackTitle = '✅ 热词图鉴获取完成';
-                                    else if (data.tool === 'get_weekly_hot_videos') fallbackTitle = '✅ 每周必看获取完成';
-                                    else if (data.tool === 'get_history_popular_videos') fallbackTitle = '✅ 入站必刷获取完成';
-                                    else if (data.tool === 'get_rank_videos') fallbackTitle = '✅ 排行榜获取完成';
-                                    else if (data.tool === 'get_search_suggestions') fallbackTitle = '✅ 搜索建议获取完成';
-                                    else if (data.tool === 'get_hot_search_keywords') fallbackTitle = '✅ 热搜关键词获取完成';
-                                    else if (data.tool === 'get_video_tags') fallbackTitle = '✅ 视频标签获取完成';
-                                    else if (data.tool === 'get_video_series') fallbackTitle = '✅ 视频合集获取完成';
-                                    else if (data.tool === 'get_user_dynamics') fallbackTitle = '✅ 用户动态获取完成';
-                                    else if (data.tool === 'finish_research_and_write_report') fallbackTitle = '✅ 报告撰写完成';
+                                // 创建或更新进度显示区域
+                                if (detailEl) {
+                                    let progressDiv = detailEl.querySelector('.batch-progress');
+                                    if (!progressDiv) {
+                                        progressDiv = document.createElement('div');
+                                        progressDiv.className = 'batch-progress';
+                                        detailEl.appendChild(progressDiv);
+                                    }
 
-                                    addTimelineItem('tool_result', fallbackTitle, data.result);
+                                    // 添加进度消息
+                                    if (data.message) {
+                                        const msg = document.createElement('div');
+                                        msg.className = 'progress-message';
+                                        msg.textContent = data.message;
+                                        progressDiv.appendChild(msg);
+
+                                        // 限制显示的进度消息数量
+                                        while (progressDiv.children.length > 5) {
+                                            progressDiv.removeChild(progressDiv.firstChild);
+                                        }
+                                    }
                                 }
-                            } else if (data.type === 'error') {
+
+                                // 更新结果预览（显示完成进度）
+                                if (resultPreview && data.bvid) {
+                                    // 创建进度列表
+                                    let progressList = resultPreview.querySelector('.batch-progress-list');
+                                    if (!progressList) {
+                                        progressList = document.createElement('div');
+                                        progressList.className = 'batch-progress-list';
+                                        resultPreview.innerHTML = '';
+                                        resultPreview.appendChild(progressList);
+                                    }
+
+                                    // 检查是否已存在该视频的进度项
+                                    let existingItem = progressList.querySelector(`[data-bvid="${data.bvid}"]`);
+                                    if (!existingItem) {
+                                        existingItem = document.createElement('div');
+                                        existingItem.className = 'progress-item';
+                                        existingItem.setAttribute('data-bvid', data.bvid);
+                                        progressList.appendChild(existingItem);
+                                    }
+
+                                    // 更新进度项内容
+                                    const statusIcon = data.message.includes('✅') ? '✅' : (data.message.includes('❌') ? '❌' : '⏳');
+                                    let messageText = data.message;
+
+                                    // 如果有单个视频的 Token 信息，添加到消息中
+                                    if (data.video_tokens !== undefined) {
+                                        messageText += ` (${data.video_tokens} Tokens)`;
+                                    } else if (data.tokens !== undefined) {
+                                        // 兼容旧格式（只有累计 Token）
+                                        messageText += ` (${data.tokens} Tokens)`;
+                                    }
+
+                                    existingItem.innerHTML = `<span class="status-icon">${statusIcon}</span> <span class="message-text">${messageText}</span>`;
+
+                                    // 自动滚动到底部
+                                    progressList.scrollTop = progressList.scrollHeight;
+                                }
+                            }
+                        }
+                    } else if (data.type === 'tool_start') {
+                        // 完成所有思考节点（工具开始执行表示思考阶段结束）
+                        const activeThinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
+                        activeThinkingItems.forEach(item => {
+                            item.classList.remove('active');
+                            item.classList.add('completed');
+                            const statusBadge = item.querySelector('.timeline-status-badge');
+                            const resultPreview = item.querySelector('.result-preview');
+                            if (statusBadge) {
+                                statusBadge.className = 'timeline-status-badge completed';
+                                statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                            }
+                            if (resultPreview) {
+                                const detailDiv = item.querySelector('.timeline-detail');
+                                const charCount = detailDiv ? detailDiv.textContent.length : 0;
+                                resultPreview.className = 'result-preview success';
+                                resultPreview.innerHTML = `${StatusIcons.chars} ${charCount} 字符`;
+                            }
+                        });
+
+                        let title = `执行工具: ${data.tool}`;
+                        let toolBvid = data.args ? data.args.bvid : null;
+                        let toolKeyword = data.args ? data.args.keyword : null;
+                        let toolMid = data.args ? data.args.mid : null;
+
+                        if (data.tool === 'search_videos') {
+                            title = `搜索相关视频: ${toolKeyword}`;
+                            const toolId = `tool-search-${Date.now()}`;
+                            searchCount++;
+                            elements.danmakuCount.textContent = `搜索: ${searchCount}`;
+                            updateMetaValue('metaSearch', searchCount, '次');
+
+                            // 丰富搜索参数显示，并增加等待状态
+                            data.args._status = 'loading';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'search_videos'; // 工具类型
+                        } else if (data.tool === 'web_search') {
+                            title = `全网深度搜索: ${toolKeyword}`;
+                            const toolId = `tool-web-${Date.now()}`;
+                            data.args._status = 'searching';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'web_search';
+                        } else if (data.tool === 'analyze_video') {
+                            title = `分析视频中...`;
+                            const toolId = `tool-analyze-${data.args.bvid}`;
+                            analysisCount++;
+                            elements.likeCount.textContent = `分析: ${analysisCount}`;
+                            updateMetaValue('metaAnalysis', analysisCount, '次');
+
+                            const oldTitle = document.getElementById(`title-${toolBvid}`);
+                            if (oldTitle) {
+                                const oldItem = oldTitle.closest('.timeline-item');
+                                if (oldItem) oldItem.remove();
+                            }
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'analyze_video';
+                        } else if (data.tool === 'analyze_videos_batch') {
+                            const bvids = data.args ? data.args.bvids : [];
+                            const count = Array.isArray(bvids) ? bvids.length : 0;
+                            title = `⚡ 批量并行分析 ${count} 个视频`;
+                            const toolId = `tool-batch-analyze-${Date.now()}`;
+                            analysisCount += count;
+                            elements.likeCount.textContent = `分析: ${analysisCount}`;
+                            updateMetaValue('metaAnalysis', analysisCount, '次');
+                            data.args._status = 'batch_analyzing';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'analyze_videos_batch';
+                            data.args._batchBvids = bvids; // 保存BVID列表
+                        } else if (data.tool === 'search_users') {
+                            title = `搜索 B 站 UP 主: ${toolKeyword}`;
+                            const toolId = `tool-search-users-${Date.now()}`;
+                            data.args._status = 'searching_user';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'search_users';
+                        } else if (data.tool === 'get_user_recent_videos') {
+                            title = `获取 UP 主作品 (UID: ${toolMid})`;
+                            const toolId = `tool-user-videos-${toolMid}`;
+                            data.args._status = 'fetching_works';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_user_recent_videos';
+                        } else if (data.tool === 'get_hot_videos') {
+                            title = `🔥 获取当前热门视频`;
+                            const toolId = `tool-hot-videos-${Date.now()}`;
+                            data.args._status = 'fetching_hot';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_hot_videos';
+                        } else if (data.tool === 'get_hot_buzzwords') {
+                            title = `📊 获取热词图鉴`;
+                            const toolId = `tool-buzzwords-${Date.now()}`;
+                            data.args._status = 'fetching_buzzwords';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_hot_buzzwords';
+                        } else if (data.tool === 'get_weekly_hot_videos') {
+                            const week = data.args ? data.args.week : 1;
+                            title = `⭐ 获取每周必看 (第${week}周)`;
+                            const toolId = `tool-weekly-hot-${Date.now()}`;
+                            data.args._status = 'fetching_weekly';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_weekly_hot_videos';
+                        } else if (data.tool === 'get_history_popular_videos') {
+                            title = `🏆 获取入站必刷经典视频`;
+                            const toolId = `tool-history-hot-${Date.now()}`;
+                            data.args._status = 'fetching_history';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_history_popular_videos';
+                        } else if (data.tool === 'get_rank_videos') {
+                            const category = data.args ? data.args.category : '未知';
+                            const day = data.args ? data.args.day : 3;
+                            const dayText = day === 3 ? '三日' : '周';
+                            title = `📈 获取${category}分区排行榜 (${dayText})`;
+                            const toolId = `tool-rank-${category}-${Date.now()}`;
+                            data.args._status = 'fetching_rank';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_rank_videos';
+                        } else if (data.tool === 'get_search_suggestions') {
+                            title = `💡 获取搜索建议: ${toolKeyword || '搜索联想'}`;
+                            const toolId = `tool-search-suggestions-${Date.now()}`;
+                            data.args._status = 'fetching_suggestions';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_search_suggestions';
+                        } else if (data.tool === 'get_hot_search_keywords') {
+                            title = `🔥 获取当前热搜关键词`;
+                            const toolId = `tool-hot-keywords-${Date.now()}`;
+                            data.args._status = 'fetching_hot_keywords';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_hot_search_keywords';
+                        } else if (data.tool === 'get_video_tags') {
+                            title = `🏷️ 获取视频标签: ${toolBvid || '视频'}`;
+                            const toolId = `tool-video-tags-${Date.now()}`;
+                            data.args._status = 'fetching_tags';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_video_tags';
+                        } else if (data.tool === 'get_video_series') {
+                            title = `📚 获取视频合集: ${toolBvid || '视频'}`;
+                            const toolId = `tool-video-series-${Date.now()}`;
+                            data.args._status = 'fetching_series';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_video_series';
+                        } else if (data.tool === 'get_user_dynamics') {
+                            title = `💬 获取用户动态 (UID: ${toolMid})`;
+                            const toolId = `tool-user-dynamics-${toolMid}-${Date.now()}`;
+                            data.args._status = 'fetching_dynamics';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'get_user_dynamics';
+                        } else if (data.tool === 'finish_research_and_write_report') {
+                            title = '开始撰写深度研究报告';
+                            const toolId = 'tool-finish-report';
+                            elements.downloadPdfBtn.classList.add('hidden');
+                            data.args._status = 'writing';
+                            data.args._toolId = toolId;
+                            data.args._toolType = 'finish_research_and_write_report';
+                        }
+
+                        // 传递 toolId 给 addTimelineItem
+                        const toolId = data.args._toolId || null;
+                        addTimelineItem('tool_start', title, data.args, toolId);
+                    } else if (data.type === 'tool_result') {
+                        // 通用工具更新逻辑：所有工具都更新现有节点而不是创建新节点
+                        let shouldCreateNewNode = true; // 默认需要创建新节点（兜底）
+
+                        if (data.tool === 'search_videos') {
+                            // 查找对应的 search_videos 节点
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-search-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 搜索已就绪';
+                                    statusEl.style.color = '#4CAF50';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = `✅ 视频搜索完成`;
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+
+                                    // 数字滚动动画
+                                    animateNumber(resultPreview, count, '个视频');
+                                }
+
+                                // 添加完成动画类
+                                setTimeout(() => {
+                                    targetItem.classList.remove('active');
+                                    targetItem.classList.add('completed');
+                                }, 300);
+
+                                shouldCreateNewNode = false;
+                            }
+
+                            // 🟢 更新资源池
+                            updateResourcePool('search_videos', data.result, data.args);
+
+                            // 完成所有初始节点（如"初始化研究计划"）
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'web_search') {
+                            // 查找对应的 web_search 节点
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-web-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 联网检索已完成';
+                                    statusEl.style.color = 'var(--bili-blue)';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = `✅ 全网搜索完成`;
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(35, 173, 229, 0.1)';
+                                    statusBadge.style.color = 'var(--bili-blue)';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.style.color = 'var(--bili-blue)';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 条结果`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+
+                            // 完成所有初始节点
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'analyze_videos_batch') {
+                            // 批量视频分析工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-batch-analyze-');
+                            });
+
+                            // 先完成初始节点（在修改targetItem状态之前）
+                            completeInitialNodes();
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    const total = data.result ? data.result.total || 0 : 0;
+                                    const success = data.result ? data.result.success || 0 : 0;
+                                    statusEl.textContent = `✅ 批量分析完成 (${success}/${total})`;
+                                    statusEl.style.color = '#00BCD4';
+                                }
+                                if (titleEl) {
+                                    const total = data.result ? data.result.total || 0 : 0;
+                                    const success = data.result ? data.result.success || 0 : 0;
+                                    titleEl.textContent = `✅ 批量分析完成 (${success}/${total}成功)`;
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(0, 188, 212, 0.1)';
+                                    statusBadge.style.color = '#00BCD4';
+                                    statusBadge.innerHTML = '⚡ 已完成';
+                                }
+                                if (resultPreview && data.result) {
+                                    const total = data.result.total || 0;
+                                    const success = data.result.success || 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${success}/${total}</span> 个视频分析完成`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+
+                        } else if (data.tool === 'search_users') {
+                            // 查找对应的 search_users 节点
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-search-users-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ UP 主搜索完成';
+                                    statusEl.style.color = 'var(--bili-blue)';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = `✅ UP 主搜索完成`;
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'var(--bili-pink-soft)';
+                                    statusBadge.style.color = 'var(--bili-pink)';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 位相关的 UP 主`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                            }
+                        } else if (data.tool === 'get_user_recent_videos') {
+                            // 查找对应的 get_user_recent_videos 节点
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-user-videos-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 作品集获取完成';
+                                    statusEl.style.color = '#4CAF50';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = `✅ 作品集获取成功`;
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const videos = data.result.videos || [];
+                                    const count = Array.isArray(videos) ? videos.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个视频`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+
+                            // 完成所有初始节点
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_hot_videos') {
+                            // 热门视频工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-hot-videos-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 热门视频获取完成';
+                                    statusEl.style.color = '#FF6B6B';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 热门视频获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(255, 107, 107, 0.1)';
+                                    statusBadge.style.color = '#FF6B6B';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个热门视频`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_hot_buzzwords') {
+                            // 热词图鉴工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-buzzwords-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 热词图鉴获取完成';
+                                    statusEl.style.color = '#9C27B0';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 热词图鉴获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(156, 39, 176, 0.1)';
+                                    statusBadge.style.color = '#9C27B0';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    // 支持两种数据格式：原始数组 {buzzwords: []} 或包装后的对象 {total: X}
+                                    const buzzwords = data.result.buzzwords || data.result;
+                                    const count = Array.isArray(buzzwords) ? buzzwords.length : (data.result.total || 0);
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个热词`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_weekly_hot_videos') {
+                            // 每周必看工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-weekly-hot-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 每周必看获取完成';
+                                    statusEl.style.color = '#FFB74D';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 每周必看获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(255, 183, 77, 0.1)';
+                                    statusBadge.style.color = '#FFB74D';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个精选视频`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_history_popular_videos') {
+                            // 入站必刷工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-history-hot-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 入站必刷获取完成';
+                                    statusEl.style.color = '#FFD700';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 入站必刷获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(255, 215, 0, 0.1)';
+                                    statusBadge.style.color = '#FFD700';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个经典视频`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_rank_videos') {
+                            // 排行榜工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-rank-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 排行榜获取完成';
+                                    statusEl.style.color = '#4FC3F7';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 排行榜获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.style.background = 'rgba(79, 195, 247, 0.1)';
+                                    statusBadge.style.color = '#4FC3F7';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个排行榜视频`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'finish_research_and_write_report') {
+                            // 查找对应的 finish_research 节点
+                            const targetItem = elements.researchTimeline.querySelector('.timeline-item[data-tool-id="tool-finish-report"].active');
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '⏳ AI 正在撰写报告内容...';
+                                    statusEl.style.color = 'var(--bili-pink)';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '⏳ 正在生成深度研究报告';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge active';
+                                    statusBadge.style.background = 'rgba(251, 114, 153, 0.1)';
+                                    statusBadge.style.color = 'var(--bili-pink)';
+                                    statusBadge.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div> 生成中';
+                                }
+                                if (resultPreview) {
+                                    resultPreview.className = 'result-preview';
+                                    resultPreview.style.color = 'var(--bili-pink)';
+                                    resultPreview.innerHTML = '⏳ AI正在思考并撰写...';
+                                }
+
+                                // 保持 active 状态，因为报告还在生成中
+                                shouldCreateNewNode = false;
+                            }
+
+                        } else if (data.tool === 'get_search_suggestions') {
+                            // 搜索建议工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-search-suggestions-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 搜索建议获取完成';
+                                    statusEl.style.color = '#4CAF50';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 搜索建议获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : (data.result?.suggestions?.length || 0);
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 条建议`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_hot_search_keywords') {
+                            // 热搜关键词工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-hot-keywords-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 热搜关键词获取完成';
+                                    statusEl.style.color = '#FF6B6B';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 热搜关键词获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = Array.isArray(data.result) ? data.result.length : 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个热搜词`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_video_tags') {
+                            // 视频标签工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-video-tags-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 视频标签获取完成';
+                                    statusEl.style.color = '#FFB74D';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 视频标签获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = data.result?.tag_count || 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 个标签`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_video_series') {
+                            // 视频合集工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-video-series-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 视频合集获取完成';
+                                    statusEl.style.color = '#9C27B0';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 视频合集获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const hasSeries = data.result?.has_series;
+                                    const count = data.result?.video_count || 0;
+                                    resultPreview.className = 'result-preview success';
+                                    if (hasSeries) {
+                                        resultPreview.innerHTML = `<span class="count">${count}</span> 个视频`;
+                                    } else {
+                                        resultPreview.innerHTML = `<span class="count">-</span> 无合集`;
+                                    }
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'get_user_dynamics') {
+                            // 用户动态工具结果处理
+                            const items = Array.from(elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active'));
+                            const targetItem = items.find(item => {
+                                const toolId = item.getAttribute('data-tool-id');
+                                return toolId && toolId.startsWith('tool-user-dynamics-');
+                            });
+
+                            if (targetItem) {
+                                const statusEl = targetItem.querySelector('.search-status');
+                                const titleEl = targetItem.querySelector('.title-text');
+                                const statusBadge = targetItem.querySelector('.timeline-status-badge');
+                                const resultPreview = targetItem.querySelector('.result-preview');
+
+                                if (statusEl) {
+                                    statusEl.textContent = '✅ 用户动态获取完成';
+                                    statusEl.style.color = '#4FC3F7';
+                                }
+                                if (titleEl) {
+                                    titleEl.textContent = '✅ 用户动态获取完成';
+                                }
+                                if (statusBadge) {
+                                    statusBadge.className = 'timeline-status-badge completed';
+                                    statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+                                }
+                                if (resultPreview && data.result) {
+                                    const count = data.result?.total || 0;
+                                    resultPreview.className = 'result-preview success';
+                                    resultPreview.innerHTML = `<span class="count">${count}</span> 条动态`;
+                                }
+
+                                targetItem.classList.remove('active');
+                                targetItem.classList.add('completed');
+                                shouldCreateNewNode = false;
+                            }
+                            completeInitialNodes();
+
+                        } else if (data.tool === 'analyze_video') {
+                            // 智能更新 UI：如果已经有这个视频的进度框，直接更新它，不要新建节点
+                            const msgEl = document.getElementById(`msg-${data.result.bvid}`);
+                            const tokenEl = document.getElementById(`tokens-${data.result.bvid}`);
+                            const containerEl = document.getElementById(`tokens-container-${data.result.bvid}`);
+                            const titleEl = document.getElementById(`title-${data.result.bvid}`);
+
+                            if (msgEl) {
+                                msgEl.textContent = '分析建模已完成';
+                                msgEl.style.color = '#4CAF50';
+
+                                if (tokenEl && data.tokens) {
+                                    tokenEl.textContent = `✨ 消耗: ${data.tokens} Tokens`;
+                                    tokenEl.style.color = '#2E7D32'; // 更深一点的绿色
+                                    tokenEl.style.fontWeight = 'bold';
+
+                                    if (containerEl) {
+                                        containerEl.style.background = 'rgba(76, 175, 80, 0.1)';
+                                        containerEl.style.border = '1px solid rgba(76, 175, 80, 0.2)';
+                                    }
+
+                                    totalResearchTokens += data.tokens;
+                                    const totalTokens = totalResearchTokens + thinkingTokens;
+                                    elements.commentCount.textContent = `Tokens: ${totalTokens}`;
+                                    elements.tokenCount.textContent = totalTokens;
+                                    updateMetaValue('metaTokens', totalTokens);
+                                }
+
+                                if (containerEl) {
+                                    const dot = containerEl.querySelector('.pulse-dot');
+                                    if (dot) dot.style.display = 'none';
+                                }
+
+                                // 清理幻影内容（完成后保持清爽，或保留一点余韵）
+                                const ghostEl = document.getElementById(`ghost-${data.result.bvid}`);
+                                if (ghostEl) {
+                                    ghostEl.style.opacity = '0.05'; // 进一步变淡
+                                }
+
+                                if (titleEl) {
+                                    // 只显示标题，不显示BV号
+                                    const displayTitle = data.result.title || '视频';
+                                    titleEl.textContent = `✅ 分析完成: ${displayTitle}`;
+                                    titleEl.title = displayTitle;
+                                }
+
+                                // 标记该时间轴节点为完成状态
+                                const item = msgEl.closest('.timeline-item');
+                                if (item) {
+                                    item.classList.remove('active');
+                                    item.classList.add('completed');
+                                }
+
+                                // 完成所有初始节点
+                                completeInitialNodes();
+
+                                continue; // 关键：不再向下执行 addTimelineItem，而是继续处理下一条流数据
+                            }
+                            // 没找到对应节点，设置兜底标志
+                            shouldCreateNewNode = true;
+                        }
+
+                        // 只有在找不到对应节点时才创建新节点（兜底逻辑）
+                        if (shouldCreateNewNode) {
+                            let fallbackTitle = `✅ 工具完成: ${data.tool}`;
+                            if (data.tool === 'search_videos') fallbackTitle = '✅ 视频搜索完成';
+                            else if (data.tool === 'web_search') fallbackTitle = '✅ 全网搜索完成';
+                            else if (data.tool === 'analyze_video') fallbackTitle = '✅ 视频分析完成';
+                            else if (data.tool === 'analyze_videos_batch') fallbackTitle = '✅ 批量分析完成';
+                            else if (data.tool === 'search_users') fallbackTitle = '✅ UP 主搜索完成';
+                            else if (data.tool === 'get_user_recent_videos') fallbackTitle = '✅ 作品集获取完成';
+                            else if (data.tool === 'get_hot_videos') fallbackTitle = '✅ 热门视频获取完成';
+                            else if (data.tool === 'get_hot_buzzwords') fallbackTitle = '✅ 热词图鉴获取完成';
+                            else if (data.tool === 'get_weekly_hot_videos') fallbackTitle = '✅ 每周必看获取完成';
+                            else if (data.tool === 'get_history_popular_videos') fallbackTitle = '✅ 入站必刷获取完成';
+                            else if (data.tool === 'get_rank_videos') fallbackTitle = '✅ 排行榜获取完成';
+                            else if (data.tool === 'get_search_suggestions') fallbackTitle = '✅ 搜索建议获取完成';
+                            else if (data.tool === 'get_hot_search_keywords') fallbackTitle = '✅ 热搜关键词获取完成';
+                            else if (data.tool === 'get_video_tags') fallbackTitle = '✅ 视频标签获取完成';
+                            else if (data.tool === 'get_video_series') fallbackTitle = '✅ 视频合集获取完成';
+                            else if (data.tool === 'get_user_dynamics') fallbackTitle = '✅ 用户动态获取完成';
+                            else if (data.tool === 'finish_research_and_write_report') fallbackTitle = '✅ 报告撰写完成';
+
+                            addTimelineItem('tool_result', fallbackTitle, data.result);
+                        }
+                    } else if (data.type === 'error') {
                         // 完成所有剩余的active节点（即使出错也要更新状态）
                         const remainingActiveItems = elements.researchTimeline.querySelectorAll('.timeline-item.active');
                         remainingActiveItems.forEach(item => {
@@ -2069,7 +2073,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const resultPreview = item.querySelector('.result-preview');
                             if (statusBadge) {
                                 statusBadge.className = 'timeline-status-badge completed';
-                                statusBadge.innerHTML = '✅ 已完成';
+                                statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                             }
                             if (resultPreview && resultPreview.textContent === '等待结果...') {
                                 resultPreview.className = 'result-preview success';
@@ -2080,7 +2084,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         BiliHelpers.showToast('深度研究已完成并持久化！', elements.toast);
                         updateProgress(100, '研究完成');
                         addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧"研究报告"查看。');
-                        
+
                         // 尝试获取刚生成的文件ID以便立即下载 PDF
                         fetch('/api/research/history')
                             .then(res => res.json())
@@ -2094,7 +2098,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         isAnalyzing = false;
         elements.analyzeBtn.disabled = false;
         if (fullReport) {
@@ -2103,7 +2107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 全局折叠/展开控制函数
-    window.toggleTimelineCollapse = function(btn) {
+    window.toggleTimelineCollapse = function (btn) {
         const item = btn.closest('.timeline-item');
         if (!item) return;
 
@@ -2123,7 +2127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 全局折叠所有卡片
-    window.collapseAllTimeline = function() {
+    window.collapseAllTimeline = function () {
         const items = elements.researchTimeline.querySelectorAll('.timeline-item');
         items.forEach(item => {
             if (!item.classList.contains('collapsed')) {
@@ -2138,7 +2142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 全局展开所有卡片
-    window.expandAllTimeline = function() {
+    window.expandAllTimeline = function () {
         const items = elements.researchTimeline.querySelectorAll('.timeline-item');
         items.forEach(item => {
             if (item.classList.contains('collapsed')) {
@@ -2201,15 +2205,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const initTitleEl = initItem.querySelector('.title-text');
 
                 if (initTitleEl) {
-                    initTitleEl.textContent = '✓ 研究计划已就绪';
+                    initTitleEl.textContent = '研究计划已就绪';
+                    // 可以在前面加个icon，但这里直接改文字即可
+                    initTitleEl.innerHTML = `${StatusIcons.completed} 研究计划已就绪`;
                 }
                 if (initStatusBadge) {
                     initStatusBadge.className = 'timeline-status-badge completed';
-                    initStatusBadge.innerHTML = '✅ 已完成';
+                    initStatusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
                 }
                 if (initResultPreview) {
                     initResultPreview.className = 'result-preview success';
-                    initResultPreview.innerHTML = '✓ 就绪';
+                    initResultPreview.innerHTML = `${StatusIcons.completed} 就绪`;
                 }
 
                 initItem.classList.remove('active');
@@ -2238,20 +2244,337 @@ document.addEventListener('DOMContentLoaded', () => {
         return icons[type] || icons['default'];
     }
 
+    function addThinkingNode(content) {
+        addTimelineItem('thinking', '深度思考中...', content);
+    }
+
+    // 资源池更新函数（用于收集研究过程中获取的资源）
+    function updateResourcePool(toolType, result, args) {
+        // 资源池功能暂时为空实现，避免报错
+        // 可以在此处添加资源收集逻辑
+        console.log('[ResourcePool] Tool:', toolType, 'Args:', args, 'Result count:', Array.isArray(result) ? result.length : 0);
+    }
+
+    // ========== SVG 状态图标（替代emoji） ==========
+    const StatusIcons = {
+        // 完成图标（绿色对勾）
+        completed: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+        // 进行中图标（旋转圆）
+        loading: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="40" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>`,
+        // 错误图标（X）
+        error: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+        // 思考图标（灯泡）
+        thinking: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"></path></svg>`,
+        // 搜索图标
+        search: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+        // 用户图标
+        user: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+        // 视频图标
+        video: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`,
+        // 文档图标
+        document: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+        // 字符计数图标
+        chars: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>`
+    };
+
+    // 获取状态徽章HTML（替代emoji）
+    function getStatusBadgeHTML(status, text) {
+        const icon = StatusIcons[status] || StatusIcons.completed;
+        return `<span class="status-icon">${icon}</span> ${text}`;
+    }
+
+    // 更新节点为完成状态的辅助函数
+    function markNodeAsCompleted(item, resultText = null) {
+        if (!item) return;
+
+        item.classList.remove('active');
+        item.classList.add('completed');
+
+        const statusBadge = item.querySelector('.timeline-status-badge');
+        const resultPreview = item.querySelector('.result-preview');
+
+        if (statusBadge) {
+            statusBadge.className = 'timeline-status-badge completed';
+            statusBadge.innerHTML = getStatusBadgeHTML('completed', '已完成');
+        }
+
+        if (resultPreview && resultText) {
+            resultPreview.className = 'result-preview success';
+            resultPreview.innerHTML = resultText;
+        } else if (resultPreview) {
+            // 如果没有提供结果文本，尝试从内容推断
+            const detailDiv = item.querySelector('.timeline-detail, .thinking-content');
+            if (detailDiv) {
+                const charCount = detailDiv.textContent.length;
+                resultPreview.className = 'result-preview success';
+                resultPreview.innerHTML = `${StatusIcons.chars} ${charCount} 字符`;
+            }
+        }
+    }
+
+
+    // 生成报告目录（Table of Contents）
+    function generateTOC(contentElement) {
+        const tocContainer = document.getElementById('reportTOC');
+        const tocList = document.getElementById('tocList');
+
+        if (!tocContainer || !tocList || !contentElement) return;
+
+        // 获取所有标题元素
+        const headings = contentElement.querySelectorAll('h1, h2, h3');
+
+        if (headings.length === 0) {
+            tocContainer.classList.add('hidden');
+            return;
+        }
+
+        // 清空现有目录
+        tocList.innerHTML = '';
+
+        headings.forEach((heading, index) => {
+            const level = parseInt(heading.tagName[1]);
+            const text = heading.textContent.trim();
+
+            // 为标题添加ID以便跳转
+            const headingId = `toc-heading-${index}`;
+            heading.id = headingId;
+
+            // 创建目录项
+            const tocItem = document.createElement('div');
+            tocItem.className = `toc-item toc-level-${level}`;
+            tocItem.style.paddingLeft = `${(level - 1) * 12}px`;
+            tocItem.innerHTML = `<a href="#${headingId}">${text}</a>`;
+
+            tocItem.onclick = (e) => {
+                e.preventDefault();
+                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+
+            tocList.appendChild(tocItem);
+        });
+
+        // 显示目录容器
+        tocContainer.classList.remove('hidden');
+    }
+
     function updateStreamingBadge(tokenCount) {
         const lastItem = elements.researchTimeline.lastElementChild;
         if (!lastItem) return;
-        
+
         const titleArea = lastItem.querySelector('.timeline-title');
         let badge = titleArea.querySelector('.streaming-data-badge');
-        
+
         if (!badge) {
             badge = document.createElement('span');
             badge.className = 'streaming-data-badge';
             titleArea.appendChild(badge);
         }
-        
+
         badge.innerHTML = `<span class="pulse-dot"></span> 🪙 累计 Tokens: ${tokenCount}`;
+    }
+
+    // 渲染工具结果的通用函数
+    function renderToolResult(data, toolType = null) {
+        if (!data) return '';
+
+        if (typeof data === 'string') {
+            return data; // 直接返回文本
+        }
+
+        if (Array.isArray(data)) {
+            if (data.length > 0 && data[0].url) {
+                // 网络搜索结果美化
+                return `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
+                    <div class="tool-name" style="color: var(--bili-blue);">全网搜索结果 (${data.length} 条):</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                        ${data.map(item => `
+                            <div style="font-size: 13px; display: flex; flex-direction: column; gap: 2px;">
+                                <a href="${item.url}" target="_blank" style="color: var(--bili-blue); font-weight: 600; text-decoration: none;">🌐 ${item.title}</a>
+                                <span style="font-size: 11px; color: var(--text-secondary); opacity: 0.8;">发布于: ${item.published_date || '未知日期'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            } else if (data.length > 0 && data[0].mid) {
+                // 用户搜索结果美化 - 详细卡片展示
+                return `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
+                    <div class="tool-name" style="color: var(--bili-blue); display: flex; align-items: center; gap: 8px;">
+                        ${StatusIcons.user}
+                        找到相关 UP 主 (${data.length} 位)
+                    </div>
+                    <div class="result-detail-card">
+                        ${data.map(u => `
+                            <div class="up-result-item">
+                                <img src="/api/image-proxy?url=${encodeURIComponent(u.face)}" class="up-avatar" alt="${u.name}">
+                                <div class="up-info">
+                                    <div class="up-name">${u.name}</div>
+                                    <div class="up-meta">
+                                        <span>UID: ${u.mid}</span>
+                                        ${u.follower ? `<span>粉丝: ${BiliHelpers.formatNumber(u.follower)}</span>` : ''}
+                                        ${u.level ? `<span class="up-badge">Lv${u.level}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            } else if (data.length > 0 && data[0].bvid && !data[0].url) {
+                // 视频列表/作品集美化 - 详细卡片展示
+                return `<div class="tool-call-card">
+                    <div class="tool-name" style="display: flex; align-items: center; gap: 8px;">
+                        ${StatusIcons.video}
+                        获取到 ${data.length} 条视频素材
+                    </div>
+                    <div class="result-detail-card">
+                        ${data.map(v => `
+                            <div class="video-result-item" onclick="window.open('https://www.bilibili.com/video/${v.bvid}', '_blank')">
+                                <img src="${v.pic || 'https://via.placeholder.com/80x50'}" class="video-thumb" alt="${v.title}">
+                                <div class="video-info">
+                                    <div class="video-title">${v.title}</div>
+                                    <div class="video-meta">
+                                        <span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                            </svg>
+                                            ${BiliHelpers.formatNumber(v.play || 0)}
+                                        </span>
+                                        <span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 12"></polyline>
+                                            </svg>
+                                            ${v.duration || '--:--'}
+                                        </span>
+                                        <span style="color: var(--bili-pink);">${v.bvid}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            } else {
+                // 默认列表美化 (兜底)
+                return `<div class="tool-call-card">
+                    <div class="tool-name">发现 ${data.length} 条相关内容:</div>
+                    ${data.map(v => `<div style="margin-bottom:4px; font-size: 12px;">📄 ${v.title || (typeof v === 'string' ? v : JSON.stringify(v))}</div>`).join('')}
+                </div>`;
+            }
+        }
+
+        // 处理对象数据
+        if (data.keyword) {
+            // 搜索参数美化 (视频 or 用户)
+            const isUserSearch = data._status === 'searching_user';
+            return `<div class="tool-call-card" ${isUserSearch ? 'style="border-left-color: var(--bili-blue);"' : ''}>
+                 <div class="tool-name">${isUserSearch ? '发起 UP 主搜索:' : '发起视频搜索:'}</div>
+                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                     <span class="search-keyword" ${isUserSearch ? 'style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);"' : ''}>${data.keyword}</span>
+                     ${data._status ? `
+                         <span class="search-status" style="font-size: 12px; color: ${isUserSearch ? 'var(--bili-blue)' : 'var(--bili-pink)'}; display: flex; align-items: center; gap: 4px;">
+                             <span class="pulse-dot" ${isUserSearch ? 'style="background-color: var(--bili-blue);"' : ''}></span> ⏳ ${isUserSearch ? '正在检索 B 站用户...' : '正在检索 B 站视频...'}
+                         </span>
+                     ` : ''}
+                 </div>
+             </div>`;
+        } else if (data.mid) {
+            // 获取作品集参数美化
+            return `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
+                 <div class="tool-name">发起作品集检索:</div>
+                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                     <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">UID: ${data.mid}</span>
+                     ${data._status === 'fetching_works' ? `
+                         <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
+                             <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在抓取该 UP 主的近期稿件...
+                         </span>
+                     ` : ''}
+                 </div>
+             </div>`;
+        } else if (data.bvid) {
+            // 分析视频参数美化
+            return `<div class="tool-call-card">
+                 <div id="title-${data.bvid}" class="tool-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="正在深度分析视频内容">正在深度分析视频内容:</div>
+                 <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; position: relative; z-index: 1;">
+                     <div style="display: flex; align-items: center; gap: 12px;">
+                         <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2); margin: 0; flex-shrink: 0;">${data.bvid}</span>
+                         <span id="msg-${data.bvid}" style="font-size: 12px; color: var(--bili-pink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">准备中...</span>
+                     </div>
+                 <div id="tokens-container-${data.bvid}" style="font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(0,0,0,0.03); border-radius: 6px; width: fit-content;">
+                     <span class="pulse-dot"></span> <span id="tokens-${data.bvid}">等待响应...</span>
+                 </div>
+             </div>
+             <div id="ghost-${data.bvid}" class="ghost-content"></div>
+         </div>`;
+        } else if (data._toolType === 'analyze_videos_batch' && data._batchBvids) {
+            // 批量分析参数美化
+            const bvids = data._batchBvids;
+            const count = Array.isArray(bvids) ? bvids.length : 0;
+            return `<div class="tool-call-card" style="border-left-color: #00BCD4;">
+                <div class="tool-name" style="color: #00BCD4;">⚡ 批量并行分析已启动</div>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    <div style="font-size: 12px; color: var(--text-secondary);">将要分析 ${count} 个视频，并行处理中...</div>
+
+                    <!-- 总体Token显示 -->
+                    <div id="batch-tokens-container" style="font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(0, 188, 212, 0.05); border: 1px solid rgba(0, 188, 212, 0.2); border-radius: 8px;">
+                        <span class="pulse-dot" style="background-color: #00BCD4;"></span>
+                        <span id="batch-total-tokens">正在初始化...</span>
+                        <span style="color: var(--text-secondary); margin-left: auto;">总消耗</span>
+                    </div>
+
+                    <!-- 当前视频Token显示 -->
+                    <div id="batch-current-video-container" style="display: none; font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(251, 114, 153, 0.05); border: 1px solid rgba(251, 114, 153, 0.2); border-radius: 8px;">
+                        <span class="pulse-dot" style="background-color: var(--bili-pink);"></span>
+                        <span id="batch-current-video">等待开始...</span>
+                        <span style="color: var(--text-secondary); margin-left: auto;">当前视频</span>
+                    </div>
+
+                    <!-- 视频列表 -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                        <div style="font-size: 11px; color: var(--text-secondary);">分析队列:</div>
+                        ${bvids.map((bv, idx) => `
+                            <div class="batch-video-item" data-bvid="${bv}" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--input-bg); border-radius: 6px; font-size: 11px;">
+                                <span style="color: var(--text-secondary); width: 20px;">${idx + 1}.</span>
+                                <span style="flex: 1; color: var(--text-main); font-family: monospace;">${bv}</span>
+                                <span class="batch-video-status" style="color: var(--text-secondary);">⏳ 等待</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+        } else if (data.query) {
+            // Exa 搜索参数美化
+            return `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
+                 <div class="tool-name" style="color: var(--bili-blue);">发起 Exa 全网搜索:</div>
+                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                     <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">${data.query}</span>
+                     ${data._status === 'searching' ? `
+                         <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
+                             <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在检索全网数据...
+                         </span>
+                     ` : ''}
+                 </div>
+             </div>`;
+        } else if (data.summary_of_findings) {
+            // 撰写报告参数美化
+            return `<div class="tool-call-card">
+                <div class="tool-name">研究大纲已就绪:</div>
+                <div style="font-size: 13px; color: var(--text-main); line-height: 1.6; background: rgba(251, 114, 153, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid var(--bili-pink);">
+                    ${data.summary_of_findings}
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: var(--bili-pink); font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <span class="pulse-dot"></span> ⏳ AI将基于此大纲开始撰写完整报告，请稍候...
+                </div>
+            </div>`;
+        } else if (data.summary) {
+            return `<div class="tool-call-card">
+                <div class="tool-name">AI 提取摘要:</div>
+                <div style="font-style: italic; color: var(--text-secondary)">${data.summary.substring(0, 150)}...</div>
+            </div>`;
+        } else {
+            // 默认对象 JSON 展示
+            return `<div class="tool-result-container">
+                <div class="tool-result-json">${JSON.stringify(data, null, 2)}</div>
+             </div>`;
+        }
     }
 
     function addTimelineItem(type, title, data = null, toolId = null) {
@@ -2288,6 +2611,9 @@ document.addEventListener('DOMContentLoaded', () => {
             toolIcon = getToolIcon(data._toolType);
         }
 
+        // 思考节点使用专门的 thinking-content 类
+        const detailClass = type === 'thinking' ? 'thinking-content' : 'timeline-detail';
+
         let contentHTML = `
             <div class="timeline-time">${timeStr}</div>
             <div class="timeline-content-box">
@@ -2300,7 +2626,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="timeline-collapsible-content">
-                    <div class="timeline-detail"></div>
+                    <div class="${detailClass}"></div>
                 </div>
                 <div class="timeline-collapse-summary">
                     <div class="summary-left">
@@ -2317,209 +2643,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         item.innerHTML = contentHTML;
-        const detailDiv = item.querySelector('.timeline-detail');
-        
+        const detailDiv = item.querySelector(`.${detailClass}`);
+
         if (data) {
-            if (typeof data === 'string') {
-                detailDiv.textContent = data;
-            } else {
-                if (Array.isArray(data)) {
-                    if (data.length > 0 && data[0].url) {
-                        // 网络搜索结果美化
-                        detailDiv.innerHTML = `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
-                            <div class="tool-name" style="color: var(--bili-blue);">全网搜索结果 (${data.length} 条):</div>
-                            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
-                                ${data.map(item => `
-                                    <div style="font-size: 13px; display: flex; flex-direction: column; gap: 2px;">
-                                        <a href="${item.url}" target="_blank" style="color: var(--bili-blue); font-weight: 600; text-decoration: none;">🌐 ${item.title}</a>
-                                        <span style="font-size: 11px; color: var(--text-secondary); opacity: 0.8;">发布于: ${item.published_date}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    } else if (data.length > 0 && data[0].mid) {
-                        // 用户搜索结果美化 - 详细卡片展示
-                        detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
-                            <div class="tool-name" style="color: var(--bili-blue); display: flex; align-items: center; gap: 8px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                找到相关 UP 主 (${data.length} 位)
-                            </div>
-                            <div class="result-detail-card">
-                                ${data.map(u => `
-                                    <div class="up-result-item">
-                                        <img src="/api/image-proxy?url=${encodeURIComponent(u.face)}" class="up-avatar" alt="${u.name}">
-                                        <div class="up-info">
-                                            <div class="up-name">${u.name}</div>
-                                            <div class="up-meta">
-                                                <span>UID: ${u.mid}</span>
-                                                ${u.follower ? `<span>粉丝: ${formatNumber(u.follower)}</span>` : ''}
-                                                ${u.level ? `<span class="up-badge">Lv${u.level}</span>` : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    } else if (data.length > 0 && data[0].bvid && !data[0].url) {
-                        // 视频列表/作品集美化 - 详细卡片展示
-                        detailDiv.innerHTML = `<div class="tool-call-card">
-                            <div class="tool-name" style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                                    <path d="M10 8l6 4-6 4V8z"></path>
-                                </svg>
-                                获取到 ${data.length} 条视频素材
-                            </div>
-                            <div class="result-detail-card">
-                                ${data.map(v => `
-                                    <div class="video-result-item" onclick="window.open('https://www.bilibili.com/video/${v.bvid}', '_blank')">
-                                        <img src="${v.pic || 'https://via.placeholder.com/80x50'}" class="video-thumb" alt="${v.title}">
-                                        <div class="video-info">
-                                            <div class="video-title">${v.title}</div>
-                                            <div class="video-meta">
-                                                <span>
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                                    </svg>
-                                                    ${formatNumber(v.play || 0)}
-                                                </span>
-                                                <span>
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <circle cx="12" cy="12" r="10"></circle>
-                                                        <polyline points="12 6 12 12 16 12"></polyline>
-                                                    </svg>
-                                                    ${v.duration || '--:--'}
-                                                </span>
-                                                <span style="color: var(--bili-pink);">${v.bvid}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    } else {
-                        // 默认列表美化 (兜底)
-                        detailDiv.innerHTML = `<div class="tool-call-card">
-                            <div class="tool-name">发现 ${data.length} 条相关内容:</div>
-                            ${data.map(v => `<div style="margin-bottom:4px; font-size: 12px;">📄 ${v.title || JSON.stringify(v)}</div>`).join('')}
-                        </div>`;
-                    }
-                } else if (data.keyword) {
-                    // 搜索参数美化 (视频 or 用户)
-                    const isUserSearch = data._status === 'searching_user';
-                    detailDiv.innerHTML = `<div class="tool-call-card" ${isUserSearch ? 'style="border-left-color: var(--bili-blue);"' : ''}>
-                        <div class="tool-name">${isUserSearch ? '发起 UP 主搜索:' : '发起视频搜索:'}</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" ${isUserSearch ? 'style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);"' : ''}>${data.keyword}</span>
-                            ${data._status ? `
-                                <span class="search-status" style="font-size: 12px; color: ${isUserSearch ? 'var(--bili-blue)' : 'var(--bili-pink)'}; display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" ${isUserSearch ? 'style="background-color: var(--bili-blue);"' : ''}></span> ⏳ ${isUserSearch ? '正在检索 B 站用户...' : '正在检索 B 站视频...'}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data.mid) {
-                    // 获取作品集参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
-                        <div class="tool-name">发起作品集检索:</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">UID: ${data.mid}</span>
-                            ${data._status === 'fetching_works' ? `
-                                <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在抓取该 UP 主的近期稿件...
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data._toolType === 'analyze_videos_batch' && data._batchBvids) {
-                    // 批量分析参数美化
-                    const bvids = data._batchBvids;
-                    const count = Array.isArray(bvids) ? bvids.length : 0;
-                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: #00BCD4;">
-                        <div class="tool-name" style="color: #00BCD4;">⚡ 批量并行分析已启动</div>
-                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                            <div style="font-size: 12px; color: var(--text-secondary);">将要分析 ${count} 个视频，并行处理中...</div>
-
-                            <!-- 总体Token显示 -->
-                            <div id="batch-tokens-container" style="font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(0, 188, 212, 0.05); border: 1px solid rgba(0, 188, 212, 0.2); border-radius: 8px;">
-                                <span class="pulse-dot" style="background-color: #00BCD4;"></span>
-                                <span id="batch-total-tokens">正在初始化...</span>
-                                <span style="color: var(--text-secondary); margin-left: auto;">总消耗</span>
-                            </div>
-
-                            <!-- 当前视频Token显示 -->
-                            <div id="batch-current-video-container" style="display: none; font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(251, 114, 153, 0.05); border: 1px solid rgba(251, 114, 153, 0.2); border-radius: 8px;">
-                                <span class="pulse-dot" style="background-color: var(--bili-pink);"></span>
-                                <span id="batch-current-video">等待开始...</span>
-                                <span style="color: var(--text-secondary); margin-left: auto;">当前视频</span>
-                            </div>
-
-                            <!-- 视频列表 -->
-                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-                                <div style="font-size: 11px; color: var(--text-secondary);">分析队列:</div>
-                                ${bvids.map((bv, idx) => `
-                                    <div class="batch-video-item" data-bvid="${bv}" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--input-bg); border-radius: 6px; font-size: 11px;">
-                                        <span style="color: var(--text-secondary); width: 20px;">${idx + 1}.</span>
-                                        <span style="flex: 1; color: var(--text-main); font-family: monospace;">${bv}</span>
-                                        <span class="batch-video-status" style="color: var(--text-secondary);">⏳ 等待</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>`;
-                } else if (data.bvid) {
-                                // 分析视频参数美化
-                                detailDiv.innerHTML = `<div class="tool-call-card">
-                                    <div id="title-${data.bvid}" class="tool-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="正在深度分析视频内容">正在深度分析视频内容:</div>
-                                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; position: relative; z-index: 1;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2); margin: 0; flex-shrink: 0;">${data.bvid}</span>
-                                            <span id="msg-${data.bvid}" style="font-size: 12px; color: var(--bili-pink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">准备中...</span>
-                                        </div>
-                                    <div id="tokens-container-${data.bvid}" style="font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(0,0,0,0.03); border-radius: 6px; width: fit-content;">
-                                        <span class="pulse-dot"></span> <span id="tokens-${data.bvid}">等待响应...</span>
-                                    </div>
-                                </div>
-                                <div id="ghost-${data.bvid}" class="ghost-content"></div>
-                            </div>`;
-                } else if (data.query) {
-                    // Exa 搜索参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
-                        <div class="tool-name" style="color: var(--bili-blue);">发起 Exa 全网搜索:</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">${data.query}</span>
-                            ${data._status === 'searching' ? `
-                                <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在检索全网数据...
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data.summary_of_findings) {
-                    // 撰写报告参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card">
-                        <div class="tool-name">研究大纲已就绪:</div>
-                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.6; background: rgba(251, 114, 153, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid var(--bili-pink);">
-                            ${data.summary_of_findings}
-                        </div>
-                        <div style="margin-top: 10px; font-size: 12px; color: var(--bili-pink); font-weight: 500; display: flex; align-items: center; gap: 6px;">
-                            <span class="pulse-dot"></span> ⏳ AI将基于此大纲开始撰写完整报告，请稍候...
-                        </div>
-                    </div>`;
-                } else if (data.summary) {
-                    detailDiv.innerHTML = `<div class="tool-call-card">
-                        <div class="tool-name">AI 提取摘要:</div>
-                        <div style="font-style: italic; color: var(--text-secondary)">${data.summary.substring(0, 150)}...</div>
-                    </div>`;
-                } else {
-                    detailDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                }
-            }
+            const renderedContent = renderToolResult(data);
+            detailDiv.innerHTML = renderedContent;
         }
-        
+
         const prevActive = elements.researchTimeline.querySelectorAll('.timeline-item.active');
         prevActive.forEach(node => {
             if (node !== item && (type !== 'thinking' || !node.classList.contains('type-thinking'))) {
@@ -2527,7 +2657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 node.classList.add('completed');
             }
         });
-        
+
         elements.researchTimeline.appendChild(item);
         elements.researchTimeline.scrollTop = elements.researchTimeline.scrollHeight;
     }
@@ -2536,7 +2666,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/api/analyze/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 url: url,
                 mode: currentMode // 告知后端搜索意图
             })
@@ -2569,7 +2699,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn('JSON Parse Error:', e, 'Raw string:', jsonStr);
                         continue;
                     }
-                    
+
                     try {
                         handleStreamData(data);
                     } catch (e) {
@@ -2579,7 +2709,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         isAnalyzing = false;
         elements.analyzeBtn.disabled = false;
         elements.loadingState.classList.add('hidden');
@@ -2615,7 +2745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.stage === 'info_complete') {
                 updateStepper('info', 'completed');
                 updateStepper('content', 'active');
-                
+
                 if (currentMode === 'article' && data.info) {
                     currentData.videoInfo = data.info;
                     updateVideoCard(data.info);
@@ -2648,7 +2778,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateMetaValue('metaFrames', data.frame_count || (data.has_frames ? '已提取' : '0'), '');
                 }
             }
-            
+
             if (data.content) {
                 currentData.rawContent = data.content;
                 elements.rawSubtitleText.textContent = data.content;
@@ -2658,7 +2788,41 @@ document.addEventListener('DOMContentLoaded', () => {
         switch (data.type) {
             case 'stage':
                 break;
-                
+
+            case 'tool_result':
+                const result = data.output || data.result;
+                const toolId = data.tool_call_id || data.id;
+
+                // 查找对应的时间线节点
+                const timelineItem = document.querySelector(`.timeline-item[data-tool-id="${toolId}"]`);
+                if (timelineItem) {
+                    // 更新内容区域
+                    const detailDiv = timelineItem.querySelector('.timeline-detail');
+                    if (detailDiv) {
+                        const renderedContent = renderToolResult(result);
+
+                        // 为了保留原有的 input 参数显示（如果有的话），我们可以追加或者替换
+                        // 这里选择追加结果到 card 中
+                        const existingCard = detailDiv.querySelector('.tool-call-card');
+                        if (existingCard) {
+                            // 创建结果容器
+                            const resultContainer = document.createElement('div');
+                            resultContainer.className = 'tool-result-container';
+                            resultContainer.innerHTML = `<div style="font-weight:600; margin-bottom:6px; color:var(--bili-blue);">执行结果:</div>` + renderedContent;
+                            existingCard.appendChild(resultContainer);
+                        } else {
+                            detailDiv.innerHTML = renderedContent;
+                        }
+                    }
+
+                    // 标记为完成
+                    markNodeAsCompleted(timelineItem, '已获取结果');
+                } else {
+                    // 如果找不到对应节点（可能是之前的逻辑），则不做处理或打印警告
+                    console.warn('Tool result received for unknown toolId:', toolId);
+                }
+                break;
+
             case 'content_preview':
             case 'complete':
             case 'final':
@@ -2666,7 +2830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentData.summary = data.parsed.summary || '';
                     currentData.danmaku = data.parsed.danmaku || '';
                     currentData.comments = data.parsed.comments || '';
-                    
+
                     if (currentMode === 'video') {
                         renderMarkdown(elements.summaryContent, currentData.summary || '暂无内容总结');
                         renderMarkdown(elements.danmakuAnalysisResult, currentData.danmaku || '暂无弹幕分析');
@@ -2675,13 +2839,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderMarkdown(elements.articleAnalysisContent, currentData.summary || '暂无文章分析');
                     }
                 }
-                
+
                 if (data.type === 'final' && currentMode === 'article') {
                     elements.articleOriginalContent.textContent = data.content || '无法获取专栏原文';
                     // 再强制更新一次卡片，因为 final 可能带了更全的数据
                     if (data.info) updateVideoCard(data.info);
                 }
-                
+
                 // If we have danmaku data, generate word cloud
                 if (data.type === 'final' && data.danmaku_preview && data.danmaku_preview.length > 0) {
                     currentData.danmakuPreview = data.danmaku_preview;
@@ -2696,7 +2860,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.tokens_used) {
                     elements.tokenCount.textContent = data.tokens_used;
                 }
-                
+
                 // Final metadata update
                 if (data.type === 'final') {
                     if (currentMode === 'video' && currentData.videoInfo) {
@@ -2718,12 +2882,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     BiliHelpers.showToast('分析完成！✨', elements.toast);
                 }
                 break;
-                
+
             case 'error':
                 throw new Error(data.message || data.error || '未知错误');
         }
     }
-    
+
     async function fetchVideoInfo(url) {
         try {
             const res = await fetch('/api/video/info', {
@@ -2749,7 +2913,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadUpPortrait(mid) {
         elements.upPortraitCard.classList.remove('hidden');
         elements.upPortraitContent.innerHTML = '<div class="loading-dots">正在生成深度画像</div>';
-        
+
         try {
             const res = await fetch('/api/user/portrait', {
                 method: 'POST',
@@ -2979,7 +3143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cachedUser) {
             try {
                 renderUserBadge(JSON.parse(cachedUser));
-            } catch (e) {}
+            } catch (e) { }
         }
 
         try {
@@ -3015,7 +3179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderUserBadge(user) {
         const faceUrl = user.face ? `/api/image-proxy?url=${encodeURIComponent(user.face)}` : '';
-        
+
         elements.loginBtn.innerHTML = `
             <div class="user-badge-container">
                 <div class="user-face-circle" id="analyzeMeBtn" title="点击分析我的UP主画像">
@@ -3030,7 +3194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         elements.loginBtn.classList.add('logged-in');
-        elements.loginBtn.onclick = null; 
+        elements.loginBtn.onclick = null;
 
         // 绑定“分析我”逻辑
         const analyzeMeBtn = document.getElementById('analyzeMeBtn');
@@ -3048,12 +3212,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (logoutUserBtn) {
             logoutUserBtn.onclick = (e) => {
                 e.stopPropagation();
-                if(confirm('确定要退出登录吗？')) {
+                if (confirm('确定要退出登录吗？')) {
                     logout();
                 }
             };
         }
-        
+
         // Hide hint if logged in
         elements.loginHint.classList.add('hidden');
     }
@@ -3094,20 +3258,20 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.videoTitle.textContent = info.title;
         elements.upName.textContent = info.author;
         elements.viewCount.textContent = BiliHelpers.formatNumber(info.view);
-        
+
         // 适配视频/专栏不同的点赞/弹幕字段
         elements.danmakuCount.textContent = (info.danmaku !== undefined) ? BiliHelpers.formatNumber(info.danmaku) : '-';
         elements.likeCount.textContent = (info.like !== undefined) ? BiliHelpers.formatNumber(info.like) : (info.stats ? BiliHelpers.formatNumber(info.stats.like) : '-');
         elements.commentCount.textContent = (info.reply !== undefined) ? BiliHelpers.formatNumber(info.reply) : (info.stats ? BiliHelpers.formatNumber(info.stats.reply) : '-');
-        
+
         elements.videoDuration.textContent = info.duration_str || info.duration || (currentMode === 'article' ? '专栏文章' : '');
-        
+
         // 封面图适配：pic, cover, banner_url, face
         const coverUrl = info.cover || info.banner_url || info.pic || info.face || '';
         if (coverUrl) {
             elements.videoCover.src = `/api/image-proxy?url=${encodeURIComponent(coverUrl)}`;
         }
-        
+
         if (info.bvid) {
             elements.watchBiliBtn.href = `https://www.bilibili.com/video/${info.bvid}`;
         } else if (currentMode === 'article') {
@@ -3119,7 +3283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.goHome = function(targetMode = 'smart_up') {
+    window.goHome = function (targetMode = 'smart_up') {
         if (isAnalyzing) {
             if (!confirm('分析正在进行中，现在返回主页将无法看到实时进度，确定吗？')) {
                 return false;
@@ -3129,30 +3293,30 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.loadingState.classList.add('hidden');
         elements.welcomeSection.classList.remove('hidden');
         elements.homeBtn.classList.add('hidden');
-        
+
         // --- 核心修复：还原平滑过渡相关的 CSS 类与元素显示 ---
         elements.welcomeSection.classList.remove('fade-out-down');
         elements.resultArea.classList.remove('fade-in-up');
         elements.resultArea.classList.remove('smart-up-fullscreen');
         const videoCard = document.querySelector('.video-info-card');
         if (videoCard) videoCard.classList.remove('hidden');
-        
+
         // 确保所有聊天面板都被隐藏
         if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
         if (elements.chatContent) elements.chatContent.classList.remove('active');
-        
+
         // 重置上下文记忆
         smartUpHistory = [];
-        
+
         // 清空输入框以便下次使用
         elements.videoUrl.value = '';
         manualModeLock = false;
-        
+
         // 确保热门视频始终存在
         if (elements.initRelatedList && elements.initRelatedList.children.length === 0) {
             fetchPopularVideos();
         }
-        
+
         // 重置模式
         switchMode(targetMode);
         return true;
@@ -3171,15 +3335,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 历史研究报告逻辑 ---
-    window.showResearchHistory = async function() {
+    window.showResearchHistory = async function () {
         elements.historyModal.classList.remove('hidden');
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = '<div class="loading">正在加载历史报告...</div>';
-        
+
         try {
             const response = await fetch('/api/research/history');
             const data = await response.json();
-            
+
             if (data.success && data.data.length > 0) {
                 historyList.innerHTML = data.data.map(item => `
                     <div class="history-item">
@@ -3201,41 +3365,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.downloadFile = function(fileId, format) {
+    window.downloadFile = function (fileId, format) {
         window.open(`/api/research/download/${fileId}/${format}`);
     };
 
-    window.closeHistoryModal = function() {
+    window.closeHistoryModal = function () {
         elements.historyModal.classList.add('hidden');
     };
 
-    window.loadReport = async function(filename) {
+    window.loadReport = async function (filename) {
         closeHistoryModal();
         try {
             // 获取文件 ID 用于后续可能的 PDF 下载
             const fileId = filename.replace('.md', '');
-            
+
             const response = await fetch(`/api/research/report/${filename}`);
             const data = await response.json();
-            
+
             if (data.success) {
                 // 模拟一个切换到结果区域的状态
                 elements.loadingState.classList.add('hidden');
                 elements.resultArea.classList.remove('hidden');
                 currentMode = 'research';
                 updateSidebarUI();
-                
+
                 // 更新 UI
                 elements.videoTitle.textContent = `课题研究：${data.data.filename.split('_').slice(2).join('_').replace('.md', '')}`;
                 elements.upName.textContent = 'History Research Report';
-                
+
                 renderMarkdown(elements.researchReportContent, data.data.content);
                 currentData.fullMarkdown = data.data.content;
-                
+
                 // 设置当前文件 ID 用于顶部的 PDF 下载
                 currentData.researchFileId = fileId;
                 elements.downloadPdfBtn.classList.remove('hidden');
-                
+
                 switchTab('research_report');
                 BiliHelpers.showToast('已加载历史报告', elements.toast);
             } else {
@@ -3277,7 +3441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetStepper() {
         ProgressUI.resetStepper();
     }
-    
+
     // 已迁移到 BiliHelpers.renderMarkdown，保留包装函数以兼容调用
     function renderMarkdown(element, text) {
         BiliHelpers.renderMarkdown(element, text);
@@ -3302,10 +3466,10 @@ document.addEventListener('DOMContentLoaded', () => {
         comments.forEach(comment => {
             const card = document.createElement('div');
             card.className = 'comment-card';
-            
+
             // 使用代理获取头像，如果失败使用默认图
             const avatarUrl = `/api/image-proxy?url=${encodeURIComponent(comment.avatar)}`;
-            
+
             card.innerHTML = `
                 <img class="comment-avatar" src="${avatarUrl}" onerror="this.src='https://static.hdslb.com/images/akari.jpg'">
                 <div class="comment-main">
@@ -3336,18 +3500,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateWordCloud(danmakus) {
         if (!danmakus || danmakus.length === 0) return;
-        
+
         elements.danmakuWordCloudContainer.classList.remove('hidden');
-        
+
         // Simple word frequency counter
         const wordMap = {};
         // Common stop words or useless tokens
         const stopWords = new Set(['的', '了', '是', '我', '你', '他', '她', '它', '们', '这', '那', '在', '也', '都', '不', '有', '人', '就', '要', '而', '及', '并', '等', '或', '和', '与', '为', '以', '于', '啊', '哈', '呀', '嘿', '哦', '吧']);
-        
+
         danmakus.forEach(text => {
             // Remove punctuation
             const cleanText = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！；：]/g, '');
-            
+
             // For Chinese without spaces, we can't just split by space.
             // A better simple approach: use words of length 2-4
             for (let i = 0; i < cleanText.length; i++) {
@@ -3359,7 +3523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
+
             // Also split by space for English/spaced content
             text.split(/\s+/).forEach(w => {
                 if (w.length > 1 && !stopWords.has(w)) {
@@ -3367,12 +3531,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        
+
         // Convert to wordcloud2 format: [ ['word', count], ... ]
         let list = Object.entries(wordMap)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 60); // Top 60 words
-            
+
         if (list.length === 0) {
             elements.danmakuWordCloudContainer.classList.add('hidden');
             return;
@@ -3385,11 +3549,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.danmakuCanvas.height = 300;
 
         const isDark = document.body.classList.contains('dark-theme');
-        
+
         // Bilibili themed colors
-    const colors = isDark 
-        ? ['#FB7299', '#23ADE5', '#7B68EE', '#3EBAD5', '#FFFFFF', '#9499A0']
-        : ['#FB7299', '#23ADE5', '#7B68EE', '#1E96C8', '#18191C', '#9499A0'];
+        const colors = isDark
+            ? ['#FB7299', '#23ADE5', '#7B68EE', '#3EBAD5', '#FFFFFF', '#9499A0']
+            : ['#FB7299', '#23ADE5', '#7B68EE', '#1E96C8', '#18191C', '#9499A0'];
 
         try {
             WordCloud(elements.danmakuCanvas, {
@@ -3399,7 +3563,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return (size * 35) / (list[0][1] || 1) + 8;
                 },
                 fontFamily: 'Noto Sans SC, sans-serif',
-                color: function() {
+                color: function () {
                     return colors[Math.floor(Math.random() * colors.length)];
                 },
                 rotateRatio: 0.3,
@@ -3417,28 +3581,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // 重置并初始化元数据
         initAnalysisMeta('smart_up');
         elements.tokenCount.textContent = '0';
-        
+
         // 更新侧边栏和标签页
         updateSidebarUI();
-        
+
         // 确保通用问答面板被隐藏
         if (elements.chatContent) elements.chatContent.classList.remove('active');
-        
+
         // 切换到智能小UP专用聊天面板
         switchTab('smart_up_chat');
-        
+
         // 智能小UP：隐藏顶部的视频/课题信息卡片，并开启宽屏模式，实现沉浸式聊天感
         const videoCard = document.querySelector('.video-info-card');
         if (videoCard) videoCard.classList.add('hidden');
         elements.resultArea.classList.add('smart-up-fullscreen');
-        
+
         // 清空并添加用户问题
         elements.smartUpMessages.innerHTML = '';
         addSmartUpMessage('user', question);
-        
+
         // 自动聚焦
         elements.smartUpInput.value = '';
-        
+
         // 发起流式请求
         await processSmartUpStream(question);
     }
@@ -3446,9 +3610,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function addSmartUpMessage(role, content, duration = null) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${role} smart-up`;
-        
+
         const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
+
         // SVG Avatars
         const aiAvatar = `
             <svg class="bili-tv-svg" viewBox="0 0 100 100" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
@@ -3459,7 +3623,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <circle cx="60" cy="55" r="3" fill="#FB7299"/>
                 <path d="M45 65Q50 70 55 65" stroke="#FB7299" stroke-width="3" fill="none" stroke-linecap="round"/>
             </svg>`;
-            
+
         const userAvatar = `
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -3491,7 +3655,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 全局编辑方法
-    window.editSmartUpMessage = function(btn) {
+    window.editSmartUpMessage = function (btn) {
         const msgContent = btn.closest('.message-content');
         const mainText = msgContent.querySelector('.main-text');
         const oldText = mainText.innerText;
@@ -3557,21 +3721,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const startTime = Date.now();
         isAnalyzing = true;
         elements.smartUpSendBtn.disabled = true;
-        
+
         // 记录用户问题到历史
         smartUpHistory.push({ role: 'user', content: question });
-        
+
         let currentTokens = 0;
         let roundCount = 0;
         let thinkingTokens = 0;
         let totalBlocks = 0;
-        let allSteps = []; 
+        let allSteps = [];
 
         try {
             const response = await fetch('/api/smart_up/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     question,
                     history: smartUpHistory // 发送历史记录
                 })
@@ -3584,7 +3748,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let buffer = '';
             let assistantMsgDiv = null;
             let fullContent = '';
-            
+
             let explorerBar = null;
             let explorationLayout = null;
 
@@ -3672,7 +3836,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.type === 'thinking') {
                         thinkingTokens += data.content.length;
                         updateMetaValue('metaRounds', '深度思考中...');
-                        
+
                         let currentStep = allSteps.find(s => s.type === 'thinking' && s.active);
                         if (!currentStep) {
                             totalBlocks++;
@@ -3689,27 +3853,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         currentStep.content += data.content;
                         updateExplorerStatus(explorerBar, `正在进行: ${currentStep.title}`);
                         updateStepUI(currentStep);
-                    } 
-                    
+                    }
+
                     else if (data.type === 'content') {
                         // 结束并隐藏探索条（或者保持折叠）
                         assistantMsgDiv.classList.remove('is-exploring'); // 关闭探索动画
                         allSteps.forEach(s => s.active = false);
                         explorerBar.querySelector('.pulse-dot').style.display = 'none';
                         updateExplorerStatus(explorerBar, `已完成 ${totalBlocks} 步深度研究，点击查看过程`);
-                        
+
                         fullContent += data.content;
                         mainText.innerHTML = marked.parse(fullContent);
                         elements.smartUpMessages.scrollTop = elements.smartUpMessages.scrollHeight;
-                        
+
                         currentTokens += data.content.length;
                         updateMetaValue('metaTokens', currentTokens + thinkingTokens);
-                    } 
-                    
+                    }
+
                     else if (data.type === 'tool_start') {
-                        allSteps.forEach(s => s.active = false); 
+                        allSteps.forEach(s => s.active = false);
                         totalBlocks++;
-                        
+
                         let icon = '🛠️';
                         let name = data.tool;
                         if (data.tool === 'search_videos') { icon = '🔍'; name = '检索 B 站视频'; }
@@ -3741,8 +3905,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         allSteps.push(currentStep);
                         addStepToSidebar(currentStep, explorationLayout);
                         updateExplorerStatus(explorerBar, `正在调用工具: ${name}`);
-                    } 
-                    
+                    }
+
                     else if (data.type === 'tool_result') {
                         const currentStep = allSteps.find(s => s.type === 'tool' && s.active);
                         if (currentStep) {
@@ -3751,8 +3915,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             updateStepUI(currentStep);
                             updateExplorerStatus(explorerBar, `已获取工具结果: ${currentStep.title}`);
                         }
-                    } 
-                    
+                    }
+
                     else if (data.type === 'error') {
                         addSmartUpMessage('assistant', `❌ 抱歉，处理时出现错误: ${data.error}`);
                     }
@@ -3780,7 +3944,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mini.onclick = () => showStepDetail(step, layout);
         sidebar.appendChild(mini);
         step.miniEl = mini;
-        
+
         // 如果是新加的，自动显示详情
         showStepDetail(step, layout);
         sidebar.scrollTop = sidebar.scrollHeight;
@@ -3789,7 +3953,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showStepDetail(step, layout) {
         const main = layout.querySelector('.exploration-main');
         const sidebar = layout.querySelector('.exploration-sidebar');
-        
+
         sidebar.querySelectorAll('.mini-block').forEach(el => el.classList.remove('active'));
         if (step.miniEl) step.miniEl.classList.add('active');
 
@@ -3815,7 +3979,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body.innerHTML = `<div style="white-space: pre-wrap; font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.7;">${step.content}</div>`;
             } else {
                 const count = step.result ? (Array.isArray(step.result) ? step.result.length : (step.result.data ? step.result.data.length : '完成')) : null;
-                
+
                 let resultHTML = '';
                 if (step.result) {
                     resultHTML = `
@@ -3850,17 +4014,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function addSmartUpProgress(text, type, isActive = false, toolName = '', args = null) {
         const item = document.createElement('div');
         item.className = `chat-progress-item ${isActive ? 'active' : ''} type-${type}`;
-        
+
         let contentHTML = `<span class="pulse-dot" style="${isActive ? '' : 'display:none'}"></span> <span>${text}</span>`;
-        
+
         if (type === 'tool' && args) {
             // 可以根据需要添加更多元数据
         }
-        
+
         item.innerHTML = contentHTML;
         elements.smartUpProgress.appendChild(item);
         elements.smartUpMessages.scrollTop = elements.smartUpMessages.scrollHeight;
-        
+
         // 自动展开进度容器（如果它是隐藏的）
         elements.smartUpProgress.classList.remove('hidden');
 
@@ -3929,7 +4093,7 @@ document.addEventListener('DOMContentLoaded', () => {
         results.forEach(item => {
             const div = document.createElement('div');
             div.className = 'result-item';
-            
+
             let idValue = '';
             let metaText = '';
             let displayTitle = item.title || item.name; // 优先使用 title，用户模式下回退到 name

@@ -40,7 +40,7 @@ class Config:
     # 应用配置
     MAX_SUBTITLE_LENGTH = 50000  # 最大字幕长度
     REQUEST_TIMEOUT = 300  # 请求超时时间（秒）
-    ENABLE_SMART_UP_THINKING = os.getenv('ENABLE_SMART_UP_THINKING', 'false').lower() == 'true'
+
     ENABLE_RESEARCH_THINKING = os.getenv('ENABLE_RESEARCH_THINKING', 'false').lower() == 'true'
 
     # ========== API 服务配置 ==========
