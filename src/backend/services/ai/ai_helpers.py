@@ -305,7 +305,7 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
             <div class="header">
                 <div class="logo-box">
                     <div style="background-color: #FB7299; padding: 10px; border-radius: 8px; display: inline-block; margin-bottom: 5px;">
-                        <span style="color: white; font-size: 20px; font-weight: bold;">BiliBili Summarize</span>
+                        <span style="color: white; font-size: 20px; font-weight: bold;">BiliInsight</span>
                     </div>
                 </div>
                 <h1>{topic}</h1>
@@ -321,7 +321,7 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
             </div>
 
             <div id="footerContent" class="footer">
-                © 2025 BiliBili Summarize - 掌握视频，深挖价值 | 由 AI 驱动的深度研究引擎 | 第 <pdf:pagenumber> 页
+                © 2025 BiliInsight - 深度研究 · 视频洞察 · 全能助手 | 由 AI 驱动的深度研究引擎 | 第 <pdf:pagenumber> 页
             </div>
         </body>
         </html>

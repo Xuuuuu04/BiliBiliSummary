@@ -41,3 +41,36 @@ class Config:
     MAX_SUBTITLE_LENGTH = 50000  # 最大字幕长度
     REQUEST_TIMEOUT = 300  # 请求超时时间（秒）
 
+    ENABLE_RESEARCH_THINKING = os.getenv('ENABLE_RESEARCH_THINKING', 'false').lower() == 'true'
+
+    # ========== API 服务配置 ==========
+    API_VERSION = os.getenv('API_VERSION', 'v1')
+    API_RATE_LIMIT_ENABLED = os.getenv('API_RATE_LIMIT_ENABLED', 'True').lower() == 'true'
+    API_RATE_LIMIT_DEFAULT = int(os.getenv('API_RATE_LIMIT_DEFAULT', 100))
+    API_RATE_LIMIT_WINDOW = int(os.getenv('API_RATE_LIMIT_WINDOW', 60))
+
+    # ========== 认证配置 ==========
+    API_KEY_HEADER = os.getenv('API_KEY_HEADER', 'X-API-Key')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default-secret-key-change-in-production')
+    JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', 24))
+
+    # ========== 缓存配置 ==========
+    CACHE_ENABLED = os.getenv('CACHE_ENABLED', 'True').lower() == 'true'
+    CACHE_TYPE = os.getenv('CACHE_TYPE', 'memory')  # memory 或 redis
+    CACHE_DEFAULT_TTL = int(os.getenv('CACHE_DEFAULT_TTL', 3600))
+
+    # Redis 配置
+    REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+    REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+    REDIS_DB = int(os.getenv('REDIS_DB', 0))
+    REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
+
+    # ========== CORS 配置 ==========
+    CORS_ENABLED = os.getenv('CORS_ENABLED', 'True').lower() == 'true'
+    CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
+
+    # ========== 日志配置 ==========
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+    LOG_TO_FILE = os.getenv('LOG_TO_FILE', 'True').lower() == 'true'
+    LOG_DIR = os.getenv('LOG_DIR', 'logs')
+

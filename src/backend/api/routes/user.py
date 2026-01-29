@@ -8,14 +8,14 @@ from src.backend.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def init_user_routes(app, bilibili_service, ai_service):
+def init_user_routes(app, bilibili_service, ai_service_ref):
     """
     初始化用户相关路由
 
     Args:
         app: Flask 应用实例
         bilibili_service: BilibiliService 实例
-        ai_service: AIService 实例
+        ai_service_ref: AI服务引用字典 {'service': AIService实例}
     """
     from src.backend.services.bilibili import run_async
 
@@ -49,6 +49,7 @@ def init_user_routes(app, bilibili_service, ai_service):
             recent_videos_res = run_async(bilibili_service.get_user_recent_videos(target_uid))
 
             # AI生成画像
+            ai_service = ai_service_ref['service']  # 动态获取最新的 AI 服务
             portrait_data = ai_service.generate_user_analysis(user_info_res['data'], recent_videos_res.get('data', []))
 
             return jsonify({

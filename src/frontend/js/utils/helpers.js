@@ -125,6 +125,19 @@ function renderMarkdown(element, text) {
     }
 
     try {
+        // 配置 marked.js 以支持 GFM 表格和其他扩展
+        marked.setOptions({
+            gfm: true,           // 启用 GitHub Flavored Markdown
+            breaks: true,        // 换行符转换为 <br>
+            headerIds: true,     // 为标题生成 ID
+            mangle: false,       // 不转义邮箱地址
+            pedantic: false,     // 不使用严格模式
+            sanitize: false,     // 不过滤 HTML（marked v5+ 已移除此选项）
+            smartLists: true,    // 智能列表
+            smartypants: false,  // 不转换引号
+            xhtml: false         // 不使用 XHTML 标签
+        });
+
         element.innerHTML = marked.parse(text);
     } catch (error) {
         console.error('[renderMarkdown] Markdown 解析失败:', error);

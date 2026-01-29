@@ -32,6 +32,8 @@ def init_settings_routes(app, ai_service_ref):
                 'qa_model': os.getenv('QA_MODEL'),
                 'deep_research_model': os.getenv('DEEP_RESEARCH_MODEL', 'moonshotai/Kimi-K2-Thinking'),
                 'exa_api_key': os.getenv('EXA_API_KEY') or '',
+                'enable_smart_up_thinking': os.getenv('ENABLE_SMART_UP_THINKING', 'false').lower() == 'true',
+                'enable_research_thinking': os.getenv('ENABLE_RESEARCH_THINKING', 'false').lower() == 'true',
                 'dark_mode': os.getenv('DARK_MODE', 'false').lower() == 'true'
             }
         })
@@ -84,6 +86,14 @@ def init_settings_routes(app, ai_service_ref):
             if 'dark_mode' in data:
                 set_key(env_path, 'DARK_MODE', str(data['dark_mode']).lower())
                 os.environ['DARK_MODE'] = str(data['dark_mode']).lower()
+
+            if 'enable_smart_up_thinking' in data:
+                set_key(env_path, 'ENABLE_SMART_UP_THINKING', str(data['enable_smart_up_thinking']).lower())
+                os.environ['ENABLE_SMART_UP_THINKING'] = str(data['enable_smart_up_thinking']).lower()
+
+            if 'enable_research_thinking' in data:
+                set_key(env_path, 'ENABLE_RESEARCH_THINKING', str(data['enable_research_thinking']).lower())
+                os.environ['ENABLE_RESEARCH_THINKING'] = str(data['enable_research_thinking']).lower()
 
             # 重新初始化 AI 服务以应用新配置
             from src.backend.services.ai import AIService

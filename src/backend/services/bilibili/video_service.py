@@ -446,3 +446,109 @@ class VideoService:
             }
         except Exception as e:
             return {'success': False, 'error': f'提取视频帧失败: {str(e)}'}
+
+    async def get_video_tags(self, bvid: str) -> Dict:
+        """
+        获取视频标签及详细信息
+
+        Args:
+            bvid: 视频BVID
+
+        Returns:
+            {'success': bool, 'data': {标签列表}} 或 {'success': False, 'error': str}
+        """
+        try:
+            from bilibili_api import video_tag
+
+            v = video.Video(bvid=bvid, credential=self.credential)
+            tags = await v.get_tags()
+
+            # 获取每个标签的详细信息
+            tag_details = []
+            for tag in tags:
+                tag_info = {
+                    'tag_id': tag.get('tag_id'),
+                    'tag_name': tag.get('tag_name'),
+                    'jump_url': tag.get('jump_url'),
+                    'is_activity': tag.get('is_activity', 0),
+                    'type': tag.get('type')
+                }
+                tag_details.append(tag_info)
+
+            return {
+                'success': True,
+                'data': {
+                    'tags': tag_details,
+                    'tag_count': len(tag_details)
+                }
+            }
+        except Exception as e:
+            logger.error(f"获取视频标签失败: {str(e)}")
+            return {'success': False, 'error': f'获取视频标签失败: {str(e)}'}
+
+    async def get_video_series(self, bvid: str) -> Dict:
+        """
+        获取视频所属的合集信息（系列视频）
+
+        Args:
+            bvid: 视频BVID
+
+        Returns:
+            {'success': bool, 'data': {合集信息}} 或 {'success': False, 'error': str}
+        """
+        try:
+            v = video.Video(bvid=bvid, credential=self.credential)
+
+            # 获取视频的合集信息
+            series_list = await v.get_series()
+
+            if not series_list or len(series_list) == 0:
+                return {
+                    'success': True,
+                    'data': {
+                        'has_series': False,
+                        'message': '该视频不属于任何合集'
+                    }
+                }
+
+            # 获取第一个合集的详细信息
+            series = series_list[0]
+            series_id = series.get('sid')
+            series_info = {
+                'series_id': series_id,
+                'series_title': series.get('title', ''),
+                'series_cover': series.get('cover', ''),
+                'total_videos': series.get('total', 0),
+                'intro': series.get('intro', ''),
+                'has_series': True
+            }
+
+            # 尝试获取合集中的视频列表
+            try:
+                from bilibili_api import channel_series
+                series_obj = channel_series.ChannelSeries(series_id=series_id)
+                series_videos = await series_obj.get_videos()
+
+                video_list = []
+                for item in series_videos.get('list', [])[:20]:  # 限制返回前20个
+                    video_list.append({
+                        'bvid': item.get('bvid'),
+                        'title': item.get('title'),
+                        'index': item.get('index', 1)  # 集合中的序号
+                    })
+
+                series_info['videos'] = video_list
+                series_info['video_count'] = len(video_list)
+
+            except Exception as e:
+                logger.warning(f"获取合集视频列表失败: {str(e)}")
+                series_info['videos'] = []
+                series_info['video_count'] = 0
+
+            return {
+                'success': True,
+                'data': series_info
+            }
+        except Exception as e:
+            logger.error(f"获取视频合集失败: {str(e)}")
+            return {'success': False, 'error': f'获取视频合集失败: {str(e)}'}

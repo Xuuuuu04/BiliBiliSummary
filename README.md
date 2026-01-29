@@ -1,7 +1,7 @@
 <div align="center">
-  <h1>BiliBili Summarize | AI 视频深度分析助手</h1>
-  <img src="assets/logo.svg" width="200" alt="BiliBili Summarize Logo">
-  <h3>掌握视频，深挖价值</h3>
+  <h1>BiliInsight | AI 视频深度分析助手</h1>
+  <img src="assets/logo.svg" width="200" alt="BiliInsight Logo">
+  <h3>深度研究 · 视频洞察 · 全能助手</h3>
 </div>
 
 **一键提取 B 站视频字幕、弹幕、评论及关键帧画面，通过 AI 多模态大模型生成深度总结、思维导图及舆情分析报告。**

@@ -7,13 +7,13 @@ import json
 from flask import request, jsonify, Response, send_from_directory
 
 
-def init_research_routes(app, ai_service, bilibili_service):
+def init_research_routes(app, ai_service_ref, bilibili_service):
     """
     初始化深度研究相关路由
 
     Args:
         app: Flask 应用实例
-        ai_service: AIService 实例
+        ai_service_ref: AI服务引用字典 {'service': AIService实例}
         bilibili_service: BilibiliService 实例
     """
 
@@ -28,6 +28,7 @@ def init_research_routes(app, ai_service, bilibili_service):
                 return jsonify({'success': False, 'error': '请输入研究课题'}), 400
 
             def generate():
+                ai_service = ai_service_ref['service']  # 动态获取最新的 AI 服务
                 for chunk in ai_service.deep_research_stream(topic, bilibili_service):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
