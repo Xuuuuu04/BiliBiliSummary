@@ -45,11 +45,6 @@ const MODE_META = {
         { id: 'metaSearch', title: '搜索次数', icon: '🔍', default: '0 次' },
         { id: 'metaAnalysis', title: '分析次数', icon: '📽️', default: '0 次' },
         { id: 'metaTokens', title: '累计 Tokens', icon: '🪙', default: '0' }
-    ],
-    smart_up: [
-        { id: 'metaRounds', title: '思考深度', icon: '🧠', default: '深度思考' },
-        { id: 'metaSearch', title: '检索次数', icon: '🔍', default: '0 次' },
-        { id: 'metaTokens', title: '消耗 Tokens', icon: '🪙', default: '0' }
     ]
 };
 
@@ -57,7 +52,6 @@ const MODE_META = {
  * 各模式的按钮文字配置
  */
 const MODE_BUTTON_TEXTS = {
-    smart_up: '开始对话',
     research: '深度研究',
     video: '开始分析',
     article: '解析专栏',
@@ -68,7 +62,6 @@ const MODE_BUTTON_TEXTS = {
  * 各模式的描述文字
  */
 const MODE_DESCRIPTIONS = {
-    'smart_up': '智连全网，自适应你的每一个好奇。',
     'research': '多维拆解，在海量信息中捕捉深度洞见。',
     'video': '瞬息提炼，让每一帧光影都有迹可循。',
     'article': '结构重组，深度转译专栏背后的文字灵魂。',
@@ -82,8 +75,7 @@ const MODE_PLACEHOLDERS = {
     'video': '粘贴 Bilibili 视频链接或 BV 号...',
     'article': '粘贴专栏链接或 CV 号...',
     'user': '输入用户 UID 或空间链接...',
-    'research': '输入你想要研究的课题 (如: 2025 AI 发展趋势)',
-    'smart_up': '输入您的问题，智能小UP为您检索视频并作答...'
+    'research': '输入你想要研究的课题 (如: 2025 AI 发展趋势)'
 };
 
 // ============================================================================
@@ -195,7 +187,7 @@ function toggleDarkMode(isDark) {
  * - 按钮文字和占位符
  * - 智能小UP/深度研究的特殊处理
  *
- * @param {string} mode - 目标模式 ('video' | 'article' | 'user' | 'research' | 'smart_up')
+ * @param {string} mode - 目标模式 ('video' | 'article' | 'user' | 'research')
  * @param {Object} params - 参数对象
  * @param {Object} params.elements - DOM 元素集合
  * @param {Function} params.updateSidebarUI - 侧边栏更新函数
@@ -236,25 +228,6 @@ function switchMode(mode, params) {
     elements.analyzeBtn.className = `btn-primary mode-${mode}`;
     const btnText = elements.analyzeBtn.lastChild;
 
-    // 退出智能小UP全屏模式（恢复通用布局）
-    if (mode !== 'smart_up') {
-        // 退出真正全屏
-        if (elements.resultArea.classList.contains('smart-up-true-fullscreen')) {
-            elements.resultArea.classList.remove('smart-up-true-fullscreen');
-        }
-        document.body.classList.remove('smart-up-full-overflow');
-
-        // 退出沉浸式宽屏
-        elements.resultArea.classList.remove('smart-up-fullscreen');
-
-        // 恢复视频/专栏/用户卡片显示
-        const videoCard = document.querySelector('.video-info-card');
-        if (videoCard) videoCard.classList.remove('hidden');
-
-        // 确保智能小UP面板不再占用 active
-        if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
-    }
-
     // 根据模式更新输入框和按钮
     if (mode === 'video') {
         elements.videoUrl.placeholder = MODE_PLACEHOLDERS.video;
@@ -276,9 +249,6 @@ function switchMode(mode, params) {
         if (elements.resultArea.classList.contains('hidden') && showToastFn) {
             showToastFn('💡 您可以点击输入框下方的按钮查看以往的研究报告');
         }
-    } else if (mode === 'smart_up') {
-        elements.videoUrl.placeholder = MODE_PLACEHOLDERS.smart_up;
-        btnText.textContent = ' 智能对话';
     }
 
     // 非研究模式隐藏历史入口
@@ -377,7 +347,7 @@ window.ModeUI = {
  * - analysisMeta: 元数据容器
  * - tokenCount: Token 计数元素
  * - researchHistoryShortcut: 研究历史入口
- * - smartUpChatContent: 智能小UP聊天面板
+ * - researchHistoryShortcut: 研究历史入口
  *
  * 【测试清单】
  * - ✅ initAnalysisMeta: 测试各模式元数据创建、ID正确性
@@ -388,7 +358,6 @@ window.ModeUI = {
  *
  * 【注意事项】
  * - switchMode 会更新多个 UI 元素，确保 elements 对象完整
- * - 智能小UP模式有特殊的全屏逻辑，切换时需注意恢复
  * - 深度研究模式会显示历史入口，其他模式隐藏
  * - 元数据更新时图标会自动保留
  */

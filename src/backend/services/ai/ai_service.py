@@ -6,7 +6,6 @@ import time
 from typing import Dict, Optional, Callable, Generator, List
 from openai import OpenAI
 from src.config import Config
-from src.backend.services.ai.agents.smart_up_agent import SmartUpAgent
 from src.backend.services.ai.agents.deep_research_agent import DeepResearchAgent
 from src.backend.services.ai.prompts import (
     get_summary_prompt,
@@ -47,24 +46,9 @@ class AIService:
         self.research_model = Config.DEEP_RESEARCH_MODEL
 
         # 初始化 Agent（深度研究Agent需要视觉模型用于视频分析）
-        self._smart_up_agent = SmartUpAgent(self.client, self.research_model)
         self._deep_research_agent = DeepResearchAgent(self.client, self.research_model, vl_model=self.model)
 
     # ========== Agent 方法（保持向后兼容）==========
-
-    def smart_up_stream(self, question: str, bilibili_service, history: List = None) -> Generator[Dict, None, None]:
-        """
-        智能小UP 快速问答流
-
-        Args:
-            question: 用户问题
-            bilibili_service: B站服务实例
-            history: 对话历史（可选）
-
-        Yields:
-            Dict: 包含状态、内容、工具调用等信息的字典
-        """
-        return self._smart_up_agent.stream_chat(question, bilibili_service, history)
 
     def deep_research_stream(self, topic: str, bilibili_service) -> Generator[Dict, None, None]:
         """

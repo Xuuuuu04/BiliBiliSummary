@@ -1,6 +1,6 @@
 """
 视频分析路由模块
-提供视频分析、智能小UP和对话问答接口
+提供视频分析和对话问答接口
 """
 import asyncio
 import json
@@ -20,24 +20,6 @@ def init_analyze_routes(app, bilibili_service, ai_service):
         ai_service: AIService 实例
     """
     from src.backend.services.bilibili import BilibiliService, run_async
-
-    @app.route('/api/smart_up/stream', methods=['POST'])
-    def smart_up_stream():
-        """智能小UP 快速问答流"""
-        try:
-            data = request.json
-            question = data.get('question')
-            history = data.get('history', [])
-            if not question:
-                return jsonify({'success': False, 'error': '问题不能为空'}), 400
-
-            def generate():
-                for chunk in ai_service.smart_up_stream(question, bilibili_service, history):
-                    yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
-
-            return Response(generate(), mimetype='text/event-stream')
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/api/chat/stream', methods=['POST'])
     def chat_video_stream():

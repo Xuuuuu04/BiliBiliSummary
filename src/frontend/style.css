@@ -1577,7 +1577,6 @@ button {
     background: var(--card-bg);
 }
 
-#chatInput, #smartUpInput {
     flex: 1;
     background: transparent;
     border: none;
@@ -1592,7 +1591,6 @@ button {
     line-height: 1.5;
 }
 
-#sendMsgBtn, #smartUpSendBtn {
     padding: 0;
     width: 44px;
     height: 44px;
@@ -1692,11 +1690,11 @@ button {
 /* Analysis Mode Switcher */
 .analysis-mode-switcher {
     display: flex;
+    justify-content: center;
     background: var(--input-bg);
     padding: 4px;
     border-radius: 14px;
     margin-bottom: 12px;
-    align-self: flex-start;
     position: relative;
     z-index: 1;
     border: 1px solid var(--border-color);
@@ -1728,7 +1726,6 @@ button {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.mode-btn.active[data-mode="smart_up"] { color: var(--bili-purple); background: var(--bili-purple-soft); }
 .mode-btn.active[data-mode="research"] { color: var(--bili-yellow); background: var(--bili-yellow-soft); }
 .mode-btn.active[data-mode="video"] { color: var(--bili-pink); background: var(--nav-active-bg); }
 .mode-btn.active[data-mode="article"] { color: var(--bili-lavender); background: var(--bili-lavender-soft); }
@@ -1739,7 +1736,6 @@ button {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark-theme .mode-btn.active[data-mode="smart_up"] { background: rgba(147, 112, 219, 0.15); }
 .dark-theme .mode-btn.active[data-mode="research"] { background: rgba(255, 160, 0, 0.15); }
 .dark-theme .mode-btn.active[data-mode="video"] { background: rgba(251, 114, 153, 0.15); }
 .dark-theme .mode-btn.active[data-mode="article"] { background: rgba(187, 107, 217, 0.15); }
@@ -1769,7 +1765,6 @@ button {
     opacity: 0.6;
 }
 
-.mode-description.mode-smart_up { color: var(--bili-purple); }
 .mode-description.mode-research { color: var(--bili-yellow); }
 .mode-description.mode-video { color: var(--bili-pink); }
 .mode-description.mode-article { color: var(--bili-lavender); }
@@ -1783,7 +1778,6 @@ button {
 .search-box.mode-article { border-color: var(--bili-lavender); box-shadow: 0 0 0 4px rgba(187, 107, 217, 0.05); }
 .search-box.mode-user { border-color: var(--bili-blue); box-shadow: 0 0 0 4px rgba(35, 173, 229, 0.05); }
 .search-box.mode-research { border-color: var(--bili-yellow); box-shadow: 0 0 0 4px rgba(255, 179, 0, 0.05); }
-.search-box.mode-smart_up { border-color: var(--bili-purple); box-shadow: 0 0 0 4px rgba(123, 104, 238, 0.05); }
 
 /* 动画 */
 @keyframes fadeIn {
@@ -1800,7 +1794,6 @@ button {
 .btn-primary.mode-article { background: linear-gradient(135deg, var(--bili-lavender) 0%, #bb6bd9 100%); box-shadow: 0 8px 20px rgba(155, 81, 224, 0.3); }
 .btn-primary.mode-user { background: linear-gradient(135deg, var(--bili-blue) 0%, #3EBAD5 100%); box-shadow: 0 8px 20px rgba(35, 173, 229, 0.3); }
 .btn-primary.mode-research { background: linear-gradient(135deg, var(--bili-yellow) 0%, #FFD54F 100%); box-shadow: 0 8px 20px rgba(255, 179, 0, 0.3); }
-.btn-primary.mode-smart_up { background: linear-gradient(135deg, var(--bili-purple) 0%, #9370DB 100%); box-shadow: 0 8px 20px rgba(123, 104, 238, 0.3); }
 
 /* 内容区切换动效 */
 /* 已合并到前面的.tab-pane定义 */
@@ -3035,7 +3028,6 @@ input:checked + .slider:before {
 }
 
 /* 智能小UP 沉浸式模式 - 与顶部搜索框对齐 */
-.smart-up-fullscreen.result-container {
     max-width: 1400px !important;
     width: 100% !important;
     margin: 0 auto !important;
@@ -3044,11 +3036,9 @@ input:checked + .slider:before {
 }
 
 /* 真正的全屏对话模式 */
-body.smart-up-full-overflow {
     overflow: hidden !important;
 }
 
-.smart-up-true-fullscreen.result-container {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -3063,37 +3053,30 @@ body.smart-up-full-overflow {
     background: var(--bili-bg);
 }
 
-.smart-up-true-fullscreen .content-wrapper {
     height: 100vh !important;
     max-width: 100% !important;
 }
 
-.smart-up-true-fullscreen .content-display {
     height: 100vh !important;
     border-radius: 0 !important;
     border: none !important;
 }
 
-.smart-up-true-fullscreen .compact-chat {
     height: 100vh !important;
     max-height: 100vh !important;
 }
 
-.smart-up-true-fullscreen #smartUpMessages {
     padding: 40px 15% !important; /* 全屏下增加左右留白，保持阅读舒适 */
 }
 
-.smart-up-true-fullscreen .chat-input-area {
     max-width: 70% !important;
     margin: 0 auto 40px !important;
 }
 
-.smart-up-true-fullscreen .chat-progress-container {
     max-width: 70% !important;
     margin: 10px auto !important;
 }
 
-.smart-up-fullscreen .content-wrapper {
     grid-template-columns: 1fr !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -3101,12 +3084,10 @@ body.smart-up-full-overflow {
     gap: 0 !important;
 }
 
-.smart-up-fullscreen .main-content-column {
     max-width: 100% !important;
     width: 100% !important;
 }
 
-.smart-up-fullscreen .content-display {
     max-width: 100% !important;
     width: 100% !important;
     border-radius: var(--border-radius) !important;
@@ -3116,12 +3097,10 @@ body.smart-up-full-overflow {
     background: var(--card-bg);
 }
 
-.smart-up-fullscreen #tabContents {
     padding: 0 !important;
     width: 100% !important;
 }
 
-.smart-up-fullscreen .compact-chat {
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
@@ -3176,7 +3155,6 @@ body.smart-up-full-overflow {
     border-color: #313233;
 }
 
-.smart-up-fullscreen #smartUpMessages {
     max-width: 100% !important;
     width: 100% !important;
     padding: 30px !important;
@@ -3356,7 +3334,6 @@ body.smart-up-full-overflow {
 }
 
 /* 输入框区域全屏化 */
-.smart-up-fullscreen .chat-input-area {
     max-width: calc(100% - 60px) !important;
     width: calc(100% - 60px) !important;
     margin: 0 auto 30px !important;
@@ -3364,7 +3341,6 @@ body.smart-up-full-overflow {
     border-radius: 16px;
 }
 
-.smart-up-fullscreen .chat-progress-container {
     max-width: calc(100% - 60px) !important;
     width: calc(100% - 60px) !important;
     margin: 10px auto !important;
@@ -3581,11 +3557,9 @@ body.smart-up-full-overflow {
     color: #4CAF50;
 }
 
-.smart-up-fullscreen .toolbar {
     display: none !important;
 }
 
-.smart-up-fullscreen .content-display {
     border-top: none !important;
 }
 

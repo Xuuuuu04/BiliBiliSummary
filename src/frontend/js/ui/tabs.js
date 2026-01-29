@@ -128,12 +128,6 @@ function switchTab(tabName, params) {
         if (elements.chatMessages) {
             elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
         }
-    } else if (tabName === 'smart_up_chat') {
-        elements.smartUpChatContent.classList.add('active');
-        // 自动滚动到底部
-        if (elements.smartUpMessages) {
-            elements.smartUpMessages.scrollTop = elements.smartUpMessages.scrollHeight;
-        }
     }
 }
 
@@ -186,8 +180,8 @@ function updateSidebarUI(params) {
         switchTabFn(firstVisibleTab);
     }
 
-    // 特殊处理：智能小UP/深度研究模式隐藏相关推荐侧边栏
-    if (currentMode === 'smart_up' || currentMode === 'research') {
+    // 特殊处理：深度研究模式隐藏相关推荐侧边栏
+    if (currentMode === 'research') {
         elements.relatedSection.classList.add('hidden');
     } else {
         elements.relatedSection.classList.remove('hidden');
@@ -265,7 +259,7 @@ window.TabUI = {
  *
  * 【注意事项】
  * - switchTab 需要传入完整的状态参数
- * - 切换到 chat/smart_up_chat 会自动滚动到底部
+ * - 切换到 chat 会自动滚动到底部
  * - 切换到 danmaku 会自动触发词云生成（如果提供了函数）
  * - 智能小UP和深度研究模式会隐藏相关推荐侧边栏
  */

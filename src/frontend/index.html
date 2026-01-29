@@ -73,11 +73,7 @@
                 <div class="search-box-container">
                     <!-- 模式切换器 -->
                     <div class="analysis-mode-switcher">
-                        <button class="mode-btn active" data-mode="smart_up">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="9" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle><path d="M12 13a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2z"></path></svg>
-                            智能小UP
-                        </button>
-                        <button class="mode-btn" data-mode="research">
+                        <button class="mode-btn active" data-mode="research">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                             深度研究
                         </button>
@@ -96,8 +92,8 @@
                     </div>
                     
                     <!-- 模式描述文本 (新) -->
-                    <div id="modeDescription" class="mode-description mode-smart_up animate-fade-in">
-                        智连全网，自适应你的每一个好奇。
+                    <div id="modeDescription" class="mode-description mode-research animate-fade-in">
+                        多维拆解，在海量信息中捕捉深度洞见。
                     </div>
                     
                     <div class="search-box">
@@ -458,40 +454,6 @@
                             </div>
 
                             <!-- 深度研究专用 -->
-            <div id="smartUpChatContent" class="tab-pane chat-pane">
-                <div class="chat-container compact-chat">
-                    <div class="chat-header">
-                        <div class="chat-header-title">智能小UP 对话</div>
-                        <div class="chat-header-actions">
-                            <button id="toggleSmartUpFullscreen" class="btn-icon-small" title="切换全屏">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                                </svg>
-                            </button>
-                            <button id="clearChatBtn" class="btn-icon-small" title="清空聊天记录">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="smartUpMessages" class="chat-messages">
-                        <div class="message assistant">
-                            <div class="message-content">你好！我是你的智能小UP。有什么我可以帮你的吗？我会自适应问题复杂度，快速检索B站视频和全网资讯为您提供精准回答。</div>
-                        </div>
-                    </div>
-                    <div id="smartUpProgress" class="chat-progress-container hidden">
-                        <!-- 动态展示 AI 思考与工具调用进度 -->
-                    </div>
-                    <div class="chat-input-area">
-                        <textarea id="smartUpInput" placeholder="输入您的问题，我会为您检索视频并作答..."></textarea>
-                        <button id="smartUpSendBtn" class="btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
             <div id="researchReportContent" class="tab-pane markdown-body">
                 <div class="empty-state">
                     <p>等待深度研究开始...</p>
