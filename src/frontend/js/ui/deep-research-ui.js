@@ -309,7 +309,14 @@
     }
     function appendToolCardPreview(toolCard, delta) {
         if (!toolCard || !toolCard.previewEl || !delta) return;
-        toolCard.previewEl.textContent += String(delta);
+        
+        // 保存原始文本以支持累加渲染
+        if (!toolCard.rawContent) toolCard.rawContent = '';
+        toolCard.rawContent += String(delta);
+        
+        // 使用 Markdown 渲染
+        BiliHelpers.renderMarkdown(toolCard.previewEl, toolCard.rawContent);
+        
         toolCard.previewEl.scrollTop = toolCard.previewEl.scrollHeight;
     }
     function upsertThinkingCard({ roundNumber, tsMs }) {
@@ -368,7 +375,9 @@
                 card.summaryEl.textContent = `已生成 ${count} 字，报告同步写入“研究报告”面板`;
             }
             if (card && card.previewEl) {
-                card.previewEl.textContent = state.reportBuffer.slice(-200); // 显示最后 200 字预览
+                // 对于报告预览，显示最后一段完整的内容或截断显示
+                const previewText = state.reportBuffer.length > 500 ? '...' + state.reportBuffer.slice(-500) : state.reportBuffer;
+                BiliHelpers.renderMarkdown(card.previewEl, previewText);
                 card.previewEl.scrollTop = card.previewEl.scrollHeight;
             }
         }
@@ -393,11 +402,8 @@
         const tips = el('div', 'dr-card-summary', '报告正在生成，同步写入“研究报告”面板');
         body.appendChild(tips);
 
-        const preview = el('div', 'dr-preview');
+        const preview = el('div', 'dr-preview markdown-body');
         preview.dataset.role = 'preview';
-        preview.style.maxHeight = '120px';
-        preview.style.fontSize = '0.9em';
-        preview.style.opacity = '0.8';
         body.appendChild(preview);
 
         setToolStatus(statusEl, 'running', tsMs);

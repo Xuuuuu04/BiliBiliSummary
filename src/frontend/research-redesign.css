@@ -809,6 +809,42 @@
     background: rgba(255, 255, 255, 0.02);
 }
 
+/* 流式内容预览区域 - Markdown 适配 */
+.dr-preview.markdown-body {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 8px;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    opacity: 0.9;
+}
+
+[data-theme="dark"] .dr-preview.markdown-body {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dr-preview.markdown-body p {
+    margin-bottom: 8px;
+}
+
+.dr-preview.markdown-body h1, 
+.dr-preview.markdown-body h2, 
+.dr-preview.markdown-body h3 {
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-size: 1.1em;
+    border-bottom: none;
+}
+
+.dr-preview.markdown-body ul, 
+.dr-preview.markdown-body ol {
+    padding-left: 20px;
+    margin-bottom: 8px;
+}
+
 /* ============================================================
    12. 流式数据徽章
    ============================================================ */
