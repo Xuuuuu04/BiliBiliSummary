@@ -75,9 +75,9 @@
 
 3. **启动应用**
    ```bash
-   uvicorn asgi:app --reload --host 0.0.0.0 --port 5000
+   uvicorn asgi:app --reload --host 0.0.0.0 --port 5001
    ```
-   访问 `http://localhost:5000` 即可开始使用。
+   访问 `http://localhost:5001` 即可开始使用。
 
 ## 🏗️ 项目结构
 
@@ -85,15 +85,14 @@
 Bilibili_Analysis_Helper/
 ├── .github/             # CI（lint/format/test）
 ├── asgi.py             # FastAPI 启动入口（推荐）
-├── app.py              # 兼容入口（复用 asgi:app）
 ├── pyproject.toml      # 工具链配置（black/ruff/pytest/mypy）
 ├── requirements.txt    # 核心依赖
 ├── .env.example        # 环境变量模板
 ├── README.md           # 项目文档
 ├── tests/              # 单元测试
 └── src/                # 核心源代码包
-    ├── backend/        # 后端领域层（服务/工具/AI/数据源等）
-    ├── backend_fastapi/# 新后端（FastAPI：薄路由 + services/usecase）
+    ├── backend/        # 领域能力层（B站/AI/工具/数据源；不直接对外提供 HTTP）
+    ├── backend_fastapi/# HTTP 层（FastAPI：路由 + 用例编排；复用 backend 能力层）
     ├── frontend/       # 前端网页资源（HTML、CSS、JS）
     └── config.py       # 系统统一配置文件
 ```

@@ -16,7 +16,7 @@
 
 ![BiliBili Logo](https://img.shields.io/badge/BiliBili-FF6699?style=for-the-badge&logo=bilibili&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
 [クイックスタート](#🚀-クイックスタート) • [機能特徴](#✨-機能特性) • [スクリーンショット](#🖼️-スクリーンショット) • [技術スタック](#🛠️-技術スタック) • [謝辞](#🙏-謝辞)
@@ -72,27 +72,28 @@
 
 3. **アプリケーションの起動**
    ```bash
-   python app.py
+   uvicorn asgi:app --reload --host 0.0.0.0 --port 5001
    ```
-   `http://localhost:5000` にアクセスして開始します。
+   `http://localhost:5001` にアクセスして開始します。
 
 ## 🏗️ プロジェクト構造
 
 ```text
 Bilibili_Analysis_Helper/
-├── app.py              # メインエントリーポイント
+├── asgi.py             # FastAPI 起動エントリーポイント（推奨）
 ├── requirements.txt    # 依存ライブラリ
 ├── .env.example        # 環境変数テンプレート
 ├── README.md           # プロジェクトドキュメント
 └── src/                # ソースコード
-    ├── backend/        # バックエンド（Bilibili & AI サービス）
+    ├── backend/        # ドメイン能力層（Bilibili/AI/ツール。HTTP は提供しない）
+    ├── backend_fastapi/# HTTP 層（FastAPI ルート + オーケストレーション）
     ├── frontend/       # フロントエンド（HTML, CSS, JS）
     └── config.py       # グローバル設定
 ```
 
 ## 🛠️ 技術スタック
 
-- **バックエンド**: Python (Flask), `bilibili-api-python`, `aiohttp`
+- **バックエンド**: Python (FastAPI), `bilibili-api-python`, `aiohttp`
 - **フロントエンド**: Vanilla HTML/JS/CSS3, `Marked.js` (Markdown レンダリング)
 - **AI エンジン**: 全てのOpenAI互換マルチモーダルモデルに対応 (推奨：SiliconCloud, Qwen)
 

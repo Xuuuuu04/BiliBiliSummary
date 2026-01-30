@@ -25,10 +25,9 @@ class Config:
     DEEP_RESEARCH_MODEL = os.getenv("DEEP_RESEARCH_MODEL", "moonshotai/Kimi-K2-Thinking")
     EXA_API_KEY = os.getenv("EXA_API_KEY")
 
-    # Flask配置
-    FLASK_PORT = int(os.getenv("FLASK_PORT", 5000))
-    FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0")
-    FLASK_DEBUG = os.getenv("FLASK_DEBUG", "True").lower() == "true"
+    # 服务监听配置（FastAPI / Uvicorn）
+    HOST = os.getenv("HOST", "0.0.0.0")
+    PORT = int(os.getenv("PORT", 5001))
 
     # B站API配置
     BILIBILI_SESSDATA = os.getenv("BILIBILI_SESSDATA")
@@ -46,7 +45,6 @@ class Config:
     ENABLE_RESEARCH_THINKING = os.getenv("ENABLE_RESEARCH_THINKING", "false").lower() == "true"
 
     # ========== API 服务配置 ==========
-    API_VERSION = os.getenv("API_VERSION", "v1")
     API_RATE_LIMIT_ENABLED = os.getenv("API_RATE_LIMIT_ENABLED", "True").lower() == "true"
     API_RATE_LIMIT_DEFAULT = int(os.getenv("API_RATE_LIMIT_DEFAULT", 100))
     API_RATE_LIMIT_WINDOW = int(os.getenv("API_RATE_LIMIT_WINDOW", 60))

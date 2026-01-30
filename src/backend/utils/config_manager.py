@@ -262,8 +262,8 @@ class ConfigManager:
             "api_base": Config.OPENAI_API_BASE,
             "api_key_configured": bool(Config.OPENAI_API_KEY),
             "bilibili_logged_in": bool(Config.BILIBILI_SESSDATA),
-            "flask_port": Config.FLASK_PORT,
-            "flask_host": Config.FLASK_HOST,
+            "host": Config.HOST,
+            "port": Config.PORT,
         }
 
 

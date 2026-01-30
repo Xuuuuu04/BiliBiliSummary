@@ -16,7 +16,7 @@
 
 ![BiliBili Logo](https://img.shields.io/badge/BiliBili-FF6699?style=for-the-badge&logo=bilibili&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
 [Quick Start](#🚀-quick-start) • [Features](#✨-features) • [Screenshots](#🖼️-screenshots) • [Tech Stack](#🛠️-tech-stack) • [Acknowledgements](#🙏-acknowledgements)
@@ -72,27 +72,28 @@
 
 3. **Launch Application**
    ```bash
-   python app.py
+   uvicorn asgi:app --reload --host 0.0.0.0 --port 5001
    ```
-   Visit `http://localhost:5000` to start analyzing.
+   Visit `http://localhost:5001` to start analyzing.
 
 ## 🏗️ Project Structure
 
 ```text
 Bilibili_Analysis_Helper/
-├── app.py              # Main entry point
+├── asgi.py             # FastAPI entrypoint (recommended)
 ├── requirements.txt    # Core dependencies
 ├── .env.example        # Environment variable template
 ├── README.md           # Project documentation
 └── src/                # Source code
-    ├── backend/        # Backend logic (Bilibili & AI services)
+    ├── backend/        # Domain capabilities (Bilibili/AI/tools; no HTTP)
+    ├── backend_fastapi/# HTTP layer (FastAPI routes + orchestration)
     ├── frontend/       # Frontend assets (HTML, CSS, JS)
     └── config.py       # Global configuration
 ```
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python (Flask), `bilibili-api-python`, `aiohttp`
+- **Backend**: Python (FastAPI), `bilibili-api-python`, `aiohttp`
 - **Frontend**: Vanilla HTML/JS/CSS3, `Marked.js` (Markdown rendering)
 - **AI Engine**: Supports all OpenAI-compatible vision multimodal models (Recommended: SiliconCloud, Qwen)
 
