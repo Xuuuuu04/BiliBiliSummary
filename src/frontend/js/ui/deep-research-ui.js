@@ -539,7 +539,9 @@
             return;
         }
         if (type === 'content') {
-            appendReport(tsMs, data.content || '');
+            if (state.reportStarted) {
+                appendReport(tsMs, data.content || '');
+            }
             completeThinking(roundNumber);
             return;
         }

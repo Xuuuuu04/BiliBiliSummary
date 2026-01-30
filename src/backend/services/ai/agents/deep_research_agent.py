@@ -128,6 +128,41 @@ class DeepResearchAgent:
                     data["tool_call_id"] = tool_call_id
                 return data
 
+            think_state = {"in_think": False, "carry": ""}
+
+            def _strip_think_blocks(text: str) -> str:
+                if not text:
+                    return ""
+                open_tag = "<think>"
+                close_tag = "</think>"
+                s = (think_state["carry"] or "") + text
+                think_state["carry"] = ""
+                out: list[str] = []
+                i = 0
+                while i < len(s):
+                    if not think_state["in_think"]:
+                        if s.startswith(open_tag, i):
+                            think_state["in_think"] = True
+                            i += len(open_tag)
+                            continue
+                        remain = s[i:]
+                        if len(remain) < len(open_tag) and open_tag.startswith(remain):
+                            think_state["carry"] = remain
+                            break
+                        out.append(s[i])
+                        i += 1
+                        continue
+                    if s.startswith(close_tag, i):
+                        think_state["in_think"] = False
+                        i += len(close_tag)
+                        continue
+                    remain = s[i:]
+                    if len(remain) < len(close_tag) and close_tag.startswith(remain):
+                        think_state["carry"] = remain
+                        break
+                    i += 1
+                return "".join(out)
+
             system_prompt = get_deep_research_system_prompt(topic)
 
             tools = ToolRegistry.list_tools_schema()
@@ -250,13 +285,11 @@ class DeepResearchAgent:
                         continue
                     delta = chunk.choices[0].delta
 
-                    # 处理思考过程
                     if hasattr(delta, "reasoning_content") and delta.reasoning_content:
                         yield _emit({"type": "thinking", "content": delta.reasoning_content})
 
                     if delta.content:
                         full_content += delta.content
-                        yield _emit({"type": "content", "content": delta.content})
 
                     if delta.tool_calls:
                         for tool_call in delta.tool_calls:
@@ -282,6 +315,7 @@ class DeepResearchAgent:
                 analyze_video_calls = [
                     tc for tc in tool_calls if tc.get("function", {}).get("name") == "analyze_video"
                 ]
+
                 batch_analyze_detected = len(analyze_video_calls) > 1
                 if batch_analyze_detected:
                     logger.info(
@@ -662,8 +696,11 @@ class DeepResearchAgent:
                         if hasattr(delta, "reasoning_content") and delta.reasoning_content:
                             yield _emit({"type": "thinking", "content": delta.reasoning_content})
                         if delta.content:
-                            final_report += delta.content
-                            yield _emit({"type": "content", "content": delta.content})
+                            clean = _strip_think_blocks(delta.content)
+                            if clean:
+                                final_report += clean
+                                if clean:
+                                    yield _emit({"type": "content", "content": clean})
 
                     # 持久化报告
                     try:
