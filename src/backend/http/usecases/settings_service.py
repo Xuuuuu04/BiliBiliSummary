@@ -16,9 +16,7 @@ class SettingsService:
                 "openai_api_key_set": bool(openai_api_key),
                 "model": os.getenv("model"),
                 "qa_model": os.getenv("QA_MODEL"),
-                "deep_research_model": os.getenv(
-                    "DEEP_RESEARCH_MODEL", "moonshotai/Kimi-K2-Thinking"
-                ),
+                "deep_research_model": os.getenv("DEEP_RESEARCH_MODEL", "moonshotai/Kimi-K2-Thinking"),
                 "exa_api_key_set": bool(exa_api_key),
                 "enable_research_thinking": os.getenv("ENABLE_RESEARCH_THINKING", "false").lower()
                 == "true",
@@ -73,12 +71,11 @@ class SettingsService:
             os.environ["DARK_MODE"] = str(data["dark_mode"]).lower()
 
         if "enable_research_thinking" in data:
-            set_key(
-                env_path, "ENABLE_RESEARCH_THINKING", str(data["enable_research_thinking"]).lower()
-            )
+            set_key(env_path, "ENABLE_RESEARCH_THINKING", str(data["enable_research_thinking"]).lower())
             os.environ["ENABLE_RESEARCH_THINKING"] = str(data["enable_research_thinking"]).lower()
 
-        from src.backend_fastapi.dependencies import get_ai_service
+        from src.backend.http.dependencies import get_ai_service
 
         get_ai_service.cache_clear()
         return {"success": True, "message": "设置已更新"}
+

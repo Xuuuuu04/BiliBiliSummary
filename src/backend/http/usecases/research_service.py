@@ -2,9 +2,9 @@ import os
 from collections.abc import Iterator
 from datetime import datetime
 
+from src.backend.http.core.errors import BadRequestError, NotFoundError
 from src.backend.services.ai import AIService
 from src.backend.services.bilibili import BilibiliService
-from src.backend_fastapi.core.errors import BadRequestError, NotFoundError
 
 
 class ResearchService:
@@ -36,9 +36,7 @@ class ResearchService:
                 reports_dict[base] = {
                     "id": base,
                     "topic": topic,
-                    "created_at": datetime.fromtimestamp(stats.st_mtime).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                    "created_at": datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
                     "has_md": False,
                     "has_pdf": False,
                 }
@@ -76,3 +74,4 @@ class ResearchService:
             content = f.read()
 
         return {"success": True, "data": {"content": content, "filename": filename}}
+

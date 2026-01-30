@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
-from src.backend_fastapi.api.schemas import ResearchRequest
-from src.backend_fastapi.api.utils import sse_data
-from src.backend_fastapi.dependencies import get_research_service
-from src.backend_fastapi.services.research_service import ResearchService
+from src.backend.http.api.schemas import ResearchRequest
+from src.backend.http.api.utils import sse_data
+from src.backend.http.dependencies import get_research_service
+from src.backend.http.usecases.research_service import ResearchService
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -39,9 +39,7 @@ async def download_research_report(
     format: str,
     research_service: ResearchService = Depends(get_research_service),
 ):
-    filepath, filename = await run_in_threadpool(
-        research_service.resolve_download_path, file_id, format
-    )
+    filepath, filename = await run_in_threadpool(research_service.resolve_download_path, file_id, format)
     return FileResponse(path=filepath, filename=filename, media_type="application/octet-stream")
 
 
@@ -50,3 +48,4 @@ async def get_research_report(
     filename: str, research_service: ResearchService = Depends(get_research_service)
 ):
     return await run_in_threadpool(research_service.read_report, filename)
+

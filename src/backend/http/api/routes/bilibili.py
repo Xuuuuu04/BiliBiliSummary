@@ -5,16 +5,16 @@ import requests
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from src.backend.services.bilibili import BilibiliService
-from src.backend.services.bilibili.login_service import LoginService
-from src.backend.utils.logger import get_logger
-from src.backend_fastapi.api.schemas import (
+from src.backend.http.api.schemas import (
     LoginStatusRequest,
     SearchRequest,
     VideoInfoRequest,
     VideoSubtitleRequest,
 )
-from src.backend_fastapi.dependencies import get_bilibili_service, get_login_service
+from src.backend.http.dependencies import get_bilibili_service, get_login_service
+from src.backend.services.bilibili import BilibiliService
+from src.backend.services.bilibili.login_service import LoginService
+from src.backend.utils.logger import get_logger
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -192,9 +192,7 @@ async def check_current_login(bilibili_service: BilibiliService = Depends(get_bi
         if has_credentials:
             is_valid = await bilibili_service.check_credential_valid()
             if is_valid:
-                user_info_res = await bilibili_service.get_user_info(
-                    int(Config.BILIBILI_DEDEUSERID)
-                )
+                user_info_res = await bilibili_service.get_user_info(int(Config.BILIBILI_DEDEUSERID))
                 if user_info_res.get("success"):
                     return {
                         "success": True,
@@ -219,11 +217,9 @@ async def check_current_login(bilibili_service: BilibiliService = Depends(get_bi
                 },
             }
 
-        return {
-            "success": True,
-            "data": {"is_logged_in": False, "user_id": None, "message": "未登录"},
-        }
+        return {"success": True, "data": {"is_logged_in": False, "user_id": None, "message": "未登录"}}
     except Exception as e:
         return JSONResponse(
             status_code=500, content={"success": False, "error": f"检查登录状态失败: {str(e)}"}
         )
+

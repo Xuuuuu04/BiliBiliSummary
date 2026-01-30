@@ -61,3 +61,4 @@ class SettingsUpdateRequest(BaseModel):
     exa_api_key: str | None = None
     dark_mode: bool | None = None
     enable_research_thinking: bool | None = None
+

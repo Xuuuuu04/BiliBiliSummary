@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
+from src.backend.http.api.schemas import AnalyzeRequest, AnalyzeStreamRequest, ChatStreamRequest
+from src.backend.http.api.utils import sse_data
+from src.backend.http.dependencies import get_ai_service, get_analyze_service
+from src.backend.http.usecases.analyze_service import AnalyzeService
 from src.backend.services.ai import AIService
-from src.backend_fastapi.api.schemas import AnalyzeRequest, AnalyzeStreamRequest, ChatStreamRequest
-from src.backend_fastapi.api.utils import sse_data
-from src.backend_fastapi.dependencies import get_ai_service, get_analyze_service
-from src.backend_fastapi.services.analyze_service import AnalyzeService
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -58,3 +58,4 @@ async def analyze_video_stream(
             "Access-Control-Allow-Headers": "Cache-Control",
         },
     )
+

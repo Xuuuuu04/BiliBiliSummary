@@ -1,12 +1,12 @@
 from functools import lru_cache
 
+from src.backend.http.usecases.analyze_service import AnalyzeService
+from src.backend.http.usecases.research_service import ResearchService
+from src.backend.http.usecases.settings_service import SettingsService
+from src.backend.http.usecases.user_service import UserService
 from src.backend.services.ai import AIService
 from src.backend.services.bilibili import BilibiliService
 from src.backend.services.bilibili.login_service import LoginService
-from src.backend_fastapi.services.analyze_service import AnalyzeService
-from src.backend_fastapi.services.research_service import ResearchService
-from src.backend_fastapi.services.settings_service import SettingsService
-from src.backend_fastapi.services.user_service import UserService
 
 
 @lru_cache(maxsize=1)
@@ -39,3 +39,4 @@ def get_settings_service() -> SettingsService:
 
 def get_user_service() -> UserService:
     return UserService(bilibili_service=get_bilibili_service(), ai_service=get_ai_service())
+

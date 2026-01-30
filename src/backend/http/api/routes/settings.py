@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from starlette.concurrency import run_in_threadpool
 
-from src.backend_fastapi.api.schemas import SettingsUpdateRequest
-from src.backend_fastapi.dependencies import get_settings_service
-from src.backend_fastapi.services.settings_service import SettingsService
+from src.backend.http.api.schemas import SettingsUpdateRequest
+from src.backend.http.dependencies import get_settings_service
+from src.backend.http.usecases.settings_service import SettingsService
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -20,3 +20,4 @@ async def update_settings(
 ):
     data = payload.model_dump(exclude_unset=True)
     return await run_in_threadpool(settings_service.update_settings, data)
+

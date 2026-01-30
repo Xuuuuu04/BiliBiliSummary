@@ -3,10 +3,10 @@ import json
 from collections.abc import Iterator
 from typing import Any, Literal
 
+from src.backend.http.core.errors import BadRequestError
 from src.backend.services.ai import AIService
 from src.backend.services.bilibili import BilibiliService, run_async
 from src.backend.utils.logger import get_logger
-from src.backend_fastapi.core.errors import BadRequestError
 
 logger = get_logger(__name__)
 
@@ -35,9 +35,7 @@ class AnalyzeService:
         danmaku_texts = danmaku_result["data"]["danmakus"] if danmaku_result.get("success") else []
 
         comments_result = run_async(self._bilibili.get_video_comments(bvid, max_pages=30, target_count=300))
-        comments_data = (
-            comments_result["data"]["comments"] if comments_result.get("success") else []
-        )
+        comments_data = comments_result["data"]["comments"] if comments_result.get("success") else []
 
         stats_result, tags_result, series_result, related_result = run_async(
             asyncio.gather(
@@ -195,9 +193,7 @@ class AnalyzeService:
                 yield f"data: {json.dumps({'type': 'stage', 'stage': 'info_complete', 'message': f'已获取内容: {title}', 'progress': 20, 'info': info}, ensure_ascii=False)}\n\n"
                 yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '正在深度解析内容...', 'progress': 40})}\n\n"
 
-                for chunk in self._ai.generate_article_analysis_stream(
-                    res["data"], res["data"]["content"]
-                ):
+                for chunk in self._ai.generate_article_analysis_stream(res["data"], res["data"]["content"]):
                     yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
                 payload = {
@@ -251,11 +247,7 @@ class AnalyzeService:
                 danmaku_texts = danmaku_result["data"]["danmakus"]
 
             comments_data = []
-            if (
-                comments_result
-                and hasattr(comments_result, "get")
-                and comments_result.get("success")
-            ):
+            if comments_result and hasattr(comments_result, "get") and comments_result.get("success"):
                 comments_data = comments_result["data"]["comments"]
 
             content = ""
@@ -301,9 +293,7 @@ class AnalyzeService:
                         f"- 在线: {stats_data.get('online')}"
                     )
                 if tags_data.get("tags"):
-                    tag_names = [
-                        t.get("tag_name") for t in tags_data.get("tags", []) if t.get("tag_name")
-                    ]
+                    tag_names = [t.get("tag_name") for t in tags_data.get("tags", []) if t.get("tag_name")]
                     if tag_names:
                         extra_context += "\n\n【标签】\n" + "、".join(tag_names[:30])
                 if series_data.get("has_series"):
@@ -327,7 +317,9 @@ class AnalyzeService:
                 if danmaku_texts:
                     extra_context += "\n\n【实时弹幕（采样）】\n" + "\n".join(danmaku_texts[:400])
                 if comments_data:
-                    comment_texts = [f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]]
+                    comment_texts = [
+                        f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]
+                    ]
                     extra_context += "\n\n【精彩评论（热门/高赞）】\n" + "\n".join(comment_texts)
                 content += extra_context
                 subtitle_data = subtitle_result.get("data", {})
@@ -360,9 +352,7 @@ class AnalyzeService:
 
             top_comments = []
             if comments_data:
-                top_comments = sorted(comments_data, key=lambda x: x.get("like", 0), reverse=True)[
-                    :8
-                ]
+                top_comments = sorted(comments_data, key=lambda x: x.get("like", 0), reverse=True)[:8]
 
             login_info = " (已登录)" if self._bilibili.credential else " (未登录)"
             yield f"data: {json.dumps({'type': 'final', 'stage': 'completed', 'message': f'分析完成！{login_info}', 'progress': 100, 'content': content, 'top_comments': top_comments, 'danmaku_preview': danmaku_texts[:200] if danmaku_texts else [], 'frame_count': frame_count, 'comments_count': len(comments_data), 'danmaku_count': len(danmaku_texts)}, ensure_ascii=False)}\n\n"

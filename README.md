@@ -91,8 +91,7 @@ Bilibili_Analysis_Helper/
 ├── README.md           # 项目文档
 ├── tests/              # 单元测试
 └── src/                # 核心源代码包
-    ├── backend/        # 领域能力层（B站/AI/工具/数据源；不直接对外提供 HTTP）
-    ├── backend_fastapi/# HTTP 层（FastAPI：路由 + 用例编排；复用 backend 能力层）
+    ├── backend/        # 统一后端（领域能力 + HTTP：src/backend/http）
     ├── frontend/       # 前端网页资源（HTML、CSS、JS）
     └── config.py       # 系统统一配置文件
 ```

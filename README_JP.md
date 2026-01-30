@@ -85,8 +85,7 @@ Bilibili_Analysis_Helper/
 ├── .env.example        # 環境変数テンプレート
 ├── README.md           # プロジェクトドキュメント
 └── src/                # ソースコード
-    ├── backend/        # ドメイン能力層（Bilibili/AI/ツール。HTTP は提供しない）
-    ├── backend_fastapi/# HTTP 層（FastAPI ルート + オーケストレーション）
+    ├── backend/        # 統一バックエンド（ドメイン + HTTP: src/backend/http）
     ├── frontend/       # フロントエンド（HTML, CSS, JS）
     └── config.py       # グローバル設定
 ```

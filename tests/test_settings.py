@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from src.backend_fastapi.app import create_app
+from src.backend.http.app import create_app
 
 
 def test_settings_do_not_leak_secrets() -> None:

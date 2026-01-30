@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.concurrency import iterate_in_threadpool
 
+from src.backend.http.api.schemas import QAStreamRequest
+from src.backend.http.api.utils import sse_data
+from src.backend.http.dependencies import get_ai_service
 from src.backend.services.ai import AIService
-from src.backend_fastapi.api.schemas import QAStreamRequest
-from src.backend_fastapi.api.utils import sse_data
-from src.backend_fastapi.dependencies import get_ai_service
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -29,3 +29,4 @@ async def qa_stream(payload: QAStreamRequest, ai_service: AIService = Depends(ge
             yield sse_data({"type": "error", "error": str(e)}, ensure_ascii=False)
 
     return StreamingResponse(iterate_in_threadpool(generate()), media_type="text/event-stream")
+

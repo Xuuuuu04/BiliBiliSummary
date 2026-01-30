@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from src.backend_fastapi.app import create_app
+from src.backend.http.app import create_app
 
 
 def test_qa_stream_requires_question_and_context() -> None:

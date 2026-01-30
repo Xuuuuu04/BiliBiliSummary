@@ -85,8 +85,7 @@ Bilibili_Analysis_Helper/
 ├── .env.example        # Environment variable template
 ├── README.md           # Project documentation
 └── src/                # Source code
-    ├── backend/        # Domain capabilities (Bilibili/AI/tools; no HTTP)
-    ├── backend_fastapi/# HTTP layer (FastAPI routes + orchestration)
+    ├── backend/        # Unified backend (domain + HTTP: src/backend/http)
     ├── frontend/       # Frontend assets (HTML, CSS, JS)
     └── config.py       # Global configuration
 ```
