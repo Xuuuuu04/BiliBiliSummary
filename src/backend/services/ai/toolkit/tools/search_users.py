@@ -3,7 +3,6 @@
 """
 from typing import Dict
 from src.backend.services.ai.toolkit.base_tool import BaseTool
-from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -56,7 +55,7 @@ class SearchUsersTool(BaseTool):
 
         logger.info(f"[工具] 搜索用户: {keyword}")
 
-        search_res = run_async(self._bilibili_service.search_users(keyword, limit=limit))
+        search_res = await self._bilibili_service.search_users(keyword, limit=limit)
 
         if not search_res['success']:
             return {

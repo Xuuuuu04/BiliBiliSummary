@@ -16,7 +16,7 @@
 
 ![BiliBili Logo](https://img.shields.io/badge/BiliBili-FF6699?style=for-the-badge&logo=bilibili&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.0+-green?style=for-the-badge&logo=flask&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-ready-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge)
 
 [快速开始](#🚀-快速开始) • [功能特性](#✨-功能特性) • [项目截图](#🖼️-项目截图) • [技术栈](#🛠️-技术栈) • [致谢](#🙏-致谢)
@@ -25,7 +25,6 @@
 
 ## ✨ 功能特性
 
-- **🤖 智能小 UP (全新)**：自适应全能助手，支持联网检索、多视频对比与深度问答。
 - **🔬 深度研究 (全新)**：自动化课题研究员，多轮自动搜集与分析，生成长篇深度报告。
 - **📋 深度内容总结**：秒级提炼视频章节与核心知识点。
 - **🖼️ 多模态视觉分析**：结合视频关键帧，画面细节不遗漏。
@@ -65,6 +64,8 @@
 
 1. **安装依赖**
    ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
 
@@ -74,7 +75,7 @@
 
 3. **启动应用**
    ```bash
-   python app.py
+   uvicorn asgi:app --reload --host 0.0.0.0 --port 5000
    ```
    访问 `http://localhost:5000` 即可开始使用。
 
@@ -82,19 +83,21 @@
 
 ```text
 Bilibili_Analysis_Helper/
-├── app.py              # 程序启动唯一入口
+├── asgi.py             # FastAPI 启动入口（推荐）
+├── pyproject.toml      # 工具链配置（black/ruff/pytest/mypy）
 ├── requirements.txt    # 核心依赖
 ├── .env.example        # 环境变量模板
 ├── README.md           # 项目文档
 └── src/                # 核心源代码包
-    ├── backend/        # 后端逻辑（B站服务、AI服务）
+    ├── backend/        # 后端领域层（服务/工具/AI/数据源等）
+    ├── backend_fastapi/# 新后端（FastAPI：薄路由 + services/usecase）
     ├── frontend/       # 前端网页资源（HTML、CSS、JS）
     └── config.py       # 系统统一配置文件
 ```
 
 ## 🛠️ 技术栈
 
-- **后端**：Python (Flask), `bilibili-api-python`, `aiohttp`
+- **后端**：Python (FastAPI), `bilibili-api-python`, `aiohttp`
 - **前端**：原生 HTML/JS/CSS3, `Marked.js` (Markdown 渲染)
 - **AI 引擎**：支持 OpenAI 兼容格式的所有视觉多模态大模型 (推荐：SiliconCloud, Qwen)
 

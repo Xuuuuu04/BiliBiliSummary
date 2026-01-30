@@ -93,8 +93,7 @@ function switchTab(tabName, params) {
         pane.classList.remove('active');
     });
 
-    // 特别处理：确保两个聊天面板互斥
-    if (elements.smartUpChatContent) elements.smartUpChatContent.classList.remove('active');
+    // 特别处理：确保聊天面板互斥
     if (elements.chatContent) elements.chatContent.classList.remove('active');
 
     // 显示目标面板
@@ -140,7 +139,7 @@ function switchTab(tabName, params) {
  *
  * 【功能说明】
  * 根据当前模式显示/隐藏相关的导航按钮和侧边栏
- * - 智能小UP和深度研究模式隐藏相关推荐侧边栏
+ * - 深度研究模式隐藏相关推荐侧边栏
  * - 根据模式自动切换到第一个可用 Tab
  *
  * @param {Object} params - 参数对象
@@ -261,5 +260,5 @@ window.TabUI = {
  * - switchTab 需要传入完整的状态参数
  * - 切换到 chat 会自动滚动到底部
  * - 切换到 danmaku 会自动触发词云生成（如果提供了函数）
- * - 智能小UP和深度研究模式会隐藏相关推荐侧边栏
+ * - 深度研究模式会隐藏相关推荐侧边栏
  */

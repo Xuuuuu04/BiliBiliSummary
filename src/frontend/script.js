@@ -146,6 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let popularVideosCache = null; // 缓存热门视频数据
     let loginPollInterval = null;
 
+    DeepResearchUI.init({
+        timelineEl: elements.researchTimeline,
+        reportEl: elements.researchReportContent,
+        onReportChange: (markdown) => { currentData.fullMarkdown = markdown; }
+    });
+
     // --- Event Listeners ---
 
     // Mode Switcher
@@ -215,25 +221,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guide Modal
     const guideMarkdown = `
 ### 🚀 快速开始
-欢迎使用 BiliBili Summarize！这是一个强大的 AI 驱动内容分析工具。本次更新带来了全新的 **智能小UP** 与 **深度研究** 模式。
+欢迎使用 BiliBili Summarize！这是一个强大的 AI 驱动内容分析工具。
 
-#### 1. 🤖 智能小UP (全新)
-- **定位**：自适应全能助手。
-- **功能**：能够根据您问题的复杂度，自动决定是进行简单搜索还是深度检索。它会综合 B 站视频内容与全网资讯，为您提供精准、带有引用的深度回答。
-- **操作**：在首页切换至“智能小UP”模式，直接输入您想了解的问题即可。
-
-#### 2. 🔬 深度研究 (全新)
+#### 1. 🔬 深度研究 (全新)
 - **定位**：针对复杂课题的自动化研究员。
 - **功能**：它会拆解您的课题，自动执行多轮视频搜索、内容解析与网页检索，最终汇总生成一份结构清晰、论据充分的深度研究报告。
 - **特性**：全新的“思考过程”面板，实时展示 Agent 的推理链路与预分析文本。
 
-#### 3. 📺 视频/专栏/用户分析
+#### 2. 📺 视频/专栏/用户分析
 - **视频分析**：支持 BV 号/链接，自动提炼总结、弹幕舆情、评论热点及视觉关键帧。
 - **专题解析**：深度解析 B 站专栏文章及 Opus 动态图文的脉络。
 - **用户画像**：输入 UID 或空间链接，基于作品风格分析 UP 主的内容价值。
 
-#### 4. ⌨️ 快捷操作
-- **全屏模式**：在智能小UP界面，双击消息区域或点击右上角按钮可进入沉浸式全屏对话。
+#### 3. ⌨️ 快捷操作
 - **模糊匹配**：直接输入关键词，系统会自动搜索并列出匹配的视频供您选择。
 
 ---
@@ -710,10 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const decoder = new TextDecoder();
         let buffer = '';
 
-        // Reset Research UI
-        elements.researchTimeline.innerHTML = '';
-        elements.researchReportContent.innerHTML = '<div class="empty-state"><p>AI 正在分析并搜集资料...</p></div>';
-        let fullReport = '';
+        DeepResearchUI.startRun(topic);
+        let hasReport = false;
         let totalResearchTokens = 0;
         let thinkingTokens = 0;
 
@@ -738,9 +736,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let searchCount = 0;
         let analysisCount = 0;
 
-        // 初始节点
-        addTimelineItem('tool_start', '初始化研究计划', '深度研究 Agent 已启动，正在拆解研究课题...');
-
         updateStepper('ai', 'active');
         updateProgress(50, '深度研究 Agent 启动中...');
 
@@ -763,410 +758,69 @@ document.addEventListener('DOMContentLoaded', () => {
                         data = JSON.parse(jsonStr);
                     } catch (e) { continue; }
                     
-                            if (data.type === 'round_start') {
-                                roundCount = data.round;
-                                elements.viewCount.textContent = `🔄 轮${roundCount}`;
-                                updateMetaValue('metaRounds', roundCount, '轮');
-                            } else if (data.type === 'report_start') {
-                                // 收到正式报告开始信号，清空之前的研究过程/计划文本，确保报告纯净
-                                fullReport = '';
-                                // 核心修复：Token 消耗应全程叠加，不再此处清零
-                                elements.researchReportContent.innerHTML = '';
-                            } else if (data.type === 'thinking') {
-                        thinkingTokens += data.content.length;
+                    if (data.type === 'round_start') {
+                        roundCount = data.round;
+                        elements.viewCount.textContent = `🔄 轮${roundCount}`;
+                        updateMetaValue('metaRounds', roundCount, '轮');
+                    } else if (data.type === 'thinking') {
+                        thinkingTokens += (data.content || '').length;
                         const totalTokens = totalResearchTokens + thinkingTokens;
-                        updateStreamingBadge(totalTokens);
                         elements.commentCount.textContent = `🪙 ${totalTokens}`;
                         elements.tokenCount.textContent = totalTokens;
                         updateMetaValue('metaTokens', totalTokens);
-                        
-                        const lastItem = elements.researchTimeline.lastElementChild;
-                        if (lastItem && lastItem.classList.contains('type-thinking') && lastItem.classList.contains('active')) {
-                            const detail = lastItem.querySelector('.timeline-detail');
-                            detail.textContent += data.content;
-                        } else {
-                            addTimelineItem('thinking', 'Agent 思考中...', data.content);
-                        }
+                    } else if (data.type === 'report_start') {
+                        hasReport = false;
                     } else if (data.type === 'content') {
-                        fullReport += data.content;
-                        totalResearchTokens += data.content.length;
+                        hasReport = true;
+                        totalResearchTokens += (data.content || '').length;
                         const totalTokens = totalResearchTokens + thinkingTokens;
                         elements.commentCount.textContent = `🪙 ${totalTokens}`;
                         elements.tokenCount.textContent = totalTokens;
                         updateMetaValue('metaTokens', totalTokens);
-                        
-                        renderMarkdown(elements.researchReportContent, fullReport);
-                        currentData.fullMarkdown = fullReport;
-                        
-                        const thinkingItems = elements.researchTimeline.querySelectorAll('.type-thinking.active');
-                        thinkingItems.forEach(item => {
-                            item.classList.remove('active');
-                            item.classList.add('completed');
-                        });
-
-                        updateStreamingBadge(totalTokens);
-                            } else if (data.type === 'tool_progress') {
-                                if (data.tool === 'analyze_video') {
-                                    const msgEl = document.getElementById(`msg-${data.bvid}`);
-                                    const tokenEl = document.getElementById(`tokens-${data.bvid}`);
-                                    const ghostEl = document.getElementById(`ghost-${data.bvid}`);
-                                    const titleEl = document.getElementById(`title-${data.bvid}`);
-                                    
-                                    if (msgEl && data.message) {
-                                        msgEl.textContent = data.message;
-                                    }
-
-                                    if (titleEl && data.title) {
-                                        titleEl.textContent = `正在分析视频: ${data.title}`;
-                                        titleEl.title = data.title; // 悬浮显示完整标题
-                                    }
-                                    
-                                    if (tokenEl && data.tokens !== undefined) {
-                                        const currentTokens = data.tokens || 0;
-                                        tokenEl.textContent = `正在建模: ${currentTokens} Tokens`;
-                                        
-                                        // 同时更新顶部的总 Token 消耗预览（估算）
-                                        const totalSoFar = totalResearchTokens + thinkingTokens + currentTokens;
-                                        elements.commentCount.textContent = `🪙 ${totalSoFar}`;
-                                        elements.tokenCount.textContent = totalSoFar;
-                                        updateMetaValue('metaTokens', totalSoFar);
-                                    }
-
-                                    // 幻影流式预览更新
-                                    if (ghostEl && data.content) {
-                                        ghostEl.textContent += data.content;
-                                        ghostEl.scrollTop = ghostEl.scrollHeight;
-                                    }
-                                }
-                            } else if (data.type === 'tool_start') {
-                                let title = `执行工具: ${data.tool}`;
-                                let toolBvid = data.args ? data.args.bvid : null;
-                                let toolKeyword = data.args ? data.args.keyword : null;
-                                
-                                if (data.tool === 'search_videos') {
-                                    title = '🔍 搜索相关视频';
-                                    searchCount++;
-                                    elements.danmakuCount.textContent = `🔍 次${searchCount}`;
-                                    updateMetaValue('metaSearch', searchCount, '次');
-                                    
-                                    // 丰富搜索参数显示，并增加等待状态
-                                    data.args._status = 'loading';
-                                } else if (data.tool === 'web_search') {
-                                    title = '🌐 全网深度搜索';
-                                    data.args._status = 'searching';
-                                } else if (data.tool === 'analyze_video') {
-                                    title = `📽️ 分析视频: ${data.args.bvid}`;
-                                    analysisCount++;
-                                    elements.likeCount.textContent = `📽️ 次${analysisCount}`;
-                                    updateMetaValue('metaAnalysis', analysisCount, '次');
-                                    
-                                    const oldTitle = document.getElementById(`title-${toolBvid}`);
-                                    if (oldTitle) {
-                                        const oldItem = oldTitle.closest('.timeline-item');
-                                        if (oldItem) oldItem.remove();
-                                    }
-                                } else if (data.tool === 'search_users') {
-                                    title = '👤 搜索 B 站 UP 主';
-                                    data.args._status = 'searching_user';
-                                } else if (data.tool === 'get_user_recent_videos') {
-                                    title = `📽️ 获取 UP 主最近作品 (UID: ${data.args.mid})`;
-                                    data.args._status = 'fetching_works';
-                                } else if (data.tool === 'finish_research_and_write_report') {
-                                    title = '✍️ 正在撰写深度研究报告';
-                                    elements.downloadPdfBtn.classList.add('hidden');
-                                    data.args._status = 'writing';
-                                }
-                                
-                                addTimelineItem('tool_start', title, data.args);
-                            } else if (data.type === 'tool_result') {
-                                let title = `工具已完成: ${data.tool}`;
-                                if (data.tool === 'search_videos') {
-                                    title = '✅ 搜索完成';
-                                    // 寻找并更新搜索状态
-                                    const items = elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active');
-                                    items.forEach(item => {
-                                        const statusEl = item.querySelector('.search-status');
-                                        if (statusEl) {
-                                            statusEl.textContent = '搜索已就绪';
-                                            statusEl.style.color = '#4CAF50';
-                                            item.classList.remove('active');
-                                            item.classList.add('completed');
-                                        }
-                                    });
-                                } else if (data.tool === 'web_search') {
-                                    title = '✅ 全网搜索完成';
-                                    const items = elements.researchTimeline.querySelectorAll('.timeline-item.type-tool_start.active');
-                                    items.forEach(item => {
-                                        const statusEl = item.querySelector('.search-status');
-                                        if (statusEl && statusEl.textContent.includes('全网')) {
-                                            statusEl.textContent = '联网检索已完成';
-                                            statusEl.style.color = 'var(--bili-blue)';
-                                            item.classList.remove('active');
-                                            item.classList.add('completed');
-                                        }
-                                    });
-                                } else if (data.tool === 'search_users') {
-                                    title = '✅ 用户搜索完成';
-                                } else if (data.tool === 'get_user_recent_videos') {
-                                    title = '✅ UP 主作品集获取成功';
-                                }
-                                else if (data.tool === 'analyze_video') {
-                                    // 智能更新 UI：如果已经有这个视频的进度框，直接更新它，不要新建节点
-                                    const msgEl = document.getElementById(`msg-${data.result.bvid}`);
-                                    const tokenEl = document.getElementById(`tokens-${data.result.bvid}`);
-                                    const containerEl = document.getElementById(`tokens-container-${data.result.bvid}`);
-                                    const titleEl = document.getElementById(`title-${data.result.bvid}`);
-
-                                    if (msgEl) {
-                                        msgEl.textContent = '分析建模已完成';
-                                        msgEl.style.color = '#4CAF50';
-                                        
-                                        if (tokenEl && data.tokens) {
-                                            tokenEl.textContent = `✨ 消耗: ${data.tokens} Tokens`;
-                                            tokenEl.style.color = '#2E7D32'; // 更深一点的绿色
-                                            tokenEl.style.fontWeight = 'bold';
-                                            
-                                            if (containerEl) {
-                                                containerEl.style.background = 'rgba(76, 175, 80, 0.1)';
-                                                containerEl.style.border = '1px solid rgba(76, 175, 80, 0.2)';
-                                            }
-                                            
-                                            totalResearchTokens += data.tokens;
-                                            const totalTokens = totalResearchTokens + thinkingTokens;
-                                            elements.commentCount.textContent = `🪙 ${totalTokens}`;
-                                            elements.tokenCount.textContent = totalTokens;
-                                            updateMetaValue('metaTokens', totalTokens);
-                                        }
-                                        
-                                        if (containerEl) {
-                                            const dot = containerEl.querySelector('.pulse-dot');
-                                            if (dot) dot.style.display = 'none';
-                                        }
-
-                                        // 清理幻影内容（完成后保持清爽，或保留一点余韵）
-                                        const ghostEl = document.getElementById(`ghost-${data.result.bvid}`);
-                                        if (ghostEl) {
-                                            ghostEl.style.opacity = '0.05'; // 进一步变淡
-                                        }
-                                        
-                                        if (titleEl) {
-                                            titleEl.textContent = `✅ 视频分析完成: ${data.result.title || data.result.bvid}`;
-                                            titleEl.title = data.result.title || '';
-                                        }
-                                        
-                                        // 标记该时间轴节点为完成状态
-                                        const item = msgEl.closest('.timeline-item');
-                                        if (item) {
-                                            item.classList.remove('active');
-                                            item.classList.add('completed');
-                                        }
-                                        continue; // 关键：不再向下执行 addTimelineItem，而是继续处理下一条流数据
-                                    }
-                                    title = `✅ 视频分析完成`;
-                                } else if (data.tool === 'finish_research_and_write_report') {
-                                    title = '✅ 报告大纲已就绪';
-                                }
-                                
-                                addTimelineItem('tool_result', title, data.result);
-                            } else if (data.type === 'error') {
-                        addTimelineItem('error', `出现错误: ${data.error}`);
+                    } else if (data.type === 'tool_start') {
+                        if (data.tool === 'search_videos') {
+                            searchCount += 1;
+                            elements.danmakuCount.textContent = `🔍 次${searchCount}`;
+                            updateMetaValue('metaSearch', searchCount, '次');
+                        } else if (data.tool === 'analyze_video') {
+                            analysisCount += 1;
+                            elements.likeCount.textContent = `📽️ 次${analysisCount}`;
+                            updateMetaValue('metaAnalysis', analysisCount, '次');
+                        } else if (data.tool === 'finish_research_and_write_report') {
+                            elements.downloadPdfBtn.classList.add('hidden');
+                        }
+                    } else if (data.type === 'tool_result') {
+                        if (data.tool === 'analyze_video' && data.tokens) {
+                            totalResearchTokens += data.tokens;
+                            const totalTokens = totalResearchTokens + thinkingTokens;
+                            elements.commentCount.textContent = `🪙 ${totalTokens}`;
+                            elements.tokenCount.textContent = totalTokens;
+                            updateMetaValue('metaTokens', totalTokens);
+                        }
                     } else if (data.type === 'done') {
                         BiliHelpers.showToast('深度研究已完成并持久化！', elements.toast);
                         updateProgress(100, '研究完成');
-                        addTimelineItem('tool_result', '✨ 研究报告生成完毕', '所有资料已整合并持久化，点击左侧“研究报告”查看。');
-                        
-                        // 尝试获取刚生成的文件ID以便立即下载 PDF
                         fetch('/api/research/history')
                             .then(res => res.json())
                             .then(hist => {
                                 if (hist.success && hist.data.length > 0) {
                                     currentData.researchFileId = hist.data[0].id;
                                     elements.downloadPdfBtn.classList.remove('hidden');
+                                    DeepResearchUI.setArtifact(currentData.researchFileId);
                                 }
                             });
                     }
+
+                    DeepResearchUI.handleEvent(data);
                 }
             }
         }
         
         isAnalyzing = false;
         elements.analyzeBtn.disabled = false;
-        if (fullReport) {
+        if (hasReport) {
             switchTab('research_report');
         }
-    }
-
-    function updateStreamingBadge(tokenCount) {
-        const lastItem = elements.researchTimeline.lastElementChild;
-        if (!lastItem) return;
-        
-        const titleArea = lastItem.querySelector('.timeline-title');
-        let badge = titleArea.querySelector('.streaming-data-badge');
-        
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'streaming-data-badge';
-            titleArea.appendChild(badge);
-        }
-        
-        badge.innerHTML = `<span class="pulse-dot"></span> 🪙 累计 Tokens: ${tokenCount}`;
-    }
-
-    function addTimelineItem(type, title, data = null) {
-        const item = document.createElement('div');
-        item.className = `timeline-item type-${type} active`;
-        
-        const now = new Date();
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        
-        let contentHTML = `
-            <div class="timeline-time">${timeStr}</div>
-            <div class="timeline-content-box">
-                <div class="timeline-title">
-                    ${type === 'thinking' ? '<span class="thinking-badge">Think</span>' : ''}
-                    ${title}
-                </div>
-                <div class="timeline-detail"></div>
-            </div>
-        `;
-        
-        item.innerHTML = contentHTML;
-        const detailDiv = item.querySelector('.timeline-detail');
-        
-        if (data) {
-            if (typeof data === 'string') {
-                detailDiv.textContent = data;
-            } else {
-                if (Array.isArray(data)) {
-                    if (data.length > 0 && data[0].url) {
-                        // 网络搜索结果美化
-                        detailDiv.innerHTML = `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
-                            <div class="tool-name" style="color: var(--bili-blue);">全网搜索结果 (${data.length} 条):</div>
-                            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
-                                ${data.map(item => `
-                                    <div style="font-size: 13px; display: flex; flex-direction: column; gap: 2px;">
-                                        <a href="${item.url}" target="_blank" style="color: var(--bili-blue); font-weight: 600; text-decoration: none;">🌐 ${item.title}</a>
-                                        <span style="font-size: 11px; color: var(--text-secondary); opacity: 0.8;">发布于: ${item.published_date}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    } else if (data.length > 0 && data[0].mid) {
-                        // 用户搜索结果美化
-                        detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
-                            <div class="tool-name" style="color: var(--bili-blue);">找到相关 UP 主 (${data.length} 位):</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-                                ${data.map(u => `
-                                    <div style="display: flex; align-items: center; gap: 6px; background: rgba(35, 173, 229, 0.05); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(35, 173, 229, 0.1);">
-                                        <img src="/api/image-proxy?url=${encodeURIComponent(u.face)}" style="width: 20px; height: 20px; border-radius: 50%;">
-                                        <span style="font-size: 12px; font-weight: 600;">${u.name}</span>
-                                        <span style="font-size: 10px; color: var(--text-secondary);">UID:${u.mid}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    } else if (data.length > 0 && data[0].bvid && !data[0].url) {
-                        // 视频列表/作品集美化
-                        detailDiv.innerHTML = `<div class="tool-call-card">
-                            <div class="tool-name">获取到 ${data.length} 条视频素材:</div>
-                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-                                ${data.map(v => `<div style="font-size: 12px; color: var(--text-main); opacity: 0.9;">📽️ <span style="font-weight: 600; color: var(--bili-pink);">${v.bvid}</span> ${v.title}</div>`).join('')}
-                            </div>
-                        </div>`;
-                    } else {
-                        // 默认列表美化 (兜底)
-                        detailDiv.innerHTML = `<div class="tool-call-card">
-                            <div class="tool-name">发现 ${data.length} 条相关内容:</div>
-                            ${data.map(v => `<div style="margin-bottom:4px; font-size: 12px;">📄 ${v.title || JSON.stringify(v)}</div>`).join('')}
-                        </div>`;
-                    }
-                } else if (data.keyword) {
-                    // 搜索参数美化 (视频 or 用户)
-                    const isUserSearch = data._status === 'searching_user';
-                    detailDiv.innerHTML = `<div class="tool-call-card" ${isUserSearch ? 'style="border-left-color: var(--bili-blue);"' : ''}>
-                        <div class="tool-name">${isUserSearch ? '发起 UP 主搜索:' : '发起视频搜索:'}</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" ${isUserSearch ? 'style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);"' : ''}>${data.keyword}</span>
-                            ${data._status ? `
-                                <span class="search-status" style="font-size: 12px; color: ${isUserSearch ? 'var(--bili-blue)' : 'var(--bili-pink)'}; display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" ${isUserSearch ? 'style="background-color: var(--bili-blue);"' : ''}></span> ⏳ ${isUserSearch ? '正在检索 B 站用户...' : '正在检索 B 站视频...'}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data.mid) {
-                    // 获取作品集参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left-color: var(--bili-blue);">
-                        <div class="tool-name">发起作品集检索:</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">UID: ${data.mid}</span>
-                            ${data._status === 'fetching_works' ? `
-                                <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在抓取该 UP 主的近期稿件...
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data.bvid) {
-                                // 分析视频参数美化
-                                detailDiv.innerHTML = `<div class="tool-call-card">
-                                    <div id="title-${data.bvid}" class="tool-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="正在深度分析视频内容">正在深度分析视频内容:</div>
-                                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; position: relative; z-index: 1;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2); margin: 0; flex-shrink: 0;">${data.bvid}</span>
-                                            <span id="msg-${data.bvid}" style="font-size: 12px; color: var(--bili-pink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">准备中...</span>
-                                        </div>
-                                    <div id="tokens-container-${data.bvid}" style="font-size: 12px; color: var(--text-main); font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: rgba(0,0,0,0.03); border-radius: 6px; width: fit-content;">
-                                        <span class="pulse-dot"></span> <span id="tokens-${data.bvid}">等待响应...</span>
-                                    </div>
-                                </div>
-                                <div id="ghost-${data.bvid}" class="ghost-content"></div>
-                            </div>`;
-                } else if (data.query) {
-                    // Exa 搜索参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card" style="border-left: 3px solid var(--bili-blue); background: rgba(35, 173, 229, 0.03);">
-                        <div class="tool-name" style="color: var(--bili-blue);">发起 Exa 全网搜索:</div>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <span class="search-keyword" style="background: rgba(35, 173, 229, 0.1); color: var(--bili-blue); border-color: rgba(35, 173, 229, 0.2);">${data.query}</span>
-                            ${data._status === 'searching' ? `
-                                <span class="search-status" style="font-size: 12px; color: var(--bili-blue); display: flex; align-items: center; gap: 4px;">
-                                    <span class="pulse-dot" style="background-color: var(--bili-blue);"></span> ⏳ 正在检索全网数据...
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                } else if (data.summary_of_findings) {
-                    // 撰写报告参数美化
-                    detailDiv.innerHTML = `<div class="tool-call-card">
-                        <div class="tool-name">研究成果概览:</div>
-                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.6; background: rgba(251, 114, 153, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid var(--bili-pink);">
-                            ${data.summary_of_findings}
-                        </div>
-                        <div style="margin-top: 10px; font-size: 12px; color: var(--bili-pink); font-weight: 500; display: flex; align-items: center; gap: 6px;">
-                            <span class="pulse-dot"></span> ✍️ 正在将研究成果整理为深度报告，由于内容较多，请耐心等待...
-                        </div>
-                    </div>`;
-                } else if (data.summary) {
-                    detailDiv.innerHTML = `<div class="tool-call-card">
-                        <div class="tool-name">AI 提取摘要:</div>
-                        <div style="font-style: italic; color: var(--text-secondary)">${data.summary.substring(0, 150)}...</div>
-                    </div>`;
-                } else {
-                    detailDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                }
-            }
-        }
-        
-        const prevActive = elements.researchTimeline.querySelectorAll('.timeline-item.active');
-        prevActive.forEach(node => {
-            if (node !== item && (type !== 'thinking' || !node.classList.contains('type-thinking'))) {
-                node.classList.remove('active');
-                node.classList.add('completed');
-            }
-        });
-        
-        elements.researchTimeline.appendChild(item);
-        elements.researchTimeline.scrollTop = elements.researchTimeline.scrollHeight;
     }
 
     async function processStreamAnalysis(url) {

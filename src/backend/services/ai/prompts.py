@@ -2,8 +2,10 @@
 AI提示词集中管理模块
 所有AI分析提示词统一管理，确保不遗漏、不简化
 """
+
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Dict, Optional
+
 from src.config import Config
 
 
@@ -29,7 +31,10 @@ def get_deep_research_system_prompt(topic: str) -> str:
 
 【核心指令】
 1. **拆分研究方向**：首先将课题拆分为 **至少 5 个** 具体的、互补的研究维度（上不封顶，模型应根据课题深度自行决定维度数量）。
-2. **全网联动调研与并行执行**：你可以自由、灵活地结合 B 站视频搜索与 Exa 全网搜索。**为了最大限度提高效率，请务必充分利用并行调用能力**，在单轮回复中同时执行多个工具调用（例如：同时搜索多个不同的关键词，或在请求分析视频的同时发起网页搜索）。不要拘泥于先后顺序，应根据信息需求交叉验证。
+2. **全网联动调研与并行执行**：你可以自由、灵活地结合 B 站视频搜索与 Exa 全网搜索。**为了最大限度提高效率，你必须尽可能在单轮回复中同时执行多个工具调用**（例如：同时搜索多个不同的关键词，或在请求分析视频的同时发起网页搜索）。不要拘泥于先后顺序，应根据信息需求交叉验证。
+   - **强制批量视频分析（重要）**：当你已经有 2 个及以上候选 BV 号需要分析时，必须在【同一轮】里一次性发起多个 `analyze_video` 工具调用（多个 tool_calls），而不是“分析一个→再思考→再分析下一个”。
+   - **优先让同一轮的 tool_calls 里先集中放置全部 `analyze_video`**（再放其他工具），以获得最大并行收益。
+   - 你一次性批量分析的数量建议为 2–5 个，取决于候选视频的重要性与上下文长度。
 3. **深入分析 B 站生态**：
     - **阅读量要求**：你**必须**至少深入分析 5 个以上的 B 站视频。
     - **舆情洞察**：**必须** 结合视频下的"高赞评论"和"弹幕热梗"来分析大众对该课题的普遍看法和舆情趋势。
@@ -63,7 +68,13 @@ def get_deep_research_system_prompt(topic: str) -> str:
 """
 
 
-def get_video_analysis_prompt(video_info: Dict, content: str, has_video_frames: bool = False, danmaku_content: str = None) -> str:
+def get_video_analysis_prompt(
+    video_info: Dict,
+    content: str,
+    has_video_frames: bool = False,
+    danmaku_content: str = None,
+    style: str = "bilibili",
+) -> str:
     """
     获取视频完整分析提示词（极致防幻觉优化版）
 
@@ -95,8 +106,14 @@ def get_video_analysis_prompt(video_info: Dict, content: str, has_video_frames: 
 """
 
     comments_hint = ""
-    if content and '【视频评论（部分）】' in content:
+    if content and "【视频评论（部分）】" in content:
         comments_hint = "\n我已经提供了部分精彩评论内容，请在第三板块进行深入分析。"
+
+    use_emoji = style != "professional"
+    section1 = "## 📋 第一板块：内容深度总结与分析" if use_emoji else "## 第一板块：内容深度总结与分析"
+    section2 = "## 💬 第二板块：弹幕互动与舆情分析" if use_emoji else "## 第二板块：弹幕互动与舆情分析"
+    section3 = "## 📝 第三板块：评论区深度解析与建议" if use_emoji else "## 第三板块：评论区深度解析与建议"
+    output_md = "- 使用Markdown，多用 Emoji。" if use_emoji else "- 使用Markdown。"
 
     return f"""你是一位严谨的B站视频分析专家。你的任务是基于我提供的素材生成一份**准确无误**的报告。
 
@@ -118,7 +135,7 @@ UP主：{video_info.get('author', '未知')}
 请严格按照以下**三大板块**提供深度分析报告：
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## 📋 第一板块：内容深度总结与分析
+{section1}
 
 ### 1. 视频核心概览
 - **核心主旨**：用一句话精准概括视频。
@@ -136,14 +153,14 @@ UP主：{video_info.get('author', '未知')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## 💬 第二板块：弹幕互动与舆情分析
+{section2}
 - **氛围洞察**：分析弹幕的情绪曲线，识别观众在哪一时刻反响最热烈。
 - **高频词云**：提取真实的重复关键词汇，并解读背后的观众心理。
 - **互动槽点**：捕捉视频中的"梗"、争议点或共鸣点。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## 📝 第三板块：评论区深度解析与建议
+{section3}
 - **评论画像**：分析高赞评论的构成，观众是在补充干货、表达感谢还是进行理性讨论？
 - **精选解读**：深入分析提供的精彩评论，提取其中最有价值的观点或纠错信息。
 - **后续优化建议**：基于目前的观众反馈，为UP主提供具体可执行的改进方案或新选题灵感。
@@ -151,7 +168,7 @@ UP主：{video_info.get('author', '未知')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **输出格式**：
-- 使用Markdown，多用 Emoji。
+- {output_md}
 - 保持专业、客观的语气。
 - 如果信息不足以支撑某个子标题，请删除该标题。"""
 

@@ -3,7 +3,6 @@
 """
 from typing import Dict
 from src.backend.services.ai.toolkit.base_tool import BaseTool
-from src.backend.utils.async_helpers import run_async
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -61,7 +60,7 @@ class GetUserRecentVideosTool(BaseTool):
 
         logger.info(f"[工具] 获取用户投稿: mid={mid}, limit={limit}")
 
-        v_res = run_async(self._bilibili_service.get_user_recent_videos(mid, limit=limit))
+        v_res = await self._bilibili_service.get_user_recent_videos(mid, limit=limit)
 
         if not v_res['success']:
             return {

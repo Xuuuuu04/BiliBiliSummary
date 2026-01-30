@@ -185,7 +185,7 @@ function toggleDarkMode(isDark) {
  * - 搜索框样式
  * - 模式描述
  * - 按钮文字和占位符
- * - 智能小UP/深度研究的特殊处理
+ * - 深度研究的特殊处理
  *
  * @param {string} mode - 目标模式 ('video' | 'article' | 'user' | 'research')
  * @param {Object} params - 参数对象
@@ -212,6 +212,8 @@ function switchMode(mode, params) {
         if (btn.dataset.mode === mode) btn.classList.add('active');
         else btn.classList.remove('active');
     });
+
+    document.body.dataset.mode = mode;
 
     // 更新搜索框样式
     const searchBox = document.querySelector('.search-box');

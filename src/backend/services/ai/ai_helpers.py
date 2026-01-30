@@ -4,13 +4,85 @@ AI辅助工具模块
 """
 import os
 import re
+import random
+import time
+import threading
 import requests
 from datetime import datetime
+from contextlib import contextmanager
 from typing import Dict
 from src.config import Config
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+OPENAI_CONCURRENCY = int(os.getenv("OPENAI_CONCURRENCY", "2"))
+EXA_CONCURRENCY = int(os.getenv("EXA_CONCURRENCY", "1"))
+BILIBILI_FRAMES_CONCURRENCY = int(os.getenv("BILIBILI_FRAMES_CONCURRENCY", "1"))
+
+OPENAI_SEMAPHORE = threading.BoundedSemaphore(value=max(1, OPENAI_CONCURRENCY))
+EXA_SEMAPHORE = threading.BoundedSemaphore(value=max(1, EXA_CONCURRENCY))
+BILIBILI_FRAMES_SEMAPHORE = threading.BoundedSemaphore(value=max(1, BILIBILI_FRAMES_CONCURRENCY))
+
+
+class TTLCache:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._store = {}
+
+    def get(self, key):
+        now = time.time()
+        with self._lock:
+            item = self._store.get(key)
+            if not item:
+                return None
+            value, expire_at = item
+            if expire_at and expire_at < now:
+                self._store.pop(key, None)
+                return None
+            return value
+
+    def set(self, key, value, ttl_seconds: int):
+        expire_at = time.time() + ttl_seconds if ttl_seconds else None
+        with self._lock:
+            self._store[key] = (value, expire_at)
+
+
+EXA_CACHE = TTLCache()
+BILIBILI_CACHE = TTLCache()
+
+
+@contextmanager
+def _semaphore(sema: threading.Semaphore):
+    sema.acquire()
+    try:
+        yield
+    finally:
+        sema.release()
+
+
+def _sleep_backoff(attempt: int, base: float = 0.5, cap: float = 10.0):
+    delay = min(cap, base * (2**attempt))
+    delay = delay * (0.75 + random.random() * 0.5)
+    time.sleep(delay)
+
+
+def openai_chat_completions_stream(client, *, max_retries: int = 4, **params):
+    attempt = 0
+    while True:
+        with _semaphore(OPENAI_SEMAPHORE):
+            try:
+                stream = client.chat.completions.create(**params)
+                for chunk in stream:
+                    yield chunk
+                return
+            except Exception as e:
+                msg = str(e)
+                retryable = any(x in msg for x in ["429", "Rate limit", "timeout", "timed out", "502", "503", "504"])
+                if attempt >= max_retries or not retryable:
+                    raise
+        _sleep_backoff(attempt)
+        attempt += 1
 
 
 def web_search_exa(query: str) -> Dict:
@@ -29,6 +101,10 @@ def web_search_exa(query: str) -> Dict:
         if not api_key:
             return {'success': False, 'error': '未配置 Exa API Key'}
 
+        cached = EXA_CACHE.get(("exa_search", query))
+        if cached is not None:
+            return {"success": True, "data": cached}
+
         headers = {
             "x-api-key": api_key,
             "Content-Type": "application/json"
@@ -41,20 +117,45 @@ def web_search_exa(query: str) -> Dict:
         }
 
         logger.info(f"[工具] Exa 网络搜索: {query}")
-        response = requests.post("https://api.exa.ai/search", json=payload, headers=headers, timeout=20)
-        res_data = response.json()
+        with _semaphore(EXA_SEMAPHORE):
+            for attempt in range(4):
+                try:
+                    response = requests.post(
+                        "https://api.exa.ai/search",
+                        json=payload,
+                        headers=headers,
+                        timeout=(5, 20),
+                    )
+                    try:
+                        res_data = response.json()
+                    except Exception:
+                        res_data = {}
 
-        if response.status_code == 200 and 'results' in res_data:
-            results = []
-            for item in res_data['results']:
-                results.append({
-                    'title': item.get('title', '无标题'),
-                    'url': item.get('url', ''),
-                    'published_date': item.get('publishedDate', '未知')
-                })
-            return {'success': True, 'data': results}
-        else:
-            return {'success': False, 'error': res_data.get('error', '未知错误')}
+                    if response.status_code == 200 and "results" in res_data:
+                        results = []
+                        for item in res_data["results"]:
+                            results.append(
+                                {
+                                    "title": item.get("title", "无标题"),
+                                    "url": item.get("url", ""),
+                                    "published_date": item.get("publishedDate", "未知"),
+                                }
+                            )
+                        EXA_CACHE.set(("exa_search", query), results, ttl_seconds=600)
+                        return {"success": True, "data": results}
+
+                    retryable = response.status_code in (408, 429, 500, 502, 503, 504)
+                    if attempt < 3 and retryable:
+                        _sleep_backoff(attempt)
+                        continue
+
+                    error = res_data.get("error") if isinstance(res_data, dict) else None
+                    return {"success": False, "error": error or f"HTTP {response.status_code}"}
+                except (requests.Timeout, requests.ConnectionError) as e:
+                    if attempt < 3:
+                        _sleep_backoff(attempt)
+                        continue
+                    raise e
     except Exception as e:
         logger.error(f"Exa 搜索失败: {e}")
         return {'success': False, 'error': str(e)}

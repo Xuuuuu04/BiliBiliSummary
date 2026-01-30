@@ -1,6 +1,6 @@
 # Core Web Framework
-flask>=3.0.0
-flask-cors>=4.0.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
 
 # AI/ML Dependencies
 openai>=1.10.0
@@ -34,15 +34,14 @@ markdown2>=2.4.10
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
 pytest-cov>=4.1.0
-pytest-flask>=1.2.0
+httpx>=0.27.0
 
 # Code Quality
 pylint>=2.17.0
 black>=23.0.0
+ruff>=0.6.0
+mypy>=1.8.0
 
 # ========== Optional Dependencies ==========
-# Rate Limiting (optional, can use built-in)
-# flask-limiter>=3.5.0
-
 # Redis Cache (optional, can use memory cache)
 # redis>=5.0.0

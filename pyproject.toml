@@ -1,0 +1,30 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+  ".venv",
+  "src/backend",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = false
+ignore_missing_imports = true

@@ -8,10 +8,13 @@
    ============================================================ */
 
 #researchProcessContent {
-    display: flex;
     flex-direction: column;
     gap: 0;
     padding: 0;
+}
+
+#researchProcessContent.active {
+    display: flex;
 }
 
 /* 时间线控制栏 - 极简风格 */

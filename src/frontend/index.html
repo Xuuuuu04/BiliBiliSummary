@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-mode="research">
     <!-- 顶部导航栏 -->
     <header class="main-header">
         <div class="logo-area" onclick="goHome()">
@@ -464,6 +464,15 @@
                 </div>
             </div>
             <div id="researchProcessContent" class="tab-pane">
+                <div class="timeline-controls">
+                    <div class="timeline-controls-title">研究过程</div>
+                    <div class="timeline-controls-buttons">
+                        <button id="drCollapseCompletedBtn" class="timeline-control-btn ui-focusable" type="button" data-state="off">折叠已完成：关</button>
+                        <button id="drExpandAllBtn" class="timeline-control-btn ui-focusable" type="button">展开全部</button>
+                        <button id="drAutoScrollBtn" class="timeline-control-btn ui-focusable" type="button" data-state="on">自动滚动：开</button>
+                        <button id="drClearBtn" class="timeline-control-btn ui-focusable" type="button">清空</button>
+                    </div>
+                </div>
                 <div id="researchTimeline" class="research-timeline">
                     <!-- 动态插入思考过程和工具调用 -->
                 </div>
@@ -661,6 +670,7 @@
     <script src="js/ui/progress.js"></script>
     <script src="js/ui/tabs.js"></script>
     <script src="js/ui/modes.js"></script>
+    <script src="js/ui/deep-research-ui.js"></script>
 
     <!-- 主程序脚本 -->
     <script src="script.js"></script>
