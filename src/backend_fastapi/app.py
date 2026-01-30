@@ -40,6 +40,9 @@ def create_app() -> FastAPI:
 
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     static_dir = os.path.join(base_dir, "src", "frontend")
+    assets_dir = os.path.join(base_dir, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
     if os.path.isdir(static_dir):
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
 

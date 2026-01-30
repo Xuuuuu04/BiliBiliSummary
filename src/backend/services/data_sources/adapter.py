@@ -8,10 +8,11 @@
     - 适配器模式: 将新接口适配到旧接口
     - 门面模式: 提供统一的高层接口
 """
-from typing import Dict, Optional, Any
 
-from src.backend.services.data_sources.factory import DataSourceFactory
+from typing import Any, Dict
+
 from src.backend.services.data_sources.exceptions import UnsupportedPlatformError
+from src.backend.services.data_sources.factory import DataSourceFactory
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -81,26 +82,18 @@ class DataSourceAdapter:
 
             if not video_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取视频ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取视频ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_video_info(video_id)
         except UnsupportedPlatformError as e:
             logger.error(f"不支持的平台: {url}")
-            return {
-                'success': False,
-                'error': str(e),
-                'platform': None
-            }
+            return {"success": False, "error": str(e), "platform": None}
         except Exception as e:
             logger.error(f"获取视频信息失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取视频信息失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取视频信息失败: {str(e)}", "platform": None}
 
     async def get_video_subtitles(self, url: str, **kwargs) -> Dict[str, Any]:
         """
@@ -119,26 +112,18 @@ class DataSourceAdapter:
 
             if not video_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取视频ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取视频ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_video_subtitles(video_id, **kwargs)
         except Exception as e:
             logger.error(f"获取字幕失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取字幕失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取字幕失败: {str(e)}", "platform": None}
 
     async def get_video_comments(
-        self,
-        url: str,
-        max_count: int = 100,
-        sort_by: str = "hot",
-        **kwargs
+        self, url: str, max_count: int = 100, sort_by: str = "hot", **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频评论
@@ -158,31 +143,19 @@ class DataSourceAdapter:
 
             if not video_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取视频ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取视频ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_video_comments(
-                video_id,
-                max_count=max_count,
-                sort_by=sort_by,
-                **kwargs
+                video_id, max_count=max_count, sort_by=sort_by, **kwargs
             )
         except Exception as e:
             logger.error(f"获取评论失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取评论失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取评论失败: {str(e)}", "platform": None}
 
-    async def get_video_danmaku(
-        self,
-        url: str,
-        max_count: int = 1000,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_video_danmaku(self, url: str, max_count: int = 1000, **kwargs) -> Dict[str, Any]:
         """
         获取视频弹幕
 
@@ -200,19 +173,15 @@ class DataSourceAdapter:
 
             if not video_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取视频ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取视频ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_video_danmaku(video_id, max_count=max_count, **kwargs)
         except Exception as e:
             logger.error(f"获取弹幕失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取弹幕失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取弹幕失败: {str(e)}", "platform": None}
 
     # ========== 用户相关方法 ==========
 
@@ -232,19 +201,15 @@ class DataSourceAdapter:
 
             if not user_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取用户ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取用户ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_user_info(user_id)
         except Exception as e:
             logger.error(f"获取用户信息失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取用户信息失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取用户信息失败: {str(e)}", "platform": None}
 
     async def get_user_videos(self, url: str, limit: int = 10) -> Dict[str, Any]:
         """
@@ -263,27 +228,20 @@ class DataSourceAdapter:
 
             if not user_id:
                 return {
-                    'success': False,
-                    'error': '无法从URL提取用户ID',
-                    'platform': source.platform_name
+                    "success": False,
+                    "error": "无法从URL提取用户ID",
+                    "platform": source.platform_name,
                 }
 
             return await source.get_user_videos(user_id, limit=limit)
         except Exception as e:
             logger.error(f"获取用户视频失败 ({url}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取用户视频失败: {str(e)}',
-                'platform': None
-            }
+            return {"success": False, "error": f"获取用户视频失败: {str(e)}", "platform": None}
 
     # ========== 搜索相关方法 ==========
 
     async def search_videos(
-        self,
-        keyword: str,
-        platform: str = None,
-        limit: int = 10
+        self, keyword: str, platform: str = None, limit: int = 10
     ) -> Dict[str, Any]:
         """
         搜索视频
@@ -299,23 +257,16 @@ class DataSourceAdapter:
         try:
             # 如果没有指定平台，使用默认平台
             if not platform:
-                platform = self._default_platform or 'bilibili'
+                platform = self._default_platform or "bilibili"
 
             source = self._get_source_from_platform(platform)
             return await source.search_videos(keyword, limit=limit)
         except Exception as e:
             logger.error(f"搜索视频失败 ({keyword}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'搜索视频失败: {str(e)}',
-                'platform': platform
-            }
+            return {"success": False, "error": f"搜索视频失败: {str(e)}", "platform": platform}
 
     async def search_users(
-        self,
-        keyword: str,
-        platform: str = None,
-        limit: int = 10
+        self, keyword: str, platform: str = None, limit: int = 10
     ) -> Dict[str, Any]:
         """
         搜索用户
@@ -330,25 +281,17 @@ class DataSourceAdapter:
         """
         try:
             if not platform:
-                platform = self._default_platform or 'bilibili'
+                platform = self._default_platform or "bilibili"
 
             source = self._get_source_from_platform(platform)
             return await source.search_users(keyword, limit=limit)
         except Exception as e:
             logger.error(f"搜索用户失败 ({keyword}): {str(e)}")
-            return {
-                'success': False,
-                'error': f'搜索用户失败: {str(e)}',
-                'platform': platform
-            }
+            return {"success": False, "error": f"搜索用户失败: {str(e)}", "platform": platform}
 
     # ========== 热门/推荐方法 ==========
 
-    async def get_popular_videos(
-        self,
-        platform: str = None,
-        limit: int = 10
-    ) -> Dict[str, Any]:
+    async def get_popular_videos(self, platform: str = None, limit: int = 10) -> Dict[str, Any]:
         """
         获取热门视频
 
@@ -361,17 +304,13 @@ class DataSourceAdapter:
         """
         try:
             if not platform:
-                platform = self._default_platform or 'bilibili'
+                platform = self._default_platform or "bilibili"
 
             source = self._get_source_from_platform(platform)
             return await source.get_popular_videos(limit=limit)
         except Exception as e:
             logger.error(f"获取热门视频失败: {str(e)}")
-            return {
-                'success': False,
-                'error': f'获取热门视频失败: {str(e)}',
-                'platform': platform
-            }
+            return {"success": False, "error": f"获取热门视频失败: {str(e)}", "platform": platform}
 
     # ========== 辅助方法 ==========
 
@@ -451,6 +390,7 @@ class DataSourceAdapter:
 
 # ========== 便捷函数 ==========
 
+
 async def get_video_info_universal(url: str) -> Dict[str, Any]:
     """
     便捷函数：获取视频信息（自动识别平台）
@@ -471,9 +411,7 @@ async def get_video_info_universal(url: str) -> Dict[str, Any]:
 
 
 async def search_videos_universal(
-    keyword: str,
-    platform: str = "bilibili",
-    limit: int = 10
+    keyword: str, platform: str = "bilibili", limit: int = 10
 ) -> Dict[str, Any]:
     """
     便捷函数：搜索视频

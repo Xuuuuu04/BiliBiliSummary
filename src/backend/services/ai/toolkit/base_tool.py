@@ -3,9 +3,10 @@ BaseTool - 工具基类模块
 
 定义所有工具插件的抽象接口和基础功能
 """
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, Generator
+
 import json
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Generator
 
 
 class BaseTool(ABC):
@@ -61,12 +62,8 @@ class BaseTool(ABC):
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": {
-                    "type": "object",
-                    "properties": {},
-                    "required": []
-                }
-            }
+                "parameters": {"type": "object", "properties": {}, "required": []},
+            },
         }
 
     @abstractmethod
@@ -185,8 +182,4 @@ class StreamableTool(BaseTool):
         async for item in self.execute_stream(**kwargs):
             results.append(item)
 
-        return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': results
-        }
+        return {"type": "tool_result", "tool": self.name, "data": results}

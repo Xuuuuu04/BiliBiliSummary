@@ -22,15 +22,15 @@ from src.backend.services.ai.toolkit.tools import (
     GetHotBuzzwordsTool,
     GetHotSearchKeywordsTool,
     GetHotVideosTool,
-    GetUserRecentVideosTool,
-    GetUserDynamicsTool,
     GetRankVideosTool,
     GetSearchSuggestionsTool,
+    GetUserDynamicsTool,
+    GetUserRecentVideosTool,
     GetVideoSeriesTool,
     GetVideoTagsTool,
+    GetWeeklyHotVideosTool,
     SearchUsersTool,
     SearchVideosTool,
-    GetWeeklyHotVideosTool,
     WebSearchTool,
 )
 from src.backend.utils.async_helpers import run_async
@@ -117,7 +117,11 @@ class DeepResearchAgent:
             run_id = uuid.uuid4().hex
 
             def _now_iso() -> str:
-                return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+                return (
+                    datetime.now(timezone.utc)
+                    .isoformat(timespec="milliseconds")
+                    .replace("+00:00", "Z")
+                )
 
             def _emit(payload: Dict, tool_call_id=None) -> Dict:
                 data = dict(payload or {})
@@ -194,7 +198,9 @@ class DeepResearchAgent:
                         return
 
                     keep_tool_indices = set(tool_indices[-10:])
-                    summarize_tool_indices = [i for i in tool_indices[:-10] if i not in keep_tool_indices]
+                    summarize_tool_indices = [
+                        i for i in tool_indices[:-10] if i not in keep_tool_indices
+                    ]
                     if not summarize_tool_indices:
                         return
 
@@ -248,7 +254,8 @@ class DeepResearchAgent:
                                 new_messages.append(
                                     {
                                         "role": "assistant",
-                                        "content": "【已压缩历史工具输出】\n" + summary_text.strip(),
+                                        "content": "【已压缩历史工具输出】\n"
+                                        + summary_text.strip(),
                                     }
                                 )
                             new_messages.append(m)
@@ -385,7 +392,10 @@ class DeepResearchAgent:
 
                     max_workers = min(len(analyze_call_meta), 5)
                     results_by_tool_id: dict[str, dict] = {}
-                    def analyze_single_video(tool_call_id: str, bvid: str):
+
+                    def analyze_single_video(
+                        tool_call_id: str, bvid: str, progress_queue: "queue.Queue[dict]"
+                    ) -> None:
                         try:
                             if bvid and ("bilibili.com" in bvid or "http" in bvid):
                                 bvid = extract_bvid(bvid) or bvid
@@ -406,7 +416,9 @@ class DeepResearchAgent:
                             async def run_tool():
                                 result_summary = ""
                                 result_title = ""
-                                async for item in tool.execute_stream(bvid=bvid, vl_model=self.vl_model):
+                                async for item in tool.execute_stream(
+                                    bvid=bvid, vl_model=self.vl_model
+                                ):
                                     progress_queue.put(
                                         {
                                             "kind": "stream_item",
@@ -456,6 +468,7 @@ class DeepResearchAgent:
                                 analyze_single_video,
                                 m["tool_call"]["id"],
                                 m["bvid"],
+                                progress_queue,
                             )
                             for m in analyze_call_meta
                         ]
@@ -583,17 +596,17 @@ class DeepResearchAgent:
 
                             q: queue.Queue[dict] = queue.Queue()
 
-                            def worker():
+                            def worker(_tool=tool, _args=args, _q=q, _func_name=func_name):
                                 async def run():
-                                    async for item in tool.execute_stream(**args):
-                                        q.put(item)
-                                    q.put({"type": "_done"})
+                                    async for item in _tool.execute_stream(**_args):
+                                        _q.put(item)
+                                    _q.put({"type": "_done"})
 
                                 try:
                                     run_async(run())
                                 except Exception as e:
-                                    q.put({"type": "error", "tool": func_name, "error": str(e)})
-                                    q.put({"type": "_done"})
+                                    _q.put({"type": "error", "tool": _func_name, "error": str(e)})
+                                    _q.put({"type": "_done"})
 
                             t = threading.Thread(target=worker, daemon=True)
                             t.start()
@@ -607,7 +620,11 @@ class DeepResearchAgent:
                                 if item.get("type") == "tool_result":
                                     tool_data = item.get("data")
                                     yield _emit(
-                                        {"type": "tool_result", "tool": func_name, "result": tool_data},
+                                        {
+                                            "type": "tool_result",
+                                            "tool": func_name,
+                                            "result": tool_data,
+                                        },
                                         tool_call["id"],
                                     )
                                 elif item.get("type") == "tool_progress":
@@ -615,13 +632,19 @@ class DeepResearchAgent:
                                     yield _emit(item, tool_call["id"])
                                 elif item.get("type") == "error":
                                     tool_error = item.get("error") or tool_error
-                                    yield _emit({"type": "error", "error": tool_error}, tool_call["id"])
+                                    yield _emit(
+                                        {"type": "error", "error": tool_error}, tool_call["id"]
+                                    )
                                     break
 
                             if tool_data is not None:
                                 if func_name == "analyze_video":
                                     summary = (tool_data or {}).get("summary") or ""
-                                    title = (tool_data or {}).get("title") or (tool_data or {}).get("bvid") or ""
+                                    title = (
+                                        (tool_data or {}).get("title")
+                                        or (tool_data or {}).get("bvid")
+                                        or ""
+                                    )
                                     result = f"视频分析完成: {title}\n\n分析结果:\n{summary}"
                                 elif func_name == "finish_research_and_write_report":
                                     message = (tool_data or {}).get("message") or ""
@@ -687,7 +710,9 @@ class DeepResearchAgent:
                     if self.enable_thinking:
                         pass  # 模型会自动返回 reasoning_content
 
-                    final_stream = openai_chat_completions_stream(self.client, **final_request_params)
+                    final_stream = openai_chat_completions_stream(
+                        self.client, **final_request_params
+                    )
                     final_report = ""
                     for chunk in final_stream:
                         if not chunk.choices:

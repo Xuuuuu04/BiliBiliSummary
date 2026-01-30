@@ -83,11 +83,14 @@
 
 ```text
 Bilibili_Analysis_Helper/
+├── .github/             # CI（lint/format/test）
 ├── asgi.py             # FastAPI 启动入口（推荐）
+├── app.py              # 兼容入口（复用 asgi:app）
 ├── pyproject.toml      # 工具链配置（black/ruff/pytest/mypy）
 ├── requirements.txt    # 核心依赖
 ├── .env.example        # 环境变量模板
 ├── README.md           # 项目文档
+├── tests/              # 单元测试
 └── src/                # 核心源代码包
     ├── backend/        # 后端领域层（服务/工具/AI/数据源等）
     ├── backend_fastapi/# 新后端（FastAPI：薄路由 + services/usecase）

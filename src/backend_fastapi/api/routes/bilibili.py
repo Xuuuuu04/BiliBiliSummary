@@ -5,7 +5,7 @@ import requests
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse, Response
 
-from src.backend.services.bilibili import BilibiliService, run_async
+from src.backend.services.bilibili import BilibiliService
 from src.backend.services.bilibili.login_service import LoginService
 from src.backend.utils.logger import get_logger
 from src.backend_fastapi.api.schemas import (
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api", tags=["api"])
 
 
 @router.post("/search")
-def search_content(
+async def search_content(
     payload: SearchRequest, bilibili_service: BilibiliService = Depends(get_bilibili_service)
 ):
     try:
@@ -33,18 +33,18 @@ def search_content(
             )
 
         if payload.mode == "article":
-            res = run_async(bilibili_service.search_articles(payload.keyword, limit=10))
+            res = await bilibili_service.search_articles(payload.keyword, limit=10)
         elif payload.mode == "user":
-            res = run_async(bilibili_service.search_users(payload.keyword, limit=10))
+            res = await bilibili_service.search_users(payload.keyword, limit=10)
         else:
-            res = run_async(bilibili_service.search_videos(payload.keyword, limit=10))
+            res = await bilibili_service.search_videos(payload.keyword, limit=10)
         return res
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 @router.post("/video/info")
-def get_video_info(
+async def get_video_info(
     payload: VideoInfoRequest, bilibili_service: BilibiliService = Depends(get_bilibili_service)
 ):
     try:
@@ -54,14 +54,11 @@ def get_video_info(
                 status_code=400, content={"success": False, "error": "无效的B站视频链接"}
             )
 
-        async def fetch_all():
-            return await asyncio.gather(
-                bilibili_service.get_video_info(bvid),
-                bilibili_service.get_video_stats(bvid),
-                bilibili_service.get_related_videos(bvid),
-            )
-
-        info_res, stats_res, related_res = run_async(fetch_all())
+        info_res, stats_res, related_res = await asyncio.gather(
+            bilibili_service.get_video_info(bvid),
+            bilibili_service.get_video_stats(bvid),
+            bilibili_service.get_related_videos(bvid),
+        )
         if not info_res.get("success"):
             return JSONResponse(status_code=400, content=info_res)
 
@@ -78,7 +75,7 @@ def get_video_info(
 
 
 @router.post("/video/subtitle")
-def get_video_subtitle(
+async def get_video_subtitle(
     payload: VideoSubtitleRequest, bilibili_service: BilibiliService = Depends(get_bilibili_service)
 ):
     try:
@@ -87,8 +84,7 @@ def get_video_subtitle(
             return JSONResponse(
                 status_code=400, content={"success": False, "error": "无效的B站视频链接"}
             )
-        result = run_async(bilibili_service.get_video_subtitles(bvid))
-        return result
+        return await bilibili_service.get_video_subtitles(bvid)
     except Exception as e:
         return JSONResponse(
             status_code=500, content={"success": False, "error": f"获取字幕失败: {str(e)}"}
@@ -96,9 +92,9 @@ def get_video_subtitle(
 
 
 @router.get("/video/popular")
-def get_popular_videos(bilibili_service: BilibiliService = Depends(get_bilibili_service)):
+async def get_popular_videos(bilibili_service: BilibiliService = Depends(get_bilibili_service)):
     try:
-        return run_async(bilibili_service.get_popular_videos())
+        return await bilibili_service.get_popular_videos()
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
@@ -141,9 +137,9 @@ def health_check():
 
 
 @router.post("/bilibili/login/start")
-def start_bilibili_login(login_service: LoginService = Depends(get_login_service)):
+async def start_bilibili_login(login_service: LoginService = Depends(get_login_service)):
     try:
-        return run_async(login_service.start_login())
+        return await login_service.start_login()
     except Exception as e:
         return JSONResponse(
             status_code=500, content={"success": False, "error": f"启动登录失败: {str(e)}"}
@@ -151,7 +147,7 @@ def start_bilibili_login(login_service: LoginService = Depends(get_login_service
 
 
 @router.post("/bilibili/login/status")
-def check_login_status(
+async def check_login_status(
     payload: LoginStatusRequest,
     bilibili_service: BilibiliService = Depends(get_bilibili_service),
     login_service: LoginService = Depends(get_login_service),
@@ -162,7 +158,7 @@ def check_login_status(
                 status_code=400, content={"success": False, "error": "缺少session_id"}
             )
 
-        result = run_async(login_service.check_login_status(payload.session_id))
+        result = await login_service.check_login_status(payload.session_id)
         if result.get("success") and result.get("data", {}).get("status") == "success":
             bilibili_service.refresh_credential()
         return result
@@ -173,12 +169,12 @@ def check_login_status(
 
 
 @router.post("/bilibili/login/logout")
-def logout_bilibili(
+async def logout_bilibili(
     bilibili_service: BilibiliService = Depends(get_bilibili_service),
     login_service: LoginService = Depends(get_login_service),
 ):
     try:
-        result = run_async(login_service.logout())
+        result = await login_service.logout()
         bilibili_service.refresh_credential()
         return result
     except Exception as e:
@@ -188,16 +184,16 @@ def logout_bilibili(
 
 
 @router.get("/bilibili/login/check")
-def check_current_login(bilibili_service: BilibiliService = Depends(get_bilibili_service)):
+async def check_current_login(bilibili_service: BilibiliService = Depends(get_bilibili_service)):
     try:
         has_credentials = all(
             [Config.BILIBILI_SESSDATA, Config.BILIBILI_BILI_JCT, Config.BILIBILI_DEDEUSERID]
         )
         if has_credentials:
-            is_valid = run_async(bilibili_service.check_credential_valid())
+            is_valid = await bilibili_service.check_credential_valid()
             if is_valid:
-                user_info_res = run_async(
-                    bilibili_service.get_user_info(int(Config.BILIBILI_DEDEUSERID))
+                user_info_res = await bilibili_service.get_user_info(
+                    int(Config.BILIBILI_DEDEUSERID)
                 )
                 if user_info_res.get("success"):
                     return {

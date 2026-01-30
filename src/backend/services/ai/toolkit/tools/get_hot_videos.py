@@ -1,6 +1,7 @@
 """
 获取B站热门视频工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -43,6 +44,10 @@ class GetHotVideosTool(BaseTool):
         logger.info(f"[工具] 获取热门视频: page={page}, limit={limit}")
         res = await self._bilibili_service.get_hot_videos(pn=page, ps=limit)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取热门视频失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取热门视频失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

@@ -1,7 +1,9 @@
 """
 搜索B站视频工具
 """
+
 from typing import Dict
+
 from src.backend.services.ai.toolkit.base_tool import BaseTool
 from src.backend.utils.logger import get_logger
 
@@ -28,15 +30,10 @@ class SearchVideosTool(BaseTool):
                 "description": self.description,
                 "parameters": {
                     "type": "object",
-                    "properties": {
-                        "keyword": {
-                            "type": "string",
-                            "description": "搜索关键词"
-                        }
-                    },
-                    "required": ["keyword"]
-                }
-            }
+                    "properties": {"keyword": {"type": "string", "description": "搜索关键词"}},
+                    "required": ["keyword"],
+                },
+            },
         }
 
     async def execute(self, keyword: str, limit: int = 5) -> Dict:
@@ -57,18 +54,14 @@ class SearchVideosTool(BaseTool):
 
         search_res = await self._bilibili_service.search_videos(keyword, limit=limit)
 
-        if not search_res['success']:
+        if not search_res["success"]:
             return {
-                'type': 'error',
-                'tool': self.name,
-                'error': f"搜索失败: {search_res.get('error', 'Unknown error')}"
+                "type": "error",
+                "tool": self.name,
+                "error": f"搜索失败: {search_res.get('error', 'Unknown error')}",
             }
 
         # 只返回前3个结果给AI
-        result_data = search_res['data'][:3] if len(search_res['data']) > 3 else search_res['data']
+        result_data = search_res["data"][:3] if len(search_res["data"]) > 3 else search_res["data"]
 
-        return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': result_data
-        }
+        return {"type": "tool_result", "tool": self.name, "data": result_data}

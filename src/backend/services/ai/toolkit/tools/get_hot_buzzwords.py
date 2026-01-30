@@ -1,6 +1,7 @@
 """
 获取B站热词图鉴工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -40,6 +41,10 @@ class GetHotBuzzwordsTool(BaseTool):
         logger.info(f"[工具] 获取热词图鉴: page={page}")
         res = await self._bilibili_service.get_hot_buzzwords(page_num=page, page_size=20)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取热词图鉴失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取热词图鉴失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

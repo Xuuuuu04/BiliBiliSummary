@@ -3,13 +3,13 @@
 
 提供统一的配置管理、验证和持久化功能
 """
-import os
-import asyncio
+
 from pathlib import Path
-from typing import Any, Optional, Dict, Callable
 from threading import Lock
-from src.config import Config
+from typing import Any, Callable, Dict
+
 from src.backend.utils.logger import get_logger
+from src.config import Config
 
 logger = get_logger(__name__)
 
@@ -28,7 +28,7 @@ class ConfigManager:
 
         # 项目根目录
         self._project_root = Path(__file__).parent.parent.parent.parent.parent
-        self._env_file = self._project_root / '.env'
+        self._env_file = self._project_root / ".env"
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -93,10 +93,10 @@ class ConfigManager:
         with self._lock:
             try:
                 # 更新 Config
-                Config.BILIBILI_SESSDATA = credentials.get('SESSDATA', '')
-                Config.BILIBILI_BILI_JCT = credentials.get('BILI_JCT', '')
-                Config.BILIBILI_BUVID3 = credentials.get('BUVID3', '')
-                Config.BILIBILI_DEDEUSERID = credentials.get('DEDEUSERID', '')
+                Config.BILIBILI_SESSDATA = credentials.get("SESSDATA", "")
+                Config.BILIBILI_BILI_JCT = credentials.get("BILI_JCT", "")
+                Config.BILIBILI_BUVID3 = credentials.get("BUVID3", "")
+                Config.BILIBILI_DEDEUSERID = credentials.get("DEDEUSERID", "")
 
                 logger.info("B站凭据已更新到内存")
 
@@ -104,7 +104,7 @@ class ConfigManager:
                 self._persist_bilibili_credentials(credentials)
 
                 # 触发凭据变更事件
-                self._notify_watchers('bilibili_credentials', credentials)
+                self._notify_watchers("bilibili_credentials", credentials)
 
                 return True
             except Exception as e:
@@ -154,11 +154,11 @@ class ConfigManager:
 
             # 读取现有配置
             env_content = {}
-            with open(self._env_file, 'r', encoding='utf-8') as f:
+            with open(self._env_file, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        k, v = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
                         env_content[k] = v
 
             # 更新配置
@@ -166,7 +166,7 @@ class ConfigManager:
             env_content[env_key] = value
 
             # 写回文件
-            with open(self._env_file, 'w', encoding='utf-8') as f:
+            with open(self._env_file, "w", encoding="utf-8") as f:
                 for k, v in env_content.items():
                     f.write(f"{k}={v}\n")
 
@@ -188,26 +188,26 @@ class ConfigManager:
 
             # 读取现有配置
             env_content = {}
-            with open(self._env_file, 'r', encoding='utf-8') as f:
+            with open(self._env_file, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        k, v = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
                         env_content[k] = v
 
             # 更新B站凭据
-            env_content['BILIBILI_SESSDATA'] = credentials.get('SESSDATA', '')
-            env_content['BILIBILI_BILI_JCT'] = credentials.get('BILI_JCT', '')
-            env_content['BILIBILI_BUVID3'] = credentials.get('BUVID3', '')
-            env_content['BILIBILI_DEDEUSERID'] = credentials.get('DEDEUSERID', '')
+            env_content["BILIBILI_SESSDATA"] = credentials.get("SESSDATA", "")
+            env_content["BILIBILI_BILI_JCT"] = credentials.get("BILI_JCT", "")
+            env_content["BILIBILI_BUVID3"] = credentials.get("BUVID3", "")
+            env_content["BILIBILI_DEDEUSERID"] = credentials.get("DEDEUSERID", "")
 
             # 写回文件
-            with open(self._env_file, 'w', encoding='utf-8') as f:
+            with open(self._env_file, "w", encoding="utf-8") as f:
                 f.write("# B站API配置（自动保存）\n")
                 for key, value in env_content.items():
-                    if key.startswith('BILIBILI_'):
+                    if key.startswith("BILIBILI_"):
                         f.write(f"{key}={value}\n")
-                    elif not key.startswith('OPENAI_'):  # 非敏感配置
+                    elif not key.startswith("OPENAI_"):  # 非敏感配置
                         f.write(f"{key}={value}\n")
 
             logger.info("B站凭据已持久化到 .env 文件")
@@ -224,7 +224,7 @@ class ConfigManager:
         Returns:
             是否敏感
         """
-        sensitive_keys = ['key', 'token', 'password', 'secret', 'cookie', 'sessdata']
+        sensitive_keys = ["key", "token", "password", "secret", "cookie", "sessdata"]
         return any(sk in key.lower() for sk in sensitive_keys)
 
     def validate_required(self) -> bool:
@@ -234,10 +234,7 @@ class ConfigManager:
         Returns:
             是否全部配置
         """
-        required_configs = {
-            'OPENAI_API_KEY': 'AI服务密钥',
-            'OPENAI_MODEL': '主分析模型'
-        }
+        required_configs = {"OPENAI_API_KEY": "AI服务密钥", "OPENAI_MODEL": "主分析模型"}
 
         missing = []
         for key, desc in required_configs.items():
@@ -259,14 +256,14 @@ class ConfigManager:
             配置摘要字典
         """
         return {
-            'ai_model': Config.OPENAI_MODEL,
-            'qa_model': Config.QA_MODEL,
-            'research_model': Config.DEEP_RESEARCH_MODEL,
-            'api_base': Config.OPENAI_API_BASE,
-            'api_key_configured': bool(Config.OPENAI_API_KEY),
-            'bilibili_logged_in': bool(Config.BILIBILI_SESSDATA),
-            'flask_port': Config.FLASK_PORT,
-            'flask_host': Config.FLASK_HOST
+            "ai_model": Config.OPENAI_MODEL,
+            "qa_model": Config.QA_MODEL,
+            "research_model": Config.DEEP_RESEARCH_MODEL,
+            "api_base": Config.OPENAI_API_BASE,
+            "api_key_configured": bool(Config.OPENAI_API_KEY),
+            "bilibili_logged_in": bool(Config.BILIBILI_SESSDATA),
+            "flask_port": Config.FLASK_PORT,
+            "flask_host": Config.FLASK_HOST,
         }
 
 

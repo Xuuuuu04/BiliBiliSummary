@@ -45,10 +45,7 @@ class UnsupportedPlatformError(DataSourceError):
         Args:
             url: 不支持的URL
         """
-        super().__init__(
-            message=f"不支持的平台或URL: {url}",
-            platform=None
-        )
+        super().__init__(message=f"不支持的平台或URL: {url}", platform=None)
         self.url = url
 
 
@@ -92,10 +89,7 @@ class VideoNotFoundError(DataSourceError):
             video_id: 视频ID
             platform: 平台名称
         """
-        super().__init__(
-            message=f"视频不存在或已被删除: {video_id}",
-            platform=platform
-        )
+        super().__init__(message=f"视频不存在或已被删除: {video_id}", platform=platform)
         self.video_id = video_id
 
 
@@ -114,10 +108,7 @@ class UserNotFoundError(DataSourceError):
             user_id: 用户ID
             platform: 平台名称
         """
-        super().__init__(
-            message=f"用户不存在或已被封禁: {user_id}",
-            platform=platform
-        )
+        super().__init__(message=f"用户不存在或已被封禁: {user_id}", platform=platform)
         self.user_id = user_id
 
 
@@ -136,10 +127,7 @@ class ArticleNotFoundError(DataSourceError):
             article_id: 文章ID
             platform: 平台名称
         """
-        super().__init__(
-            message=f"文章不存在或已被删除: {article_id}",
-            platform=platform
-        )
+        super().__init__(message=f"文章不存在或已被删除: {article_id}", platform=platform)
         self.article_id = article_id
 
 
@@ -151,11 +139,7 @@ class APIError(DataSourceError):
     """
 
     def __init__(
-        self,
-        message: str,
-        platform: str,
-        status_code: int = None,
-        response_data: dict = None
+        self, message: str, platform: str, status_code: int = None, response_data: dict = None
     ):
         """
         初始化异常
@@ -205,12 +189,7 @@ class RateLimitError(DataSourceError):
     当触发平台API频率限制时抛出
     """
 
-    def __init__(
-        self,
-        platform: str,
-        retry_after: int = None,
-        limit: int = None
-    ):
+    def __init__(self, platform: str, retry_after: int = None, limit: int = None):
         """
         初始化异常
 
@@ -245,10 +224,7 @@ class FeatureNotSupportedError(DataSourceError):
             platform: 平台名称
             feature: 功能名称
         """
-        super().__init__(
-            message=f"该平台不支持 '{feature}' 功能",
-            platform=platform
-        )
+        super().__init__(message=f"该平台不支持 '{feature}' 功能", platform=platform)
         self.feature = feature
 
 

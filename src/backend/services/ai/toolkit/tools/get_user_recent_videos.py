@@ -1,7 +1,9 @@
 """
 获取UP主最近投稿工具
 """
+
 from typing import Dict
+
 from src.backend.services.ai.toolkit.base_tool import BaseTool
 from src.backend.utils.logger import get_logger
 
@@ -29,19 +31,16 @@ class GetUserRecentVideosTool(BaseTool):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "mid": {
-                            "type": "integer",
-                            "description": "UP 主的 UID (mid)"
-                        },
+                        "mid": {"type": "integer", "description": "UP 主的 UID (mid)"},
                         "limit": {
                             "type": "integer",
                             "description": "获取视频的数量，默认 10",
-                            "default": 10
-                        }
+                            "default": 10,
+                        },
                     },
-                    "required": ["mid"]
-                }
-            }
+                    "required": ["mid"],
+                },
+            },
         }
 
     async def execute(self, mid: int, limit: int = 10) -> Dict:
@@ -62,15 +61,11 @@ class GetUserRecentVideosTool(BaseTool):
 
         v_res = await self._bilibili_service.get_user_recent_videos(mid, limit=limit)
 
-        if not v_res['success']:
+        if not v_res["success"]:
             return {
-                'type': 'error',
-                'tool': self.name,
-                'error': f"获取用户作品失败: {v_res.get('error', 'Unknown error')}"
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取用户作品失败: {v_res.get('error', 'Unknown error')}",
             }
 
-        return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': v_res['data']
-        }
+        return {"type": "tool_result", "tool": self.name, "data": v_res["data"]}

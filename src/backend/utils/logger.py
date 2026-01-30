@@ -2,31 +2,32 @@
 统一日志系统
 提供标准化的日志输出格式和文件持久化
 """
+
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
-import os
+from pathlib import Path
 
 
 # 日志颜色配置
 class LogColors:
     """终端日志颜色"""
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
+
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
 
     # 级别颜色
-    DEBUG = '\033[36m'      # 青色
-    INFO = '\033[32m'       # 绿色
-    WARNING = '\033[33m'    # 黄色
-    ERROR = '\033[31m'      # 红色
-    CRITICAL = '\033[35m'   # 紫色
+    DEBUG = "\033[36m"  # 青色
+    INFO = "\033[32m"  # 绿色
+    WARNING = "\033[33m"  # 黄色
+    ERROR = "\033[31m"  # 红色
+    CRITICAL = "\033[35m"  # 紫色
 
     # 模块标签颜色
-    MODULE = '\033[38;5;214m'  # 橙色
-    TIMESTAMP = '\033[90m'     # 深灰
-    FILENAME = '\033[38;5;39m'  # 蓝色
+    MODULE = "\033[38;5;214m"  # 橙色
+    TIMESTAMP = "\033[90m"  # 深灰
+    FILENAME = "\033[38;5;39m"  # 蓝色
 
 
 class ColoredFormatter(logging.Formatter):
@@ -55,7 +56,7 @@ class ColoredFormatter(logging.Formatter):
 
         # 格式化位置信息
         location = ""
-        if hasattr(record, 'pathname') and hasattr(record, 'lineno'):
+        if hasattr(record, "pathname") and hasattr(record, "lineno"):
             filename = Path(record.pathname).name
             location = f"{LogColors.FILENAME}{filename}:{record.lineno}{LogColors.RESET}"
 
@@ -70,7 +71,7 @@ class ColoredFormatter(logging.Formatter):
 
         # 添加异常信息（如果有）
         if record.exc_info:
-            formatted += '\n' + self.formatException(record.exc_info)
+            formatted += "\n" + self.formatException(record.exc_info)
 
         return formatted
 
@@ -90,7 +91,7 @@ class FileFormatter(logging.Formatter):
 
         # 格式化位置信息
         location = ""
-        if hasattr(record, 'pathname') and hasattr(record, 'lineno'):
+        if hasattr(record, "pathname") and hasattr(record, "lineno"):
             filename = Path(record.pathname).name
             location = f"{filename}:{record.lineno}"
 
@@ -105,7 +106,7 @@ class FileFormatter(logging.Formatter):
 
         # 添加异常信息（如果有）
         if record.exc_info:
-            formatted += '\n' + self.formatException(record.exc_info)
+            formatted += "\n" + self.formatException(record.exc_info)
 
         return formatted
 
@@ -124,7 +125,7 @@ def setup_logging(
     console_level: int = logging.INFO,
     log_to_file: bool = True,
     max_bytes: int = 10 * 1024 * 1024,  # 10MB
-    backup_count: int = 5
+    backup_count: int = 5,
 ):
     """
     配置应用程序的日志系统
@@ -146,7 +147,7 @@ def setup_logging(
     # 1. 控制台处理器（带颜色）
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(console_level)
-    console_formatter = ColoredFormatter(datefmt='%H:%M:%S')
+    console_formatter = ColoredFormatter(datefmt="%H:%M:%S")
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)
 
@@ -154,13 +155,13 @@ def setup_logging(
     if log_to_file:
         file_handler = TimedRotatingFileHandler(
             filename=str(CURRENT_LOG_FILE),
-            when='midnight',  # 每天午夜分割
+            when="midnight",  # 每天午夜分割
             interval=1,  # 间隔1天
             backupCount=backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         file_handler.setLevel(level)
-        file_formatter = FileFormatter(datefmt='%Y-%m-%d %H:%M:%S')
+        file_formatter = FileFormatter(datefmt="%Y-%m-%d %H:%M:%S")
         file_handler.setFormatter(file_formatter)
         root_logger.addHandler(file_handler)
 

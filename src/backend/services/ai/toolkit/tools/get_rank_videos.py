@@ -1,6 +1,7 @@
 """
 获取B站排行榜工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -73,6 +74,10 @@ class GetRankVideosTool(BaseTool):
         logger.info(f"[工具] 获取排行榜: category={category}, day={day}")
         res = await self._bilibili_service.get_rank_videos(type_=rank_type, day=day)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取排行榜失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取排行榜失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

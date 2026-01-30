@@ -2,17 +2,20 @@
 AI辅助工具模块
 提供网络搜索、PDF生成等辅助功能
 """
+
 import os
-import re
 import random
-import time
+import re
 import threading
-import requests
-from datetime import datetime
+import time
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Dict
-from src.config import Config
+
+import requests
+
 from src.backend.utils.logger import get_logger
+from src.config import Config
 
 logger = get_logger(__name__)
 
@@ -78,7 +81,10 @@ def openai_chat_completions_stream(client, *, max_retries: int = 4, **params):
                 return
             except Exception as e:
                 msg = str(e)
-                retryable = any(x in msg for x in ["429", "Rate limit", "timeout", "timed out", "502", "503", "504"])
+                retryable = any(
+                    x in msg
+                    for x in ["429", "Rate limit", "timeout", "timed out", "502", "503", "504"]
+                )
                 if attempt >= max_retries or not retryable:
                     raise
         _sleep_backoff(attempt)
@@ -99,22 +105,14 @@ def web_search_exa(query: str) -> Dict:
     try:
         api_key = Config.EXA_API_KEY
         if not api_key:
-            return {'success': False, 'error': '未配置 Exa API Key'}
+            return {"success": False, "error": "未配置 Exa API Key"}
 
         cached = EXA_CACHE.get(("exa_search", query))
         if cached is not None:
             return {"success": True, "data": cached}
 
-        headers = {
-            "x-api-key": api_key,
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "query": query,
-            "useAutoprompt": True,
-            "numResults": 5,
-            "type": "neural"
-        }
+        headers = {"x-api-key": api_key, "Content-Type": "application/json"}
+        payload = {"query": query, "useAutoprompt": True, "numResults": 5, "type": "neural"}
 
         logger.info(f"[工具] Exa 网络搜索: {query}")
         with _semaphore(EXA_SEMAPHORE):
@@ -158,7 +156,7 @@ def web_search_exa(query: str) -> Dict:
                     raise e
     except Exception as e:
         logger.error(f"Exa 搜索失败: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}
 
 
 def save_research_report(topic: str, content: str, report_dir: str = "research_reports"):
@@ -178,7 +176,7 @@ def save_research_report(topic: str, content: str, report_dir: str = "research_r
             os.makedirs(report_dir)
 
         # 清理文件名
-        safe_topic = re.sub(r'[\\/*?:"<>|]', '_', topic)[:50]
+        safe_topic = re.sub(r'[\\/*?:"<>|]', "_", topic)[:50]
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename_base = f"{timestamp}_{safe_topic}"
 
@@ -190,11 +188,11 @@ def save_research_report(topic: str, content: str, report_dir: str = "research_r
             f.write(content)
 
         logger.info(f"研究报告已持久化: {md_filepath}")
-        return {'success': True, 'path': md_filepath}
+        return {"success": True, "path": md_filepath}
 
     except Exception as e:
         logger.warning(f"保存报告失败: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}
 
 
 def generate_bili_style_pdf(topic: str, content: str, output_path: str):
@@ -211,10 +209,10 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
     """
     try:
         import markdown2
-        from xhtml2pdf import pisa
+        from reportlab.lib.fonts import addMapping
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.lib.fonts import addMapping
+        from xhtml2pdf import pisa
 
         # --- 1. 更加健壮的字体注册逻辑 ---
         font_registered = False
@@ -223,8 +221,8 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
         # 路径列表 (Windows) - 优先选择 .ttf 格式避开权限问题
         font_configs = [
             ("SimHei", "C:/Windows/Fonts/simhei.ttf"),  # 黑体 (.ttf) - 兼容性王者
-            ("YaHei", "C:/Windows/Fonts/msyh.ttc"),     # 微软雅黑 (.ttc)
-            ("SimSun", "C:/Windows/Fonts/simsun.ttc")    # 宋体 (.ttc)
+            ("YaHei", "C:/Windows/Fonts/msyh.ttc"),  # 微软雅黑 (.ttc)
+            ("SimSun", "C:/Windows/Fonts/simsun.ttc"),  # 宋体 (.ttc)
         ]
 
         for name, path in font_configs:
@@ -249,26 +247,16 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
         if not font_registered:
             # 最后的保底：使用内置的 STSong-Light (无需外部文件)
             from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-            pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+
+            pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
             current_font_name = "STSong-Light"
             logger.debug(f"[PDF] 未找到系统字体，使用内置保底字体: {current_font_name}")
 
         # --- 2. 准备 HTML 内容 ---
         # 强化加粗内容的样式，使其在 PDF 中呈现 B 站粉色
-        html_content = markdown2.markdown(content, extras=["tables", "fenced-code-blocks", "break-on-newline"])
-
-        # 注入项目 LOGO (SVG 路径)
-        logo_svg = """
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="8" fill="#FB7299"/>
-            <path d="M11 15H29V27H11V15Z" fill="white"/>
-            <path d="M14 11L18 15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M26 11L22 15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="16" cy="20" r="1.5" fill="#FB7299"/>
-            <circle cx="24" cy="20" r="1.5" fill="#FB7299"/>
-            <path d="M18 23.5H22" stroke="#FB7299" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        """
+        html_content = markdown2.markdown(
+            content, extras=["tables", "fenced-code-blocks", "break-on-newline"]
+        )
 
         # Bilibili 风格 CSS
         # 关键修复：添加 -pdf-font-encoding: identity-H; 以支持中文字符
@@ -431,19 +419,16 @@ def generate_bili_style_pdf(topic: str, content: str, output_path: str):
         # 生成 PDF
         with open(output_path, "wb") as f:
             # 关键：指定 encoding='utf-8' 并在 pisa 中处理
-            pisa_status = pisa.CreatePDF(
-                full_html,
-                dest=f,
-                encoding='utf-8'
-            )
+            pisa_status = pisa.CreatePDF(full_html, dest=f, encoding="utf-8")
 
         if pisa_status.err:
-            logger.error(f"PDF 生成过程中出现错误")
+            logger.error("PDF 生成过程中出现错误")
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
-        raise Exception(f"PDF 渲染出错: {str(e)}")
+        raise RuntimeError(f"PDF 渲染出错: {str(e)}") from e
 
 
 def extract_content_from_response(response) -> str:
@@ -463,12 +448,16 @@ def extract_content_from_response(response) -> str:
         logger.debug(f"_extract_content - 响应类型: {type(response)}")
 
         # 尝试标准OpenAI格式
-        if hasattr(response, 'choices') and response.choices:
+        if hasattr(response, "choices") and response.choices:
             content = response.choices[0].message.content
             logger.debug(f"提取到内容长度: {len(content) if content else 0}")
 
             # 检查是否是HTML（错误响应）
-            if content and content.strip().startswith('<!doctype') or content.strip().startswith('<html'):
+            if (
+                content
+                and content.strip().startswith("<!doctype")
+                or content.strip().startswith("<html")
+            ):
                 raise ValueError("API返回了HTML页面而不是文本内容，请检查API配置和网络连接")
 
             return content
@@ -476,20 +465,20 @@ def extract_content_from_response(response) -> str:
         # 如果是字符串，直接返回
         if isinstance(response, str):
             # 检查是否是HTML
-            if response.strip().startswith('<!doctype') or response.strip().startswith('<html'):
+            if response.strip().startswith("<!doctype") or response.strip().startswith("<html"):
                 raise ValueError("API返回了HTML页面，请检查OPENAI_API_BASE配置")
             return response
 
         # 如果是字典，尝试提取内容
         if isinstance(response, dict):
-            if 'choices' in response and response['choices']:
-                return response['choices'][0]['message']['content']
-            if 'content' in response:
-                return response['content']
-            if 'text' in response:
-                return response['text']
+            if "choices" in response and response["choices"]:
+                return response["choices"][0]["message"]["content"]
+            if "content" in response:
+                return response["content"]
+            if "text" in response:
+                return response["text"]
             # 如果字典中有error
-            if 'error' in response:
+            if "error" in response:
                 raise ValueError(f"API返回错误: {response['error']}")
 
         # 尝试转换为字符串
@@ -512,13 +501,13 @@ def extract_tokens_from_response(response) -> int:
         token使用量，失败返回0
     """
     try:
-        if hasattr(response, 'usage') and response.usage:
-            if hasattr(response.usage, 'total_tokens'):
+        if hasattr(response, "usage") and response.usage:
+            if hasattr(response.usage, "total_tokens"):
                 return response.usage.total_tokens
 
         if isinstance(response, dict):
-            if 'usage' in response:
-                return response['usage'].get('total_tokens', 0)
+            if "usage" in response:
+                return response["usage"].get("total_tokens", 0)
 
         return 0
     except Exception as e:
@@ -536,27 +525,22 @@ def parse_analysis_response(analysis_text: str) -> Dict:
     Returns:
         {'summary': str, 'danmaku': str, 'comments': str}
     """
-    sections = {
-        'summary': '',
-        'danmaku': '',
-        'comments': ''
-    }
+    sections = {"summary": "", "danmaku": "", "comments": ""}
 
     current_section = None
-    lines = analysis_text.split('\n')
+    lines = analysis_text.split("\n")
 
     for line in lines:
-        line_lower = line.lower()
         # 匹配第一板块：内容总结
-        if '内容深度总结' in line or '第一板块' in line:
-            current_section = 'summary'
+        if "内容深度总结" in line or "第一板块" in line:
+            current_section = "summary"
         # 匹配第二板块：弹幕分析
-        elif '弹幕互动' in line or '第二板块' in line or '舆情分析' in line:
-            current_section = 'danmaku'
+        elif "弹幕互动" in line or "第二板块" in line or "舆情分析" in line:
+            current_section = "danmaku"
         # 匹配第三板块：评论分析
-        elif '评论区深度' in line or '第三板块' in line or '评论解析' in line:
-            current_section = 'comments'
+        elif "评论区深度" in line or "第三板块" in line or "评论解析" in line:
+            current_section = "comments"
         elif current_section:
-            sections[current_section] += line + '\n'
+            sections[current_section] += line + "\n"
 
     return sections

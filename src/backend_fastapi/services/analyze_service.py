@@ -31,34 +31,92 @@ class AnalyzeService:
         video_info = video_info_result["data"]
         subtitle_result = run_async(self._bilibili.get_video_subtitles(bvid))
 
-        danmaku_result = run_async(self._bilibili.get_video_danmaku(bvid, limit=200))
+        danmaku_result = run_async(self._bilibili.get_video_danmaku(bvid, limit=1000))
         danmaku_texts = danmaku_result["data"]["danmakus"] if danmaku_result.get("success") else []
 
-        comments_result = run_async(self._bilibili.get_video_comments(bvid, max_pages=10))
+        comments_result = run_async(self._bilibili.get_video_comments(bvid, max_pages=30, target_count=300))
         comments_data = (
             comments_result["data"]["comments"] if comments_result.get("success") else []
         )
 
-        stats_result = run_async(self._bilibili.get_video_stats(bvid))
-        stats_data = stats_result["data"] if stats_result.get("success") else {}
+        stats_result, tags_result, series_result, related_result = run_async(
+            asyncio.gather(
+                self._bilibili.get_video_stats(bvid),
+                self._bilibili.get_video_tags(bvid),
+                self._bilibili.get_video_series(bvid),
+                self._bilibili.get_related_videos(bvid),
+                return_exceptions=True,
+            )
+        )
+        stats_data = (
+            stats_result.get("data") if hasattr(stats_result, "get") and stats_result.get("success") else {}
+        )
+        tags_data = (
+            tags_result.get("data") if hasattr(tags_result, "get") and tags_result.get("success") else {}
+        )
+        series_data = (
+            series_result.get("data") if hasattr(series_result, "get") and series_result.get("success") else {}
+        )
+        related_data = (
+            related_result.get("data") if hasattr(related_result, "get") and related_result.get("success") else []
+        )
 
         content = ""
-        has_subtitle = False
-        if subtitle_result.get("success") and subtitle_result["data"].get("has_subtitle"):
+        if subtitle_result.get("success") and subtitle_result.get("data", {}).get("has_subtitle"):
             content = subtitle_result["data"]["full_text"]
-            has_subtitle = True
         else:
-            if danmaku_texts:
-                content = "\n".join(danmaku_texts)
-                content = f"【视频简介】\n{video_info.get('desc', '')}\n\n【弹幕内容】\n{content}"
-            else:
-                content = f"【视频简介】\n{video_info.get('desc', '')}"
+            raise BadRequestError("该视频未获取到字幕、AI 总结或简介，无法进行分析。")
+
+        extra_context = ""
+        if stats_data:
+            extra_context += (
+                "\n\n【统计】\n"
+                f"- 播放: {stats_data.get('view')}\n"
+                f"- 点赞: {stats_data.get('like')}\n"
+                f"- 投币: {stats_data.get('coin')}\n"
+                f"- 收藏: {stats_data.get('favorite')}\n"
+                f"- 分享: {stats_data.get('share')}\n"
+                f"- 弹幕数: {stats_data.get('danmaku')}\n"
+                f"- 评论数: {stats_data.get('reply')}\n"
+                f"- 在线: {stats_data.get('online')}"
+            )
+        if tags_data.get("tags"):
+            tag_names = [t.get("tag_name") for t in tags_data.get("tags", []) if t.get("tag_name")]
+            if tag_names:
+                extra_context += "\n\n【标签】\n" + "、".join(tag_names[:30])
+        if series_data.get("has_series"):
+            extra_context += (
+                "\n\n【所属合集】\n"
+                f"- 合集: {series_data.get('series_title')}\n"
+                f"- 总集数: {series_data.get('total_videos')}\n"
+            )
+            videos = series_data.get("videos") or []
+            if videos:
+                extra_context += "  - 同合集视频(部分): " + " | ".join(
+                    [f"{v.get('index')}. {v.get('title')}" for v in videos[:10]]
+                )
+        if related_data:
+            extra_context += "\n\n【相关推荐】\n" + "\n".join(
+                [
+                    f"- {r.get('title')}（UP: {r.get('author')} / 播放: {r.get('view')}）"
+                    for r in related_data[:10]
+                ]
+            )
+        if danmaku_texts:
+            extra_context += "\n\n【实时弹幕（采样）】\n" + "\n".join(danmaku_texts[:400])
+        if comments_data:
+            comment_texts = [f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]]
+            extra_context += "\n\n【精彩评论（热门/高赞）】\n" + "\n".join(comment_texts)
+
+        content = content + extra_context
 
         if not content or len(content) < 50:
-            raise BadRequestError("无法获取视频内容（无字幕且无有效弹幕）")
+            raise BadRequestError("字幕内容过短，无法进行有效分析")
 
         frames_result = run_async(self._bilibili.extract_video_frames(bvid))
         video_frames = frames_result["data"]["frames"] if frames_result.get("success") else None
+        if not video_frames:
+            raise BadRequestError("未能提取关键帧。当前分析模式要求必须有关键帧。")
 
         analysis_result = self._ai.generate_full_analysis(video_info, content, video_frames)
         if not analysis_result.get("success"):
@@ -69,7 +127,10 @@ class AnalyzeService:
             "data": {
                 "video_info": video_info,
                 "stats": stats_data,
-                "has_subtitle": has_subtitle,
+                "has_subtitle": True,
+                "subtitle_is_ai": bool(subtitle_result.get("data", {}).get("is_ai")),
+                "subtitle_selected_track": subtitle_result.get("data", {}).get("selected_track"),
+                "subtitle_tracks": subtitle_result.get("data", {}).get("tracks"),
                 "has_video_frames": bool(video_frames),
                 "frame_count": len(video_frames) if video_frames else 0,
                 "content": content,
@@ -167,12 +228,23 @@ class AnalyzeService:
                 self._bilibili.get_video_danmaku(bvid, limit=1000),
                 self._bilibili.get_video_comments(bvid, max_pages=30, target_count=500),
                 self._bilibili.get_video_stats(bvid),
+                self._bilibili.get_video_tags(bvid),
+                self._bilibili.get_video_series(bvid),
+                self._bilibili.get_related_videos(bvid),
             ]
 
             async def fetch_all():
                 return await asyncio.gather(*tasks, return_exceptions=True)
 
-            subtitle_result, danmaku_result, comments_result, stats_result = run_async(fetch_all())
+            (
+                subtitle_result,
+                danmaku_result,
+                comments_result,
+                stats_result,
+                tags_result,
+                series_result,
+                related_result,
+            ) = run_async(fetch_all())
 
             danmaku_texts = []
             if danmaku_result and hasattr(danmaku_result, "get") and danmaku_result.get("success"):
@@ -195,22 +267,76 @@ class AnalyzeService:
             ):
                 content = subtitle_result["data"]["full_text"]
                 extra_context = ""
+                stats_data = (
+                    stats_result.get("data")
+                    if stats_result and hasattr(stats_result, "get") and stats_result.get("success")
+                    else {}
+                )
+                tags_data = (
+                    tags_result.get("data")
+                    if tags_result and hasattr(tags_result, "get") and tags_result.get("success")
+                    else {}
+                )
+                series_data = (
+                    series_result.get("data")
+                    if series_result and hasattr(series_result, "get") and series_result.get("success")
+                    else {}
+                )
+                related_data = (
+                    related_result.get("data")
+                    if related_result and hasattr(related_result, "get") and related_result.get("success")
+                    else []
+                )
+
+                if stats_data:
+                    extra_context += (
+                        "\n\n【统计】\n"
+                        f"- 播放: {stats_data.get('view')}\n"
+                        f"- 点赞: {stats_data.get('like')}\n"
+                        f"- 投币: {stats_data.get('coin')}\n"
+                        f"- 收藏: {stats_data.get('favorite')}\n"
+                        f"- 分享: {stats_data.get('share')}\n"
+                        f"- 弹幕数: {stats_data.get('danmaku')}\n"
+                        f"- 评论数: {stats_data.get('reply')}\n"
+                        f"- 在线: {stats_data.get('online')}"
+                    )
+                if tags_data.get("tags"):
+                    tag_names = [
+                        t.get("tag_name") for t in tags_data.get("tags", []) if t.get("tag_name")
+                    ]
+                    if tag_names:
+                        extra_context += "\n\n【标签】\n" + "、".join(tag_names[:30])
+                if series_data.get("has_series"):
+                    extra_context += (
+                        "\n\n【所属合集】\n"
+                        f"- 合集: {series_data.get('series_title')}\n"
+                        f"- 总集数: {series_data.get('total_videos')}\n"
+                    )
+                    videos = series_data.get("videos") or []
+                    if videos:
+                        extra_context += "  - 同合集视频(部分): " + " | ".join(
+                            [f"{v.get('index')}. {v.get('title')}" for v in videos[:10]]
+                        )
+                if related_data:
+                    extra_context += "\n\n【相关推荐】\n" + "\n".join(
+                        [
+                            f"- {r.get('title')}（UP: {r.get('author')} / 播放: {r.get('view')}）"
+                            for r in related_data[:10]
+                        ]
+                    )
                 if danmaku_texts:
-                    extra_context += "\n\n【弹幕内容（部分）】\n" + "\n".join(danmaku_texts[:100])
+                    extra_context += "\n\n【实时弹幕（采样）】\n" + "\n".join(danmaku_texts[:400])
                 if comments_data:
-                    comment_texts = [f"{c['username']}: {c['message']}" for c in comments_data[:50]]
-                    extra_context += "\n\n【视频评论（部分）】\n" + "\n".join(comment_texts)
+                    comment_texts = [f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]]
+                    extra_context += "\n\n【精彩评论（热门/高赞）】\n" + "\n".join(comment_texts)
                 content += extra_context
-                yield f"data: {json.dumps({'type': 'stage', 'stage': 'content_ready', 'message': '使用字幕内容（{}字）'.format(len(content)), 'progress': 35, 'content': content, 'has_subtitle': True, 'text_source': '字幕'})}\n\n"
+                subtitle_data = subtitle_result.get("data", {})
+                text_source = subtitle_data.get("text_source", "未知")
+
+                yield f"data: {json.dumps({'type': 'stage', 'stage': 'content_ready', 'message': '使用{}内容（{}字）'.format(text_source, len(content)), 'progress': 35, 'content': content, 'has_subtitle': True, 'text_source': text_source, 'subtitle_is_ai': bool(subtitle_data.get('is_ai')), 'subtitle_selected_track': subtitle_data.get('selected_track')}, ensure_ascii=False)}\n\n"
             else:
-                base_content = f"【视频简介】\n{video_info.get('desc', '')}"
-                if danmaku_texts:
-                    base_content += "\n\n【弹幕内容】\n" + "\n".join(danmaku_texts)
-                if comments_data:
-                    comment_texts = [f"{c['username']}: {c['message']}" for c in comments_data]
-                    base_content += "\n\n【视频评论】\n" + "\n".join(comment_texts)
-                content = base_content
-                yield f"data: {json.dumps({'type': 'stage', 'stage': 'content_ready', 'message': '使用视频文案进行分析', 'progress': 35, 'content': content, 'has_subtitle': False, 'text_source': '文案'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'error': '该视频没有字幕、AI 总结或简介，无法进行分析。'}, ensure_ascii=False)}\n\n"
+                return
 
             if not content or len(content) < 50:
                 yield f"data: {json.dumps({'type': 'error', 'error': '无法获取视频内容（无字幕且无有效弹幕）'})}\n\n"
@@ -225,7 +351,8 @@ class AnalyzeService:
                 frame_count = len(video_frames)
                 yield f"data: {json.dumps({'type': 'stage', 'stage': 'frames_ready', 'message': '成功提取 {} 帧画面'.format(frame_count), 'progress': 50, 'has_frames': True, 'frame_count': frame_count})}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'stage', 'stage': 'frames_ready', 'message': '将仅使用文本内容进行分析', 'progress': 50, 'has_frames': False, 'frame_count': 0})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'error': '未能提取关键帧。当前分析模式要求必须有关键帧。'}, ensure_ascii=False)}\n\n"
+                return
 
             yield f"data: {json.dumps({'type': 'stage', 'stage': 'starting_analysis', 'message': '开始AI智能分析...', 'progress': 55})}\n\n"
             for chunk in self._ai.generate_full_analysis_stream(video_info, content, video_frames):

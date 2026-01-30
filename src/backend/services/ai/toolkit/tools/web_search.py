@@ -1,9 +1,11 @@
 """
 全网搜索工具（Exa）
 """
+
 from typing import Dict
-from src.backend.services.ai.toolkit.base_tool import BaseTool
+
 from src.backend.services.ai.ai_helpers import web_search_exa
+from src.backend.services.ai.toolkit.base_tool import BaseTool
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,12 +34,12 @@ class WebSearchTool(BaseTool):
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "搜索查询语句，建议使用自然语言描述你想要找的内容"
+                            "description": "搜索查询语句，建议使用自然语言描述你想要找的内容",
                         }
                     },
-                    "required": ["query"]
-                }
-            }
+                    "required": ["query"],
+                },
+            },
         }
 
     async def execute(self, query: str) -> Dict:
@@ -54,15 +56,11 @@ class WebSearchTool(BaseTool):
 
         search_res = web_search_exa(query)
 
-        if not search_res['success']:
+        if not search_res["success"]:
             return {
-                'type': 'error',
-                'tool': self.name,
-                'error': f"网络搜索失败: {search_res.get('error', 'Unknown error')}"
+                "type": "error",
+                "tool": self.name,
+                "error": f"网络搜索失败: {search_res.get('error', 'Unknown error')}",
             }
 
-        return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': search_res['data']
-        }
+        return {"type": "tool_result", "tool": self.name, "data": search_res["data"]}

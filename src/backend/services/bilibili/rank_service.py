@@ -4,8 +4,10 @@ B站排行榜服务
 提供各分区视频排行榜功能
 """
 
-from bilibili_api import rank, RankType
 from typing import Dict, Optional
+
+from bilibili_api import RankType, rank
+
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,11 +25,7 @@ class RankService:
         """
         self.credential = credential
 
-    async def get_rank_videos(
-        self,
-        type_: Optional[str] = None,
-        day: int = 3
-    ) -> Dict:
+    async def get_rank_videos(self, type_: Optional[str] = None, day: int = 3) -> Dict:
         """
         获取排行榜视频
 
@@ -45,30 +43,32 @@ class RankService:
             result = await rank.get_rank(type_=rank_type, day=3 if day == 3 else 7)
 
             videos = []
-            for item in result.get('list', []):
-                videos.append({
-                    'bvid': item.get('bvid'),
-                    'title': item.get('title'),
-                    'author': item.get('owner', {}).get('name'),
-                    'cover': item.get('pic'),
-                    'view': item.get('stat', {}).get('view'),
-                    'like': item.get('stat', {}).get('like'),
-                    'duration': item.get('duration')
-                })
+            for item in result.get("list", []):
+                videos.append(
+                    {
+                        "bvid": item.get("bvid"),
+                        "title": item.get("title"),
+                        "author": item.get("owner", {}).get("name"),
+                        "cover": item.get("pic"),
+                        "view": item.get("stat", {}).get("view"),
+                        "like": item.get("stat", {}).get("like"),
+                        "duration": item.get("duration"),
+                    }
+                )
 
             return {
-                'success': True,
-                'data': {
-                    'videos': videos,
-                    'type': type_ or 'all',
-                    'day': day,
-                    'total': len(videos)
-                }
+                "success": True,
+                "data": {
+                    "videos": videos,
+                    "type": type_ or "all",
+                    "day": day,
+                    "total": len(videos),
+                },
             }
 
         except Exception as e:
             logger.error(f"获取排行榜失败: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
     def _parse_rank_type(self, type_str: str):
         """
@@ -81,24 +81,24 @@ class RankService:
             RankType 枚举值
         """
         type_map = {
-            'all': RankType.ALL,
-            'bangumi': RankType.BANGUMI,
-            'guochuang': RankType.GUOCHUANG,
-            'douga': RankType.DOUGA,
-            'music': RankType.MUSIC,
-            'dance': RankType.DANCE,
-            'game': RankType.GAME,
-            'knowledge': RankType.KNOWLEDGE,
-            'tech': RankType.TECH,
-            'sports': RankType.SPORTS,
-            'car': RankType.CAR,
-            'fashion': RankType.FASHION,
-            'ent': RankType.ENT,
-            'cinephile': RankType.CINEPHILE,
-            'life': RankType.LIFE,
-            'food': RankType.FOOD,
-            'animal': RankType.ANIMAL,
-            'caricature': RankType.CARICATURE,
+            "all": RankType.ALL,
+            "bangumi": RankType.BANGUMI,
+            "guochuang": RankType.GUOCHUANG,
+            "douga": RankType.DOUGA,
+            "music": RankType.MUSIC,
+            "dance": RankType.DANCE,
+            "game": RankType.GAME,
+            "knowledge": RankType.KNOWLEDGE,
+            "tech": RankType.TECH,
+            "sports": RankType.SPORTS,
+            "car": RankType.CAR,
+            "fashion": RankType.FASHION,
+            "ent": RankType.ENT,
+            "cinephile": RankType.CINEPHILE,
+            "life": RankType.LIFE,
+            "food": RankType.FOOD,
+            "animal": RankType.ANIMAL,
+            "caricature": RankType.CARICATURE,
         }
 
         return type_map.get(type_str, RankType.ALL)

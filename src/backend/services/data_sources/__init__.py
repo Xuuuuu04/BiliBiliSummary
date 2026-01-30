@@ -52,38 +52,38 @@
 """
 
 # 导入基类和接口
-from src.backend.services.data_sources.base import DataSource, ContentType
-
-# 导入异常类
-from src.backend.services.data_sources.exceptions import (
-    DataSourceError,
-    UnsupportedPlatformError,
-    InvalidURLError,
-    VideoNotFoundError,
-    UserNotFoundError,
-    ArticleNotFoundError,
-    APIError,
-    AuthenticationError,
-    RateLimitError,
-    FeatureNotSupportedError,
-    ContentAccessDeniedError,
-    CredentialRequiredError,
-    InvalidParameterError,
-    NetworkError,
-    ParseError,
-)
-
-# 导入具体数据源实现
-from src.backend.services.data_sources.bilibili_source import BilibiliSource
-from src.backend.services.data_sources.youtube_source import YouTubeSource
-
-# 导入工厂和适配器
-from src.backend.services.data_sources.factory import DataSourceFactory
 from src.backend.services.data_sources.adapter import (
     DataSourceAdapter,
     get_video_info_universal,
     search_videos_universal,
 )
+from src.backend.services.data_sources.base import ContentType, DataSource
+
+# 导入具体数据源实现
+from src.backend.services.data_sources.bilibili_source import BilibiliSource
+
+# 导入异常类
+from src.backend.services.data_sources.exceptions import (
+    APIError,
+    ArticleNotFoundError,
+    AuthenticationError,
+    ContentAccessDeniedError,
+    CredentialRequiredError,
+    DataSourceError,
+    FeatureNotSupportedError,
+    InvalidParameterError,
+    InvalidURLError,
+    NetworkError,
+    ParseError,
+    RateLimitError,
+    UnsupportedPlatformError,
+    UserNotFoundError,
+    VideoNotFoundError,
+)
+
+# 导入工厂和适配器
+from src.backend.services.data_sources.factory import DataSourceFactory
+from src.backend.services.data_sources.youtube_source import YouTubeSource
 
 # 版本信息
 __version__ = "1.0.0"
@@ -94,7 +94,6 @@ __all__ = [
     # 基类和接口
     "DataSource",
     "ContentType",
-
     # 异常类
     "DataSourceError",
     "UnsupportedPlatformError",
@@ -111,11 +110,9 @@ __all__ = [
     "InvalidParameterError",
     "NetworkError",
     "ParseError",
-
     # 数据源实现
     "BilibiliSource",
     "YouTubeSource",
-
     # 工厂和适配器
     "DataSourceFactory",
     "DataSourceAdapter",

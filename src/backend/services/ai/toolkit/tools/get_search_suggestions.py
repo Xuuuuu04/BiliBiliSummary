@@ -1,6 +1,7 @@
 """
 获取B站搜索联想工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -40,6 +41,10 @@ class GetSearchSuggestionsTool(BaseTool):
         logger.info(f"[工具] 获取搜索联想: {keyword}")
         res = await self._bilibili_service.get_search_suggestions(keyword)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取搜索建议失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取搜索建议失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

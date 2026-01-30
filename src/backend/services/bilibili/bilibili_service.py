@@ -2,18 +2,16 @@
 B站服务统一入口
 整合所有B站相关服务，提供向后兼容的接口
 """
+
 from typing import Optional
-from src.backend.services.bilibili.credential_manager import CredentialManager
-from src.backend.services.bilibili.video_service import VideoService
-from src.backend.services.bilibili.user_service import UserService
-from src.backend.services.bilibili.search_service import SearchService
+
 from src.backend.services.bilibili.content_service import ContentService
-from src.backend.utils.bilibili_helpers import (
-    extract_bvid,
-    extract_article_id,
-    format_duration
-)
+from src.backend.services.bilibili.credential_manager import CredentialManager
+from src.backend.services.bilibili.search_service import SearchService
+from src.backend.services.bilibili.user_service import UserService
+from src.backend.services.bilibili.video_service import VideoService
 from src.backend.utils.async_helpers import run_async
+from src.backend.utils.bilibili_helpers import extract_article_id, extract_bvid, format_duration
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -97,7 +95,9 @@ class BilibiliService:
         """获取热门推荐视频"""
         return await self.search.get_popular_videos()
 
-    async def extract_video_frames(self, bvid: str, max_frames: Optional[int] = None, interval: Optional[int] = None):
+    async def extract_video_frames(
+        self, bvid: str, max_frames: Optional[int] = None, interval: Optional[int] = None
+    ):
         """提取视频关键帧"""
         return await self.video.extract_frames(bvid, max_frames, interval)
 
@@ -208,6 +208,7 @@ class BilibiliService:
         """
         try:
             from bilibili_api import hot
+
             result = await hot.get_hot_videos(pn=pn, ps=ps)
             return {"success": True, "data": result}
         except Exception as e:
@@ -227,25 +228,24 @@ class BilibiliService:
         """
         try:
             from bilibili_api import hot
+
             result = await hot.get_hot_buzzwords(page_num=page_num, page_size=page_size)
 
             # 提取热词列表，标准化数据格式
             buzzwords = []
-            for item in result.get('list', []):
-                buzzwords.append({
-                    'keyword': item.get('keyword'),
-                    'icon': item.get('icon'),
-                    'score': item.get('score'),  # 热度分数
-                    'type': item.get('type')     # 类型标识
-                })
+            for item in result.get("list", []):
+                buzzwords.append(
+                    {
+                        "keyword": item.get("keyword"),
+                        "icon": item.get("icon"),
+                        "score": item.get("score"),  # 热度分数
+                        "type": item.get("type"),  # 类型标识
+                    }
+                )
 
             return {
                 "success": True,
-                "data": {
-                    'buzzwords': buzzwords,
-                    'total': len(buzzwords),
-                    'page': page_num
-                }
+                "data": {"buzzwords": buzzwords, "total": len(buzzwords), "page": page_num},
             }
         except Exception as e:
             logger.error(f"获取热词图鉴失败: {str(e)}")
@@ -263,6 +263,7 @@ class BilibiliService:
         """
         try:
             from bilibili_api import hot
+
             result = await hot.get_weekly_hot_videos(week=week)
             return {"success": True, "data": result}
         except Exception as e:
@@ -278,6 +279,7 @@ class BilibiliService:
         """
         try:
             from bilibili_api import hot
+
             result = await hot.get_history_popular_videos()
             return {"success": True, "data": result}
         except Exception as e:
@@ -297,6 +299,7 @@ class BilibiliService:
         """
         try:
             from bilibili_api import rank
+
             result = await rank.get_rank(type_=type_, day=3 if day == 3 else 7)
             return {"success": True, "data": result}
         except Exception as e:

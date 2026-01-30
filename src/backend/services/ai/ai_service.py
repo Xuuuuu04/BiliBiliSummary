@@ -2,27 +2,29 @@
 AI服务统一入口（重构版）
 整合所有AI相关功能，提供向后兼容的接口
 """
+
 import time
-from typing import Dict, Optional, Callable, Generator, List
+from typing import Callable, Dict, Generator, List, Optional
+
 from openai import OpenAI
-from src.config import Config
+
 from src.backend.services.ai.agents.deep_research_agent import DeepResearchAgent
-from src.backend.services.ai.prompts import (
-    get_summary_prompt,
-    get_mindmap_prompt,
-    get_video_analysis_prompt,
-    get_chat_qa_system_prompt,
-    get_article_analysis_prompt,
-    get_user_portrait_prompt,
-)
 from src.backend.services.ai.ai_helpers import (
     extract_content_from_response,
     extract_tokens_from_response,
     parse_analysis_response,
-    save_research_report,
-    generate_bili_style_pdf,
+)
+from src.backend.services.ai.prompts import (
+    get_article_analysis_prompt,
+    get_chat_qa_system_prompt,
+    get_context_qa_system_prompt,
+    get_mindmap_prompt,
+    get_summary_prompt,
+    get_user_portrait_prompt,
+    get_video_analysis_prompt,
 )
 from src.backend.utils.logger import get_logger
+from src.config import Config
 
 logger = get_logger(__name__)
 
@@ -37,16 +39,16 @@ class AIService:
     def __init__(self):
         """初始化AI服务"""
         self.client = OpenAI(
-            api_key=Config.OPENAI_API_KEY,
-            base_url=Config.OPENAI_API_BASE,
-            timeout=180.0
+            api_key=Config.OPENAI_API_KEY, base_url=Config.OPENAI_API_BASE, timeout=180.0
         )
         self.model = Config.OPENAI_MODEL
         self.qa_model = Config.QA_MODEL
         self.research_model = Config.DEEP_RESEARCH_MODEL
 
         # 初始化 Agent（深度研究Agent需要视觉模型用于视频分析）
-        self._deep_research_agent = DeepResearchAgent(self.client, self.research_model, vl_model=self.model)
+        self._deep_research_agent = DeepResearchAgent(
+            self.client, self.research_model, vl_model=self.model
+        )
 
     # ========== Agent 方法（保持向后兼容）==========
 
@@ -65,7 +67,9 @@ class AIService:
 
     # ========== 视频分析方法（保持向后兼容）==========
 
-    def chat_stream(self, question: str, context: str, video_info: Dict, history: List[Dict] = None) -> Generator[Dict, None, None]:
+    def chat_stream(
+        self, question: str, context: str, video_info: Dict, history: List[Dict] = None
+    ) -> Generator[Dict, None, None]:
         """
         视频内容流式问答
 
@@ -90,25 +94,61 @@ class AIService:
             messages.append({"role": "user", "content": question})
 
             stream = self.client.chat.completions.create(
-                model=self.qa_model,
-                messages=messages,
-                temperature=0.4,
-                stream=True
+                model=self.qa_model, messages=messages, temperature=0.4, stream=True
             )
 
             for chunk in stream:
                 if chunk.choices and len(chunk.choices) > 0:
                     delta = chunk.choices[0].delta
-                    if hasattr(delta, 'content') and delta.content:
-                        yield {'type': 'content', 'content': delta.content}
+                    if hasattr(delta, "content") and delta.content:
+                        yield {"type": "content", "content": delta.content}
 
-            yield {'type': 'done'}
+            yield {"type": "done"}
 
         except Exception as e:
             logger.error(f"QA问答失败: {str(e)}")
-            yield {'type': 'error', 'error': str(e)}
+            yield {"type": "error", "error": str(e)}
 
-    def generate_full_analysis(self, video_info: Dict, content: str, video_frames: Optional[list] = None, retry_count: int = 0) -> Dict:
+    def context_qa_stream(
+        self,
+        mode: str,
+        question: str,
+        context: str,
+        meta: Dict | None = None,
+        history: List[Dict] | None = None,
+    ) -> Generator[Dict, None, None]:
+        try:
+            meta = meta or {}
+            system_prompt = get_context_qa_system_prompt(mode, meta, context)
+            messages = [{"role": "system", "content": system_prompt}]
+
+            if history:
+                messages.extend(history)
+            messages.append({"role": "user", "content": question})
+
+            stream = self.client.chat.completions.create(
+                model=self.qa_model, messages=messages, temperature=0.4, stream=True
+            )
+
+            for chunk in stream:
+                if chunk.choices and len(chunk.choices) > 0:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, "content") and delta.content:
+                        yield {"type": "content", "content": delta.content}
+
+            yield {"type": "done"}
+
+        except Exception as e:
+            logger.error(f"上下文问答失败: {str(e)}")
+            yield {"type": "error", "error": str(e)}
+
+    def generate_full_analysis(
+        self,
+        video_info: Dict,
+        content: str,
+        video_frames: Optional[list] = None,
+        retry_count: int = 0,
+    ) -> Dict:
         """
         生成完整分析（包括总结和思维导图）
 
@@ -127,9 +167,14 @@ class AIService:
             logger.debug(f"视频帧数量: {len(video_frames) if video_frames else 0}")
 
             danmaku_preview = None
-            if content and '【弹幕内容（部分）】' in content:
+            if content and "【弹幕内容（部分）】" in content:
                 danmaku_preview = content
-            prompt = get_video_analysis_prompt(video_info, content, has_video_frames=bool(video_frames), danmaku_content=danmaku_preview)
+            prompt = get_video_analysis_prompt(
+                video_info,
+                content,
+                has_video_frames=bool(video_frames),
+                danmaku_content=danmaku_preview,
+            )
             logger.debug(f"提示词长度: {len(prompt)}")
 
             # 构建消息内容
@@ -137,13 +182,15 @@ class AIService:
 
             if video_frames and len(video_frames) > 0:
                 for idx, frame_base64 in enumerate(video_frames):
-                    user_content.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{frame_base64}",
-                            "detail": "low"
+                    user_content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{frame_base64}",
+                                "detail": "low",
+                            },
                         }
-                    })
+                    )
                     logger.debug(f"添加第 {idx+1} 帧到消息中")
 
             messages = [
@@ -156,18 +203,14 @@ class AIService:
 4. 综合评价 - 多维度评分和学习建议
 
 你能同时分析视频画面、文字内容和弹幕互动，提供全面、专业、易读的四大板块分析报告。
-请严格按照要求的四大板块结构输出，内容详实、格式规范、逻辑清晰。"""
+请严格按照要求的四大板块结构输出，内容详实、格式规范、逻辑清晰。""",
                 },
-                {"role": "user", "content": user_content}
+                {"role": "user", "content": user_content},
             ]
 
-            logger.debug(f"发送请求到API...")
+            logger.debug("发送请求到API...")
             response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=0.2,
-                max_tokens=8000,
-                timeout=240
+                model=self.model, messages=messages, temperature=0.2, max_tokens=8000, timeout=240
             )
 
             logger.debug(f"API响应类型: {type(response)}")
@@ -178,40 +221,52 @@ class AIService:
             parsed_content = parse_analysis_response(analysis_text)
 
             return {
-                'success': True,
-                'data': {
-                    'full_analysis': analysis_text,
-                    'parsed': parsed_content,
-                    'tokens_used': tokens_used
-                }
+                "success": True,
+                "data": {
+                    "full_analysis": analysis_text,
+                    "parsed": parsed_content,
+                    "tokens_used": tokens_used,
+                },
             }
         except Exception as e:
             logger.error(f"生成完整分析失败: {str(e)}")
             logger.debug(f"错误类型: {type(e).__name__}")
 
             # 针对网络和超时错误的特殊处理
-            if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network', '504', '502', '500']):
+            if any(
+                keyword in str(e).lower()
+                for keyword in ["timeout", "connection", "network", "504", "502", "500"]
+            ):
                 if retry_count < 2:
                     logger.info(f"[重试] 检测到网络错误，正在进行第{retry_count + 1}次重试...")
                     logger.info(f"[重试] 错误详情: {str(e)}")
 
                     if video_frames and len(video_frames) > 4:
                         reduced_frames = video_frames[:4]
-                        logger.warning(f"[降级] 减少视频帧数量: {len(video_frames)} → {len(reduced_frames)}")
-                        return self.generate_full_analysis(video_info, content, reduced_frames, retry_count + 1)
+                        logger.warning(
+                            f"[降级] 减少视频帧数量: {len(video_frames)} → {len(reduced_frames)}"
+                        )
+                        return self.generate_full_analysis(
+                            video_info, content, reduced_frames, retry_count + 1
+                        )
                     elif video_frames and retry_count == 0:
-                        logger.warning(f"[降级] 放弃视频帧，仅使用文本分析")
-                        return self.generate_full_analysis(video_info, content, None, retry_count + 1)
+                        logger.warning("[降级] 放弃视频帧，仅使用文本分析")
+                        return self.generate_full_analysis(
+                            video_info, content, None, retry_count + 1
+                        )
 
             import traceback
-            traceback.print_exc()
-            return {
-                'success': False,
-                'error': f'生成分析失败: {str(e)}'
-            }
 
-    def generate_full_analysis_stream(self, video_info: Dict, content: str, video_frames: Optional[list] = None,
-                                    progress_callback: Optional[Callable] = None) -> Generator[Dict, None, None]:
+            traceback.print_exc()
+            return {"success": False, "error": f"生成分析失败: {str(e)}"}
+
+    def generate_full_analysis_stream(
+        self,
+        video_info: Dict,
+        content: str,
+        video_frames: Optional[list] = None,
+        progress_callback: Optional[Callable] = None,
+    ) -> Generator[Dict, None, None]:
         """
         流式生成完整分析
 
@@ -227,31 +282,36 @@ class AIService:
         try:
             # 发送开始信号
             yield {
-                'type': 'start',
-                'stage': 'preparing',
-                'progress': 0,
-                'message': '准备生成分析...',
-                'tokens_used': 0,
-                'timestamp': time.time()
+                "type": "start",
+                "stage": "preparing",
+                "progress": 0,
+                "message": "准备生成分析...",
+                "tokens_used": 0,
+                "timestamp": time.time(),
             }
 
             if progress_callback:
-                progress_callback('preparing', 0, '准备生成分析...', 0)
+                progress_callback("preparing", 0, "准备生成分析...", 0)
 
             logger.debug(f"开始流式生成分析 - 模型: {self.model}")
 
             danmaku_preview = None
-            if content and '【弹幕内容（部分）】' in content:
+            if content and "【弹幕内容（部分）】" in content:
                 danmaku_preview = content
-            prompt = get_video_analysis_prompt(video_info, content, has_video_frames=bool(video_frames), danmaku_content=danmaku_preview)
+            prompt = get_video_analysis_prompt(
+                video_info,
+                content,
+                has_video_frames=bool(video_frames),
+                danmaku_content=danmaku_preview,
+            )
 
             yield {
-                'type': 'progress',
-                'stage': 'building_prompt',
-                'progress': 10,
-                'message': '构建分析提示词...',
-                'tokens_used': 0,
-                'timestamp': time.time()
+                "type": "progress",
+                "stage": "building_prompt",
+                "progress": 10,
+                "message": "构建分析提示词...",
+                "tokens_used": 0,
+                "timestamp": time.time(),
             }
 
             # 构建消息内容
@@ -259,13 +319,15 @@ class AIService:
 
             if video_frames and len(video_frames) > 0:
                 for idx, frame_base64 in enumerate(video_frames):
-                    user_content.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{frame_base64}",
-                            "detail": "low"
+                    user_content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{frame_base64}",
+                                "detail": "low",
+                            },
                         }
-                    })
+                    )
                     logger.debug(f"添加第 {idx+1} 帧到消息中")
 
             messages = [
@@ -278,24 +340,24 @@ class AIService:
 4. 综合评价 - 多维度评分和学习建议
 
 你能同时分析视频画面、文字内容和弹幕互动，提供全面、专业、易读的四大板块分析报告。
-请严格按照要求的四大板块结构输出，内容详实、格式规范、逻辑清晰。"""
+请严格按照要求的四大板块结构输出，内容详实、格式规范、逻辑清晰。""",
                 },
-                {"role": "user", "content": user_content}
+                {"role": "user", "content": user_content},
             ]
 
             yield {
-                'type': 'progress',
-                'stage': 'calling_api',
-                'progress': 20,
-                'message': '调用AI模型生成分析...',
-                'tokens_used': 0,
-                'timestamp': time.time()
+                "type": "progress",
+                "stage": "calling_api",
+                "progress": 20,
+                "message": "调用AI模型生成分析...",
+                "tokens_used": 0,
+                "timestamp": time.time(),
             }
 
             if progress_callback:
-                progress_callback('calling_api', 20, '调用AI模型生成分析...', 0)
+                progress_callback("calling_api", 20, "调用AI模型生成分析...", 0)
 
-            logger.debug(f"发送流式请求到API...")
+            logger.debug("发送流式请求到API...")
 
             # 流式调用API
             stream = self.client.chat.completions.create(
@@ -304,7 +366,7 @@ class AIService:
                 temperature=0.3,
                 max_tokens=8000,
                 timeout=240,
-                stream=True
+                stream=True,
             )
 
             full_content = ""
@@ -312,12 +374,12 @@ class AIService:
             last_progress_update = time.time()
 
             yield {
-                'type': 'progress',
-                'stage': 'streaming',
-                'progress': 30,
-                'message': '正在接收AI分析结果...',
-                'tokens_used': 0,
-                'timestamp': time.time()
+                "type": "progress",
+                "stage": "streaming",
+                "progress": 30,
+                "message": "正在接收AI分析结果...",
+                "tokens_used": 0,
+                "timestamp": time.time(),
             }
 
             # 处理流式响应
@@ -326,7 +388,7 @@ class AIService:
 
                 if chunk.choices and len(chunk.choices) > 0:
                     delta = chunk.choices[0].delta
-                    if hasattr(delta, 'content') and delta.content:
+                    if hasattr(delta, "content") and delta.content:
                         content_piece = delta.content
                         full_content += content_piece
 
@@ -336,52 +398,54 @@ class AIService:
                             progress = min(30 + (chunk_count * 2), 90)
 
                             yield {
-                                'type': 'progress',
-                                'stage': 'streaming',
-                                'progress': progress,
-                                'message': f'正在深度解析内容...',
-                                'tokens_used': chunk_count * 10,
-                                'content_length': len(full_content),
-                                'timestamp': current_time
+                                "type": "progress",
+                                "stage": "streaming",
+                                "progress": progress,
+                                "message": "正在深度解析内容...",
+                                "tokens_used": chunk_count * 10,
+                                "content_length": len(full_content),
+                                "timestamp": current_time,
                             }
 
                             if progress_callback:
-                                progress_callback('streaming', progress, f'正在深度解析内容...', chunk_count * 10)
+                                progress_callback(
+                                    "streaming", progress, "正在深度解析内容...", chunk_count * 10
+                                )
 
                             last_progress_update = current_time
 
             # 最终处理
             yield {
-                'type': 'progress',
-                'stage': 'processing',
-                'progress': 95,
-                'message': '处理最终结果...',
-                'tokens_used': chunk_count * 10,
-                'timestamp': time.time()
+                "type": "progress",
+                "stage": "processing",
+                "progress": 95,
+                "message": "处理最终结果...",
+                "tokens_used": chunk_count * 10,
+                "timestamp": time.time(),
             }
 
             if progress_callback:
-                progress_callback('processing', 95, '处理最终结果...', chunk_count * 10)
+                progress_callback("processing", 95, "处理最终结果...", chunk_count * 10)
 
             # 解析最终结果
             parsed_content = parse_analysis_response(full_content)
             total_tokens = chunk_count * 15
 
             yield {
-                'type': 'complete',
-                'stage': 'completed',
-                'progress': 100,
-                'message': '分析完成！',
-                'tokens_used': total_tokens,
-                'content_length': len(full_content),
-                'full_analysis': full_content,
-                'parsed': parsed_content,
-                'chunk_count': chunk_count,
-                'timestamp': time.time()
+                "type": "complete",
+                "stage": "completed",
+                "progress": 100,
+                "message": "分析完成！",
+                "tokens_used": total_tokens,
+                "content_length": len(full_content),
+                "full_analysis": full_content,
+                "parsed": parsed_content,
+                "chunk_count": chunk_count,
+                "timestamp": time.time(),
             }
 
             if progress_callback:
-                progress_callback('completed', 100, '分析完成！', total_tokens)
+                progress_callback("completed", 100, "分析完成！", total_tokens)
 
             logger.debug(f"流式分析完成 - 总共 {chunk_count} 个chunk, 约 {total_tokens} tokens")
 
@@ -390,40 +454,46 @@ class AIService:
             logger.debug(f"错误类型: {type(e).__name__}")
 
             # 错误处理和降级策略
-            if any(keyword in str(e).lower() for keyword in ['timeout', 'connection', 'network', '504', '502', '500']):
+            if any(
+                keyword in str(e).lower()
+                for keyword in ["timeout", "connection", "network", "504", "502", "500"]
+            ):
                 yield {
-                    'type': 'error',
-                    'stage': 'retrying',
-                    'progress': 0,
-                    'message': f'网络错误，尝试降级处理... 错误: {str(e)}',
-                    'error_type': 'network',
-                    'timestamp': time.time()
+                    "type": "error",
+                    "stage": "retrying",
+                    "progress": 0,
+                    "message": f"网络错误，尝试降级处理... 错误: {str(e)}",
+                    "error_type": "network",
+                    "timestamp": time.time(),
                 }
 
                 # 降级到文本分析
                 if video_frames:
                     yield {
-                        'type': 'progress',
-                        'stage': 'fallback',
-                        'progress': 10,
-                        'message': '降级到纯文本分析...',
-                        'timestamp': time.time()
+                        "type": "progress",
+                        "stage": "fallback",
+                        "progress": 10,
+                        "message": "降级到纯文本分析...",
+                        "timestamp": time.time(),
                     }
 
                     # 递归调用，不使用视频帧
-                    yield from self.generate_full_analysis_stream(video_info, content, None, progress_callback)
+                    yield from self.generate_full_analysis_stream(
+                        video_info, content, None, progress_callback
+                    )
                     return
 
             import traceback
+
             traceback.print_exc()
 
             yield {
-                'type': 'error',
-                'stage': 'failed',
-                'progress': 0,
-                'message': f'分析失败: {str(e)}',
-                'error_type': type(e).__name__,
-                'timestamp': time.time()
+                "type": "error",
+                "stage": "failed",
+                "progress": 0,
+                "message": f"分析失败: {str(e)}",
+                "error_type": type(e).__name__,
+                "timestamp": time.time(),
             }
 
     # ========== 其他分析方法（保持向后兼容）==========
@@ -438,37 +508,28 @@ class AIService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "你是一个专业的视频内容分析助手，擅长总结视频内容并提取关键信息。"
+                        "content": "你是一个专业的视频内容分析助手，擅长总结视频内容并提取关键信息。",
                     },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
-                max_tokens=4000
+                max_tokens=4000,
             )
 
             summary_text = extract_content_from_response(response)
             tokens_used = extract_tokens_from_response(response)
 
-            return {
-                'success': True,
-                'data': {
-                    'summary': summary_text,
-                    'tokens_used': tokens_used
-                }
-            }
+            return {"success": True, "data": {"summary": summary_text, "tokens_used": tokens_used}}
         except Exception as e:
             logger.error(f"生成总结失败: {str(e)}")
             import traceback
-            traceback.print_exc()
-            return {
-                'success': False,
-                'error': f'生成总结失败: {str(e)}'
-            }
 
-    def generate_mindmap(self, video_info: Dict, content: str, summary: Optional[str] = None) -> Dict:
+            traceback.print_exc()
+            return {"success": False, "error": f"生成总结失败: {str(e)}"}
+
+    def generate_mindmap(
+        self, video_info: Dict, content: str, summary: Optional[str] = None
+    ) -> Dict:
         """生成思维导图（Markdown格式）"""
         try:
             prompt = get_mindmap_prompt(video_info, content, summary)
@@ -478,37 +539,28 @@ class AIService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "你是一个专业的思维导图设计师，擅长将复杂内容结构化为清晰的思维导图。"
+                        "content": "你是一个专业的思维导图设计师，擅长将复杂内容结构化为清晰的思维导图。",
                     },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
-                max_tokens=2000
+                max_tokens=2000,
             )
 
             mindmap_text = extract_content_from_response(response)
             tokens_used = extract_tokens_from_response(response)
 
-            return {
-                'success': True,
-                'data': {
-                    'mindmap': mindmap_text,
-                    'tokens_used': tokens_used
-                }
-            }
+            return {"success": True, "data": {"mindmap": mindmap_text, "tokens_used": tokens_used}}
         except Exception as e:
             logger.error(f"生成思维导图失败: {str(e)}")
             import traceback
-            traceback.print_exc()
-            return {
-                'success': False,
-                'error': f'生成思维导图失败: {str(e)}'
-            }
 
-    def generate_article_analysis_stream(self, article_info: Dict, content: str) -> Generator[Dict, None, None]:
+            traceback.print_exc()
+            return {"success": False, "error": f"生成思维导图失败: {str(e)}"}
+
+    def generate_article_analysis_stream(
+        self, article_info: Dict, content: str
+    ) -> Generator[Dict, None, None]:
         """专栏文章深度分析"""
         try:
             if article_info is None:
@@ -516,54 +568,54 @@ class AIService:
             prompt = get_article_analysis_prompt(article_info, content)
 
             messages = [
-                {"role": "system", "content": "你是一位资深的B站专栏分析专家，擅长逻辑分析与深度总结。"},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": "你是一位资深的B站专栏分析专家，擅长逻辑分析与深度总结。",
+                },
+                {"role": "user", "content": prompt},
             ]
 
             stream = self.client.chat.completions.create(
-                model=self.qa_model,
-                messages=messages,
-                temperature=0.3,
-                stream=True
+                model=self.qa_model, messages=messages, temperature=0.3, stream=True
             )
 
             full_content = ""
             for chunk in stream:
                 if chunk.choices and len(chunk.choices) > 0:
                     delta = chunk.choices[0].delta
-                    if hasattr(delta, 'content') and delta.content:
+                    if hasattr(delta, "content") and delta.content:
                         full_content += delta.content
-                        yield {'type': 'content', 'content': delta.content}
+                        yield {"type": "content", "content": delta.content}
 
             # 解析文章内容
-            sections = {'summary': full_content, 'danmaku': '专栏文章暂无弹幕分析', 'comments': '专栏文章暂无评论分析'}
-            yield {'type': 'final', 'parsed': sections, 'full_analysis': full_content}
+            sections = {
+                "summary": full_content,
+                "danmaku": "专栏文章暂无弹幕分析",
+                "comments": "专栏文章暂无评论分析",
+            }
+            yield {"type": "final", "parsed": sections, "full_analysis": full_content}
 
         except Exception as e:
-            yield {'type': 'error', 'error': str(e)}
+            yield {"type": "error", "error": str(e)}
 
     def generate_user_analysis(self, user_info: Dict, recent_videos: List[Dict]) -> Dict:
         """生成UP主深度画像（同步返回字典）"""
         try:
-            videos_text = "\n".join([f"- {v['title']} (播放: {v['play']}, 时长: {v['length']})" for v in recent_videos])
+            videos_text = "\n".join(
+                [f"- {v['title']} (播放: {v['play']}, 时长: {v['length']})" for v in recent_videos]
+            )
             prompt = get_user_portrait_prompt(user_info, videos_text)
 
             response = self.client.chat.completions.create(
                 model=self.qa_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,
-                max_tokens=1000
+                max_tokens=1000,
             )
 
             content = extract_content_from_response(response)
             tokens = extract_tokens_from_response(response)
 
-            return {
-                'portrait': content,
-                'tokens_used': tokens
-            }
+            return {"portrait": content, "tokens_used": tokens}
         except Exception as e:
-            return {
-                'portrait': f"暂时无法生成UP主画像: {str(e)}",
-                'tokens_used': 0
-            }
+            return {"portrait": f"暂时无法生成UP主画像: {str(e)}", "tokens_used": 0}

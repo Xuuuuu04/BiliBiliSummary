@@ -19,6 +19,14 @@ class ChatStreamRequest(BaseModel):
     history: list[Any] = Field(default_factory=list)
 
 
+class QAStreamRequest(BaseModel):
+    question: str = ""
+    mode: Literal["video", "article", "user", "research"] = "video"
+    context: str = ""
+    meta: dict[str, Any] = Field(default_factory=dict)
+    history: list[Any] = Field(default_factory=list)
+
+
 class SearchRequest(BaseModel):
     keyword: str = ""
     mode: Literal["video", "article", "user"] = "video"

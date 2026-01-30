@@ -1,7 +1,9 @@
 """
 完成研究报告工具（深度研究专用）
 """
+
 from typing import Dict
+
 from src.backend.services.ai.toolkit.base_tool import BaseTool
 from src.backend.utils.logger import get_logger
 
@@ -31,12 +33,12 @@ class FinishResearchTool(BaseTool):
                     "properties": {
                         "summary_of_findings": {
                             "type": "string",
-                            "description": "对研究发现的简要概述"
+                            "description": "对研究发现的简要概述",
                         }
                     },
-                    "required": ["summary_of_findings"]
-                }
-            }
+                    "required": ["summary_of_findings"],
+                },
+            },
         }
 
     async def execute(self, summary_of_findings: str) -> Dict:
@@ -55,10 +57,10 @@ class FinishResearchTool(BaseTool):
         # 实际的报告生成由DeepResearchAgent的stream_research方法处理
 
         return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': {
-                'message': '资料搜集阶段结束。请现在撰写全方位、深度的研究报告，并严格遵守参考来源标注规范。',
-                'summary': summary_of_findings
-            }
+            "type": "tool_result",
+            "tool": self.name,
+            "data": {
+                "message": "资料搜集阶段结束。请现在撰写全方位、深度的研究报告，并严格遵守参考来源标注规范。",
+                "summary": summary_of_findings,
+            },
         }

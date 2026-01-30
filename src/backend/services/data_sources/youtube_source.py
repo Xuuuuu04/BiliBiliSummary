@@ -4,7 +4,8 @@ YouTube数据源实现（预留）
 未来实现的 YouTube 数据源，当前为接口预留。
 提供统一的 YouTube 数据访问方式。
 """
-from typing import Dict, List, Optional, Any
+
+from typing import Any, Dict, List, Optional
 
 from src.backend.services.data_sources.base import DataSource
 from src.backend.services.data_sources.exceptions import (
@@ -43,12 +44,7 @@ class YouTubeSource(DataSource):
     @property
     def supported_domains(self) -> List[str]:
         """支持的域名列表"""
-        return [
-            "youtube.com",
-            "youtu.be",
-            "m.youtube.com",
-            "www.youtube.com"
-        ]
+        return ["youtube.com", "youtu.be", "m.youtube.com", "www.youtube.com"]
 
     def __init__(self, api_key: str = None):
         """
@@ -154,11 +150,7 @@ class YouTubeSource(DataSource):
         return self._not_implemented_response("获取字幕")
 
     async def get_video_comments(
-        self,
-        video_id: str,
-        max_count: int = 100,
-        sort_by: str = "top",
-        **kwargs
+        self, video_id: str, max_count: int = 100, sort_by: str = "top", **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频评论
@@ -175,10 +167,7 @@ class YouTubeSource(DataSource):
         return self._not_implemented_response("获取评论")
 
     async def get_video_danmaku(
-        self,
-        video_id: str,
-        max_count: int = 1000,
-        **kwargs
+        self, video_id: str, max_count: int = 1000, **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频弹幕
@@ -197,11 +186,7 @@ class YouTubeSource(DataSource):
         # YouTube 不支持弹幕，返回空数据
         return self._format_response(
             success=True,
-            data={
-                'has_danmaku': False,
-                'danmaku': [],
-                'message': 'YouTube不支持弹幕功能'
-            }
+            data={"has_danmaku": False, "danmaku": [], "message": "YouTube不支持弹幕功能"},
         )
 
     async def get_video_tags(self, video_id: str) -> Dict[str, Any]:
@@ -243,12 +228,7 @@ class YouTubeSource(DataSource):
         """
         return self._not_implemented_response("获取频道信息")
 
-    async def get_user_videos(
-        self,
-        user_id: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_user_videos(self, user_id: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取频道上传视频
 
@@ -264,12 +244,7 @@ class YouTubeSource(DataSource):
 
     # ========== 搜索相关方法 ==========
 
-    async def search_videos(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_videos(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索视频
 
@@ -286,12 +261,7 @@ class YouTubeSource(DataSource):
         """
         return self._not_implemented_response("搜索视频")
 
-    async def search_users(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_users(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索频道
 
@@ -307,11 +277,7 @@ class YouTubeSource(DataSource):
 
     # ========== 热门/推荐方法 ==========
 
-    async def get_popular_videos(
-        self,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_popular_videos(self, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取热门视频
 
@@ -342,10 +308,7 @@ class YouTubeSource(DataSource):
 
         logger.warning(message)
 
-        return self._format_response(
-            success=False,
-            error=message
-        )
+        return self._format_response(success=False, error=message)
 
     async def get_video_chapters(self, video_id: str) -> Dict[str, Any]:
         """

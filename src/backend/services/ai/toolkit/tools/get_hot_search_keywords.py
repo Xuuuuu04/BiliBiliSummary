@@ -1,6 +1,7 @@
 """
 获取B站热搜关键词工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -36,6 +37,10 @@ class GetHotSearchKeywordsTool(BaseTool):
         logger.info("[工具] 获取热搜关键词")
         res = await self._bilibili_service.get_hot_search_keywords()
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取热搜关键词失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取热搜关键词失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

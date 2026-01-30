@@ -3,12 +3,12 @@ ToolRegistry - 工具注册中心
 
 提供工具的注册、注销、查询和执行功能
 """
-from typing import Dict, List, Optional, Type, Any
+
 from collections import defaultdict
-import asyncio
-import inspect
+from typing import Dict, List, Optional, Type
 
 from src.backend.utils.logger import get_logger
+
 from .base_tool import BaseTool
 
 logger = get_logger(__name__)
@@ -81,7 +81,7 @@ class ToolRegistry:
             del cls._tools[name]
 
             # 从分类中移除
-            for category, tools in cls._tool_categories.items():
+            for _category, tools in cls._tool_categories.items():
                 if name in tools:
                     tools.remove(name)
 
@@ -169,11 +169,11 @@ class ToolRegistry:
             return None
 
         return {
-            'name': tool.name,
-            'description': tool.description,
-            'schema': tool.schema,
-            'class': tool.__class__.__name__,
-            'module': tool.__class__.__module__
+            "name": tool.name,
+            "description": tool.description,
+            "schema": tool.schema,
+            "class": tool.__class__.__name__,
+            "module": tool.__class__.__module__,
         }
 
     @classmethod
@@ -232,9 +232,7 @@ class ToolRegistry:
                 if param not in kwargs:
                     missing_params.append(param)
 
-            raise ValueError(
-                f"参数验证失败，缺少必需参数: {', '.join(missing_params)}"
-            )
+            raise ValueError(f"参数验证失败，缺少必需参数: {', '.join(missing_params)}")
 
         # 执行工具
         try:
@@ -242,11 +240,7 @@ class ToolRegistry:
             return result
         except Exception as e:
             logger.error(f"执行工具 '{name}' 失败: {str(e)}")
-            return {
-                'type': 'error',
-                'tool': name,
-                'error': str(e)
-            }
+            return {"type": "error", "tool": name, "error": str(e)}
 
     @classmethod
     def set_services(cls, bilibili_service=None, ai_client=None, model: str = None):
@@ -280,6 +274,7 @@ def register_tool(name: str = None, category: str = "default"):
         name: 工具名称（可选，默认使用类名）
         category: 工具分类（可选）
     """
+
     def decorator(cls):
         # 实例化工具
         tool_instance = cls()
@@ -289,7 +284,6 @@ def register_tool(name: str = None, category: str = "default"):
             # 注意：这里假设子类通过属性定义name，
             # 如果是@property，需要特殊处理
             # 简单起见，我们通过monkey patching设置
-            original_name = tool_instance.name
             tool_instance._custom_name = name
 
             # 重写name属性

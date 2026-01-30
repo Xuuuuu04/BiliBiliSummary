@@ -9,13 +9,14 @@
     - 注册表模式: 动态注册新平台
     - 单例模式: 共享数据源实例
 """
-from typing import Dict, Type, Optional, List
+
+from typing import Dict, List, Optional, Type
 from urllib.parse import urlparse
 
 from src.backend.services.data_sources.base import DataSource
 from src.backend.services.data_sources.bilibili_source import BilibiliSource
-from src.backend.services.data_sources.youtube_source import YouTubeSource
 from src.backend.services.data_sources.exceptions import UnsupportedPlatformError
+from src.backend.services.data_sources.youtube_source import YouTubeSource
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,14 +44,13 @@ class DataSourceFactory:
     # 格式: {域名: 数据源类}
     _registered_sources: Dict[str, Type[DataSource]] = {
         # B站
-        'bilibili.com': BilibiliSource,
-        'b23.tv': BilibiliSource,
-        'm.bilibili.com': BilibiliSource,
-
+        "bilibili.com": BilibiliSource,
+        "b23.tv": BilibiliSource,
+        "m.bilibili.com": BilibiliSource,
         # YouTube
-        'youtube.com': YouTubeSource,
-        'youtu.be': YouTubeSource,
-        'm.youtube.com': YouTubeSource,
+        "youtube.com": YouTubeSource,
+        "youtu.be": YouTubeSource,
+        "m.youtube.com": YouTubeSource,
     }
 
     # 类变量：实例缓存（可选，避免重复创建）
@@ -73,9 +73,7 @@ class DataSourceFactory:
             >>> DataSourceFactory.register_source('douyin.com', DouyinSource)
         """
         if not issubclass(source_class, DataSource):
-            raise TypeError(
-                f"{source_class.__name__} 必须继承自 DataSource"
-            )
+            raise TypeError(f"{source_class.__name__} 必须继承自 DataSource")
 
         cls._registered_sources[domain.lower()] = source_class
         logger.info(f"已注册数据源: {domain} -> {source_class.__name__}")
@@ -122,7 +120,7 @@ class DataSourceFactory:
             domain = parsed.netloc.lower()
 
             # 移除 www. 前缀以便匹配
-            if domain.startswith('www.'):
+            if domain.startswith("www."):
                 domain = domain[4:]
 
             # 查找匹配的数据源
@@ -161,12 +159,7 @@ class DataSourceFactory:
             raise UnsupportedPlatformError(url) from e
 
     @classmethod
-    def create_by_platform(
-        cls,
-        platform: str,
-        use_cache: bool = True,
-        **kwargs
-    ) -> DataSource:
+    def create_by_platform(cls, platform: str, use_cache: bool = True, **kwargs) -> DataSource:
         """
         根据平台名称创建数据源
 
@@ -190,17 +183,17 @@ class DataSourceFactory:
 
         # 平台名称到域名的映射
         platform_domain_map = {
-            'bilibili': 'bilibili.com',
-            'b23': 'b23.tv',
-            'youtube': 'youtube.com',
-            'youtu.be': 'youtu.be',
+            "bilibili": "bilibili.com",
+            "b23": "b23.tv",
+            "youtube": "youtube.com",
+            "youtu.be": "youtu.be",
         }
 
         # 规范化平台名称
         platform = platform.lower().strip()
 
         # 如果是域名，直接查找
-        if '.' in platform:
+        if "." in platform:
             domain = platform
             for registered_domain, registered_class in cls._registered_sources.items():
                 if registered_domain in domain:
@@ -226,8 +219,7 @@ class DataSourceFactory:
 
         if not source_class:
             raise UnsupportedPlatformError(
-                f"不支持的平台: {platform} "
-                f"(已支持: {cls.get_supported_platforms()})"
+                f"不支持的平台: {platform} " f"(已支持: {cls.get_supported_platforms()})"
             )
 
         # 检查缓存
@@ -309,7 +301,8 @@ class DataSourceFactory:
 
             # 检查是否是直接的 BVID（无域名）
             import re
-            if re.match(r'^BV[a-zA-Z0-9]{10}$', url.strip()):
+
+            if re.match(r"^BV[a-zA-Z0-9]{10}$", url.strip()):
                 return True
 
             return False

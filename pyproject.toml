@@ -5,26 +5,29 @@ target-version = ["py312"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = [
+exclude = [
   ".venv",
-  "src/backend",
+  "docs/bilibili-api-doc",
+  "research_reports",
+  "assets",
+  "scripts",
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-ignore = ["E501"]
+select = ["E", "F", "I", "B"]
+ignore = ["B008", "E501"]
 
-[tool.ruff.lint.isort]
-known-first-party = ["src"]
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 addopts = "-q"
 
 [tool.mypy]
 python_version = "3.12"
-warn_return_any = true
+ignore_missing_imports = true
 warn_unused_ignores = true
 no_implicit_optional = true
-check_untyped_defs = false
-ignore_missing_imports = true
+check_untyped_defs = true

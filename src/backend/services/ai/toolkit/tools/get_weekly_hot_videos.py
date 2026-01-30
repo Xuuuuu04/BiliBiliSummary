@@ -1,6 +1,7 @@
 """
 获取B站每周精选优质视频工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -40,6 +41,10 @@ class GetWeeklyHotVideosTool(BaseTool):
         logger.info(f"[工具] 获取每周必看: week={week}")
         res = await self._bilibili_service.get_weekly_hot_videos(week=week)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取每周必看失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取每周必看失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

@@ -1,6 +1,7 @@
 """
 获取B站入站必刷经典视频工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -36,6 +37,10 @@ class GetHistoryPopularVideosTool(BaseTool):
         logger.info("[工具] 获取入站必刷")
         res = await self._bilibili_service.get_history_popular_videos()
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取入站必刷失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取入站必刷失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

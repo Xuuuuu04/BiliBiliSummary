@@ -164,7 +164,8 @@ function updateSidebarUI(params) {
 
     navBtns.forEach(btn => {
         const showOn = btn.dataset.showOn;
-        if (!showOn || showOn === currentMode) {
+        const showOnModes = showOn ? showOn.split(/\s+/).filter(Boolean) : [];
+        if (!showOn || showOnModes.includes(currentMode)) {
             btn.classList.remove('hidden');
             if (!firstVisibleTab && btn.classList.contains('nav-btn')) {
                 firstVisibleTab = btn.dataset.tab;

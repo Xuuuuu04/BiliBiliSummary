@@ -3,9 +3,12 @@ HTTP客户端管理模块
 
 提供全局的 aiohttp ClientSession 管理，支持连接池复用
 """
+
 import asyncio
-import aiohttp
 from typing import Optional
+
+import aiohttp
+
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +21,7 @@ class HTTPClientManager:
     管理全局的 aiohttp ClientSession，支持连接池复用和自动清理
     """
 
-    _instance: Optional['HTTPClientManager'] = None
+    _instance: Optional["HTTPClientManager"] = None
     _session: Optional[aiohttp.ClientSession] = None
 
     def __new__(cls):
@@ -37,16 +40,14 @@ class HTTPClientManager:
         # 配置连接池和超时
         timeout = aiohttp.ClientTimeout(total=30, connect=10)
         connector = aiohttp.TCPConnector(
-            limit=100,              # 最大连接数
-            limit_per_host=30,      # 每个主机的最大连接数
-            ttl_dns_cache=300,      # DNS缓存时间
-            use_dns_cache=True,     # 启用DNS缓存
+            limit=100,  # 最大连接数
+            limit_per_host=30,  # 每个主机的最大连接数
+            ttl_dns_cache=300,  # DNS缓存时间
+            use_dns_cache=True,  # 启用DNS缓存
         )
 
         self._session = aiohttp.ClientSession(
-            timeout=timeout,
-            connector=connector,
-            raise_for_status=False  # 不自动抛出HTTP错误状态
+            timeout=timeout, connector=connector, raise_for_status=False  # 不自动抛出HTTP错误状态
         )
 
         logger.info("HTTP客户端Session已初始化")
@@ -115,7 +116,6 @@ def run_async_in_thread(coro):
     Returns:
         异步函数的返回值
     """
-    import concurrent.futures
     import threading
 
     result = [None]

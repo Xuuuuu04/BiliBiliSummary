@@ -1,7 +1,9 @@
 """
 搜索B站UP主工具
 """
+
 from typing import Dict
+
 from src.backend.services.ai.toolkit.base_tool import BaseTool
 from src.backend.utils.logger import get_logger
 
@@ -29,14 +31,11 @@ class SearchUsersTool(BaseTool):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "keyword": {
-                            "type": "string",
-                            "description": "UP 主昵称或相关关键词"
-                        }
+                        "keyword": {"type": "string", "description": "UP 主昵称或相关关键词"}
                     },
-                    "required": ["keyword"]
-                }
-            }
+                    "required": ["keyword"],
+                },
+            },
         }
 
     async def execute(self, keyword: str, limit: int = 5) -> Dict:
@@ -57,15 +56,11 @@ class SearchUsersTool(BaseTool):
 
         search_res = await self._bilibili_service.search_users(keyword, limit=limit)
 
-        if not search_res['success']:
+        if not search_res["success"]:
             return {
-                'type': 'error',
-                'tool': self.name,
-                'error': f"搜索用户失败: {search_res.get('error', 'Unknown error')}"
+                "type": "error",
+                "tool": self.name,
+                "error": f"搜索用户失败: {search_res.get('error', 'Unknown error')}",
             }
 
-        return {
-            'type': 'tool_result',
-            'tool': self.name,
-            'data': search_res['data']
-        }
+        return {"type": "tool_result", "tool": self.name, "data": search_res["data"]}

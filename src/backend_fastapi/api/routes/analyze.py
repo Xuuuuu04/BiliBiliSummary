@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
 from src.backend.services.ai import AIService
 from src.backend_fastapi.api.schemas import AnalyzeRequest, AnalyzeStreamRequest, ChatStreamRequest
@@ -11,7 +12,9 @@ router = APIRouter(prefix="/api", tags=["api"])
 
 
 @router.post("/chat/stream")
-def chat_video_stream(payload: ChatStreamRequest, ai_service: AIService = Depends(get_ai_service)):
+async def chat_video_stream(
+    payload: ChatStreamRequest, ai_service: AIService = Depends(get_ai_service)
+):
     if not payload.question or not payload.context:
         return JSONResponse(status_code=400, content={"success": False, "error": "缺少必要参数"})
 
@@ -24,19 +27,19 @@ def chat_video_stream(payload: ChatStreamRequest, ai_service: AIService = Depend
         except Exception as e:
             yield sse_data({"type": "error", "error": str(e)}, ensure_ascii=False)
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(iterate_in_threadpool(generate()), media_type="text/event-stream")
 
 
 @router.post("/analyze")
-def analyze_video(
+async def analyze_video(
     payload: AnalyzeRequest,
     analyze_service: AnalyzeService = Depends(get_analyze_service),
 ):
-    return analyze_service.analyze_video(payload.url)
+    return await run_in_threadpool(analyze_service.analyze_video, payload.url)
 
 
 @router.post("/analyze/stream")
-def analyze_video_stream(
+async def analyze_video_stream(
     payload: AnalyzeStreamRequest,
     analyze_service: AnalyzeService = Depends(get_analyze_service),
 ):
@@ -46,7 +49,7 @@ def analyze_video_stream(
         )
 
     return StreamingResponse(
-        analyze_service.stream_analyze(payload.url, payload.mode),
+        iterate_in_threadpool(analyze_service.stream_analyze(payload.url, payload.mode)),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

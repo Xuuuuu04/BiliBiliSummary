@@ -7,17 +7,19 @@ from src.config import Config
 
 class SettingsService:
     def get_settings(self) -> dict:
+        openai_api_key = os.getenv("OPENAI_API_KEY") or ""
+        exa_api_key = os.getenv("EXA_API_KEY") or ""
         return {
             "success": True,
             "data": {
                 "openai_api_base": os.getenv("OPENAI_API_BASE"),
-                "openai_api_key": os.getenv("OPENAI_API_KEY") or "",
+                "openai_api_key_set": bool(openai_api_key),
                 "model": os.getenv("model"),
                 "qa_model": os.getenv("QA_MODEL"),
                 "deep_research_model": os.getenv(
                     "DEEP_RESEARCH_MODEL", "moonshotai/Kimi-K2-Thinking"
                 ),
-                "exa_api_key": os.getenv("EXA_API_KEY") or "",
+                "exa_api_key_set": bool(exa_api_key),
                 "enable_research_thinking": os.getenv("ENABLE_RESEARCH_THINKING", "false").lower()
                 == "true",
                 "dark_mode": os.getenv("DARK_MODE", "false").lower() == "true",
@@ -38,9 +40,11 @@ class SettingsService:
             Config.OPENAI_API_BASE = base_url or ""
 
         if "openai_api_key" in data:
-            set_key(env_path, "OPENAI_API_KEY", data["openai_api_key"] or "")
-            os.environ["OPENAI_API_KEY"] = data["openai_api_key"] or ""
-            Config.OPENAI_API_KEY = data["openai_api_key"] or ""
+            api_key = (data.get("openai_api_key") or "").strip()
+            if api_key:
+                set_key(env_path, "OPENAI_API_KEY", api_key)
+                os.environ["OPENAI_API_KEY"] = api_key
+                Config.OPENAI_API_KEY = api_key
 
         if "model" in data:
             set_key(env_path, "model", data["model"] or "")
@@ -58,9 +62,11 @@ class SettingsService:
             Config.DEEP_RESEARCH_MODEL = data["deep_research_model"] or ""
 
         if "exa_api_key" in data:
-            set_key(env_path, "EXA_API_KEY", data["exa_api_key"] or "")
-            os.environ["EXA_API_KEY"] = data["exa_api_key"] or ""
-            Config.EXA_API_KEY = data["exa_api_key"] or ""
+            exa_key = (data.get("exa_api_key") or "").strip()
+            if exa_key:
+                set_key(env_path, "EXA_API_KEY", exa_key)
+                os.environ["EXA_API_KEY"] = exa_key
+                Config.EXA_API_KEY = exa_key
 
         if "dark_mode" in data:
             set_key(env_path, "DARK_MODE", str(data["dark_mode"]).lower())

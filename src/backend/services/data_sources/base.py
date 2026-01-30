@@ -9,13 +9,15 @@
     - 里氏替换: 所有数据源可互相替换
     - 接口隔离: 接口精简，职责单一
 """
+
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class ContentType(Enum):
     """内容类型枚举"""
+
     VIDEO = "video"
     ARTICLE = "article"
     DYNAMIC = "dynamic"
@@ -173,11 +175,7 @@ class DataSource(ABC):
 
     @abstractmethod
     async def get_video_comments(
-        self,
-        video_id: str,
-        max_count: int = 100,
-        sort_by: str = "hot",
-        **kwargs
+        self, video_id: str, max_count: int = 100, sort_by: str = "hot", **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频评论
@@ -211,10 +209,7 @@ class DataSource(ABC):
 
     @abstractmethod
     async def get_video_danmaku(
-        self,
-        video_id: str,
-        max_count: int = 1000,
-        **kwargs
+        self, video_id: str, max_count: int = 1000, **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频弹幕（如果平台支持）
@@ -321,12 +316,7 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    async def get_user_videos(
-        self,
-        user_id: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_user_videos(self, user_id: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取用户投稿视频
 
@@ -358,12 +348,7 @@ class DataSource(ABC):
     # ========== 搜索相关方法 ==========
 
     @abstractmethod
-    async def search_videos(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_videos(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索视频
 
@@ -394,12 +379,7 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    async def search_users(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_users(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索用户
 
@@ -430,11 +410,7 @@ class DataSource(ABC):
     # ========== 热门/推荐方法 ==========
 
     @abstractmethod
-    async def get_popular_videos(
-        self,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_popular_videos(self, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取热门视频
 
@@ -458,10 +434,7 @@ class DataSource(ABC):
     # ========== 辅助方法 ==========
 
     def _format_response(
-        self,
-        success: bool,
-        data: Any = None,
-        error: str = None
+        self, success: bool, data: Any = None, error: str = None
     ) -> Dict[str, Any]:
         """
         格式化标准响应
@@ -474,15 +447,12 @@ class DataSource(ABC):
         Returns:
             Dict: 标准响应格式
         """
-        response = {
-            'success': success,
-            'platform': self.platform_name
-        }
+        response = {"success": success, "platform": self.platform_name}
 
         if success:
-            response['data'] = data
+            response["data"] = data
         else:
-            response['error'] = error or '未知错误'
+            response["error"] = error or "未知错误"
 
         return response
 
@@ -500,6 +470,5 @@ class DataSource(ABC):
             }
         """
         return self._format_response(
-            success=True,
-            data={'valid': True, 'message': '凭据验证未实现'}
+            success=True, data={"valid": True, "message": "凭据验证未实现"}
         )

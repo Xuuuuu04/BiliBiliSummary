@@ -406,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             card.onclick = () => {
                 elements.videoUrl.value = video.bvid;
+                switchMode('video');
                 startAnalysis();
             };
             elements.initRelatedList.appendChild(card);
@@ -420,17 +421,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await BiliAPI.getSettings();
             if (data) {
                 elements.apiBaseInput.value = data.openai_api_base || '';
-                elements.apiKeyInput.value = data.openai_api_key || '';
-                // Change input type to text so it's not hidden
-                elements.apiKeyInput.type = 'text';
+                elements.apiKeyInput.value = '';
+                elements.apiKeyInput.type = 'password';
+                elements.apiKeyInput.placeholder = data.openai_api_key_set
+                    ? '已配置（为安全不展示；留空表示不修改）'
+                    : '未配置';
                 elements.modelInput.value = data.model || '';
                 elements.qaModelInput.value = data.qa_model || '';
                 elements.deepResearchModelInput.value = data.deep_research_model || '';
-                elements.exaApiKeyInput.value = data.exa_api_key || '';
-
-                // Change input type to text so it's not hidden
-                elements.apiKeyInput.type = 'text';
-                elements.exaApiKeyInput.type = 'text';
+                elements.exaApiKeyInput.value = '';
+                elements.exaApiKeyInput.type = 'password';
+                elements.exaApiKeyInput.placeholder = data.exa_api_key_set
+                    ? '已配置（为安全不展示；留空表示不修改）'
+                    : '未配置';
 
                 // If backend says dark mode and local storage is empty, use backend
                 if (data.dark_mode && localStorage.getItem('darkMode') === null) {
@@ -447,13 +450,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveSettings() {
         const data = {
             openai_api_base: elements.apiBaseInput.value.trim(),
-            openai_api_key: elements.apiKeyInput.value.trim(),
             model: elements.modelInput.value.trim(),
             qa_model: elements.qaModelInput.value.trim(),
             deep_research_model: elements.deepResearchModelInput.value.trim(),
-            exa_api_key: elements.exaApiKeyInput.value.trim(),
             dark_mode: elements.darkModeToggle.checked
         };
+        const apiKey = elements.apiKeyInput.value.trim();
+        if (apiKey) {
+            data.openai_api_key = apiKey;
+        }
+        const exaApiKey = elements.exaApiKeyInput.value.trim();
+        if (exaApiKey) {
+            data.exa_api_key = exaApiKey;
+        }
 
         try {
             elements.saveSettingsBtn.disabled = true;
@@ -463,6 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.success) {
                 BiliHelpers.showToast('设置已保存！', elements.toast);
+                elements.apiKeyInput.value = '';
+                elements.exaApiKeyInput.value = '';
                 closeSettings();
             } else {
                 BiliHelpers.showToast('保存失败: ' + (result.error || '未知错误'), elements.toast);
@@ -549,17 +560,29 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSidebarUI(); // 在此处真正切换功能入口
 
         // Reset Data
-        currentData = { summary: '', danmaku: '', comments: '', rawContent: '', fullMarkdown: '', videoInfo: null, danmakuPreview: [], articleData: null, userData: null };
+        currentData = {
+            summary: '',
+            danmaku: '',
+            comments: '',
+            rawContent: '',
+            fullMarkdown: '',
+            videoInfo: null,
+            danmakuPreview: [],
+            articleData: null,
+            userData: null,
+            researchTopic: null,
+            researchFileId: null
+        };
         chatHistory = [];
 
-        // --- 核心修复：不同模式显示不同的对话初始消息 ---
-        const assistantGreeting = '你好！我是你的智能分析助手。我已经阅读了分析报告，你可以随时问我细节问题。';
+        const qaUI = getQAUIConfig(currentMode);
 
         elements.chatMessages.innerHTML = `
             <div class="message assistant">
-                <div class="message-content">${assistantGreeting}</div>
+                <div class="message-content">${qaUI.greeting}</div>
             </div>
         `;
+        elements.chatInput.placeholder = qaUI.placeholder;
 
         // Reset contents
         elements.summaryContent.innerHTML = '<div class="empty-state"><p>正在生成视频分析...</p></div>';
@@ -574,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await startUserAnalysis(input);
             } else if (currentMode === 'research') {
                 // Research mode: special streaming
+                currentData.researchTopic = input;
                 await processResearchStream(input);
             } else {
                 // Video/Article mode: streaming API
@@ -928,7 +952,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateStepper('content', 'completed');
                 updateStepper('frames', 'active');
                 if (currentMode === 'video') {
-                    updateMetaValue('metaSubtitle', data.text_source === "字幕" ? '有字幕' : '视频文案');
+                    let subText = data.text_source === "字幕" ? '有字幕' : '视频文案';
+                    if (data.subtitle_is_ai) subText = 'AI 字幕';
+                    updateMetaValue('metaSubtitle', subText);
                 } else if (currentMode === 'article') {
                     updateMetaValue('metaWordCount', (data.content || '').length, '');
                 }
@@ -1100,23 +1126,312 @@ document.addEventListener('DOMContentLoaded', () => {
     // Expose analyze function globally for inline onclick
     window.analyzeBvid = (bvid) => {
         elements.videoUrl.value = bvid;
+        switchMode('video');
         startAnalysis();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // --- Chat Functions ---
 
+    function getQAUIConfig(mode) {
+        if (mode === 'video') {
+            return {
+                greeting: '你好！我是你的视频问答助手。可以基于分析报告与字幕材料，帮你快速定位关键信息与结论。',
+                placeholder: '输入关于视频/弹幕/评论/字幕/分析报告的问题...'
+            };
+        }
+        if (mode === 'article') {
+            return {
+                greeting: '你好！我是你的专栏问答助手。可以基于专栏原文与解析报告，帮你快速追问细节与论证。',
+                placeholder: '输入关于专栏原文/解析报告的问题...'
+            };
+        }
+        if (mode === 'user') {
+            return {
+                greeting: '你好！我是你的用户画像问答助手。可以基于画像报告与作品数据，帮你进一步归纳与对比。',
+                placeholder: '输入关于 UP 主画像/近期作品/风格定位的问题...'
+            };
+        }
+        if (mode === 'research') {
+            return {
+                greeting: '你好！我是你的深度研究问答助手。可以基于研究报告与过程摘录，帮你快速追问与验证观点。',
+                placeholder: '输入关于研究报告/证据链/关键结论的问题...'
+            };
+        }
+        return {
+            greeting: '你好！我是你的问答助手。可以基于当前材料进行快速问答。',
+            placeholder: '输入问题...'
+        };
+    }
+
+    function truncateMiddle(text, maxChars) {
+        const s = (text || '').toString();
+        if (s.length <= maxChars) return s;
+        const headLen = Math.floor(maxChars * 0.6);
+        const tailLen = maxChars - headLen;
+        return `${s.slice(0, headLen)}\n\n[内容过长，已截断]\n\n${s.slice(-tailLen)}`;
+    }
+
+    function truncateText(text, maxChars) {
+        return truncateMiddle(text, maxChars);
+    }
+
+    function getActiveTab() {
+        const btn = elements.sidebarNav?.querySelector('.nav-btn.active');
+        return btn?.dataset?.tab || '';
+    }
+
+    function includesAny(text, keywords) {
+        const s = (text || '').toString().toLowerCase();
+        return keywords.some(k => s.includes(k));
+    }
+
+    function makeSource(id, title, tab, anchorId, content) {
+        return {
+            id,
+            title,
+            tab,
+            anchorId,
+            content: (content || '').toString().trim()
+        };
+    }
+
+    function assembleSourcesContext(sources, maxTotalChars) {
+        let buf = '材料片段（回答时请用 [S#] 引用对应片段）：\n\n';
+        const picked = [];
+        for (const s of sources) {
+            if (!s.content) continue;
+            const chunk = `[${s.id}] ${s.title}\n${s.content}\n\n`;
+            if (buf.length + chunk.length > maxTotalChars) continue;
+            buf += chunk;
+            picked.push(s);
+        }
+        return { context: buf.trim(), pickedSources: picked };
+    }
+
+    function buildQAContextAndMeta(question) {
+        const maxTotalChars = 24000;
+        const maxChunkChars = 6000;
+        const mode = currentMode;
+        const activeTab = getActiveTab();
+        const q = (question || '').toString();
+        const meta = {};
+
+        const sources = [];
+        let idx = 1;
+        const nextId = () => `S${idx++}`;
+
+        if (mode === 'video') {
+            meta.title = currentData.videoInfo?.title || elements.videoTitle?.textContent || '';
+            meta.author = currentData.videoInfo?.author || elements.upName?.textContent || '';
+            meta.bvid = currentData.videoInfo?.bvid || '';
+
+            const wantDanmaku = activeTab === 'danmaku' || includesAny(q, ['弹幕', '词云', '互动']);
+            const wantComments = activeTab === 'comments' || includesAny(q, ['评论', '高赞', '争议']);
+            const wantSubtitle = activeTab === 'subtitle' || includesAny(q, ['字幕', '逐字', '文案', '原话']);
+            const wantSummary = activeTab === 'summary' || (!wantDanmaku && !wantComments && !wantSubtitle);
+
+            if (wantSummary) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '内容总结',
+                        'summary',
+                        'summaryContent',
+                        truncateText(currentData.summary || currentData.fullMarkdown, maxChunkChars)
+                    )
+                );
+            }
+            if (wantDanmaku) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '弹幕互动分析',
+                        'danmaku',
+                        'danmakuContent',
+                        truncateText(currentData.danmaku || elements.danmakuAnalysisResult?.innerText, maxChunkChars)
+                    )
+                );
+            }
+            if (wantComments) {
+                const top = elements.topCommentsList?.innerText || '';
+                const analysis = elements.commentsAnalysisResult?.innerText || currentData.comments || '';
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '评论解析（含高赞）',
+                        'comments',
+                        'commentsContent',
+                        truncateText([top, analysis].filter(Boolean).join('\n\n'), maxChunkChars)
+                    )
+                );
+            }
+            if (wantSubtitle) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '字幕/文案',
+                        'subtitle',
+                        'subtitleContent',
+                        truncateText(currentData.rawContent || elements.rawSubtitleText?.textContent, maxChunkChars)
+                    )
+                );
+            }
+        } else if (mode === 'article') {
+            meta.title = currentData.videoInfo?.title || elements.videoTitle?.textContent || '';
+            meta.author = currentData.videoInfo?.author || elements.upName?.textContent || '';
+
+            const wantOriginal =
+                activeTab === 'article_content' || includesAny(q, ['原文', '引用', '哪一段', '原话']);
+            const wantAnalysis =
+                activeTab === 'article_analysis' || !wantOriginal || includesAny(q, ['观点', '论证', '总结', '结论']);
+
+            if (wantAnalysis) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '专栏解析报告',
+                        'article_analysis',
+                        'articleAnalysisContent',
+                        truncateText(currentData.summary || currentData.fullMarkdown, maxChunkChars)
+                    )
+                );
+            }
+            if (wantOriginal) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '专栏原文',
+                        'article_content',
+                        'articleOriginalContent',
+                        truncateText(elements.articleOriginalContent?.textContent || currentData.rawContent, maxChunkChars)
+                    )
+                );
+            }
+        } else if (mode === 'user') {
+            meta.name = currentData.userData?.info?.name || elements.videoTitle?.textContent || '';
+            meta.mid = currentData.userData?.info?.mid || '';
+            meta.official = currentData.userData?.info?.official || '';
+
+            const wantWorks =
+                activeTab === 'user_works' || includesAny(q, ['作品', '视频', '选题', '数据', '播放', '爆款']);
+            const wantPortrait =
+                activeTab === 'user_portrait' || !wantWorks || includesAny(q, ['画像', '风格', '定位', '受众']);
+
+            if (wantPortrait) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        'UP主画像报告',
+                        'user_portrait',
+                        'userPortraitContentPane',
+                        truncateText(currentData.fullMarkdown, maxChunkChars)
+                    )
+                );
+            }
+            if (wantWorks) {
+                const works = (currentData.userData?.recent_videos || [])
+                    .slice(0, 30)
+                    .map(v => `- ${v.title}（播放:${v.play}，BV:${v.bvid}）`)
+                    .join('\n');
+                sources.push(
+                    makeSource(nextId(), '近期作品数据（节选）', 'user_works', 'userWorksContent', truncateText(works, maxChunkChars))
+                );
+            }
+        } else if (mode === 'research') {
+            meta.topic = currentData.researchTopic || elements.videoTitle?.textContent || '';
+
+            const wantProcess =
+                activeTab === 'research_process' || includesAny(q, ['过程', '工具', '证据', '来源', '推理']);
+            const wantReport = activeTab === 'research_report' || !wantProcess;
+
+            if (wantReport) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '研究报告',
+                        'research_report',
+                        'researchReportContent',
+                        truncateText(currentData.fullMarkdown, maxChunkChars)
+                    )
+                );
+            }
+            if (wantProcess) {
+                sources.push(
+                    makeSource(
+                        nextId(),
+                        '研究过程摘录',
+                        'research_process',
+                        'researchTimeline',
+                        truncateText(elements.researchTimeline?.innerText, maxChunkChars)
+                    )
+                );
+            }
+        } else {
+            sources.push(makeSource(nextId(), '材料', activeTab || 'chat', 'chatContent', truncateText(currentData.fullMarkdown, maxChunkChars)));
+        }
+
+        const assembled = assembleSourcesContext(sources, maxTotalChars);
+        return { mode, meta, context: assembled.context, sources: assembled.pickedSources };
+    }
+
+    function parseCitedSourceIds(text) {
+        const matches = (text || '').match(/\[S\d+\]/g) || [];
+        const ids = Array.from(new Set(matches.map(m => m.slice(1, -1))));
+        return ids;
+    }
+
+    function renderCitations(container, citedIds, sources) {
+        if (!container) return;
+        const sourceMap = new Map((sources || []).map(s => [s.id, s]));
+        const items = citedIds
+            .map(id => sourceMap.get(id))
+            .filter(Boolean)
+            .map(s => {
+                const title = (s.title || s.id).replace(/"/g, '&quot;');
+                const tab = (s.tab || '').replace(/"/g, '&quot;');
+                const anchorId = (s.anchorId || '').replace(/"/g, '&quot;');
+                return `<button class="btn-mini btn-outline-mini qa-cite-btn" data-tab="${tab}" data-anchor="${anchorId}" data-id="${s.id}" type="button">${s.id}: ${title}</button>`;
+            })
+            .join('');
+
+        if (!items) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'qa-citations';
+        wrapper.innerHTML = `
+            <div class="qa-citations-title">引用来源</div>
+            <div class="qa-citations-list">${items}</div>
+        `;
+        wrapper.querySelectorAll('.qa-cite-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                const anchor = btn.dataset.anchor;
+                if (tab) switchTab(tab);
+                setTimeout(() => {
+                    const el = document.getElementById(anchor) || document.querySelector(`#${anchor}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+            });
+        });
+        container.appendChild(wrapper);
+    }
+
     async function sendMessage() {
-        if (isAnalyzing) {
-            BiliHelpers.showToast('AI 正在分析视频，请在分析完成后再发起提问', elements.toast);
+        if (isAnalyzing && currentMode !== 'research') {
+            const label =
+                { video: '视频', article: '专栏', user: '用户画像', research: '深度研究' }[currentMode] ||
+                '当前';
+            BiliHelpers.showToast(`AI 正在生成${label}材料，请在分析完成后再提问`, elements.toast);
             return;
         }
         if (isChatting) return;
         const text = elements.chatInput.value.trim();
         if (!text) return;
 
-        if (!currentData.fullMarkdown) {
-            BiliHelpers.showToast('请先完成视频分析', elements.toast);
+        const { mode, meta, context, sources } = buildQAContextAndMeta(text);
+        if (!context.trim()) {
+            BiliHelpers.showToast('请先生成报告或分析材料后再提问', elements.toast);
             return;
         }
 
@@ -1134,13 +1449,14 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.sendMsgBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/chat/stream', {
+            const response = await fetch('/api/qa/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: text,
-                    context: currentData.fullMarkdown,
-                    video_info: currentData.videoInfo,
+                    mode,
+                    context,
+                    meta,
                     history: chatHistory
                 })
             });
@@ -1171,6 +1487,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+
+            const citedIds = parseCitedSourceIds(fullResponse);
+            renderCitations(assistantMsgDiv, citedIds, sources);
 
             chatHistory.push({ role: 'user', content: text });
             chatHistory.push({ role: 'assistant', content: fullResponse });
@@ -1508,13 +1827,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.resultArea.classList.remove('hidden');
                 currentMode = 'research';
                 updateSidebarUI();
+                chatHistory = [];
+                const qaUI = getQAUIConfig(currentMode);
+                elements.chatMessages.innerHTML = `
+                    <div class="message assistant">
+                        <div class="message-content">${qaUI.greeting}</div>
+                    </div>
+                `;
+                elements.chatInput.placeholder = qaUI.placeholder;
                 
                 // 更新 UI
-                elements.videoTitle.textContent = `课题研究：${data.data.filename.split('_').slice(2).join('_').replace('.md', '')}`;
+                const topic = data.data.filename.split('_').slice(2).join('_').replace('.md', '');
+                elements.videoTitle.textContent = `课题研究：${topic}`;
                 elements.upName.textContent = 'History Research Report';
                 
                 renderMarkdown(elements.researchReportContent, data.data.content);
                 currentData.fullMarkdown = data.data.content;
+                currentData.researchTopic = topic;
                 
                 // 设置当前文件 ID 用于顶部的 PDF 下载
                 currentData.researchFileId = fileId;

@@ -3,17 +3,21 @@
 
 提供各种输入验证函数，确保数据安全性和完整性
 """
+
 import re
-from typing import Any, Optional, List
+from typing import Any, List
 from urllib.parse import urlparse
 
 
 class ValidationError(Exception):
     """验证错误异常"""
+
     pass
 
 
-def validate_string(value: Any, field_name: str = "字段", min_length: int = 0, max_length: int = None) -> str:
+def validate_string(
+    value: Any, field_name: str = "字段", min_length: int = 0, max_length: int = None
+) -> str:
     """
     验证字符串输入
 
@@ -60,7 +64,7 @@ def validate_url(value: Any, field_name: str = "URL", allowed_schemes: List[str]
         raise ValidationError(f"{field_name} 必须是字符串类型")
 
     if allowed_schemes is None:
-        allowed_schemes = ['http', 'https']
+        allowed_schemes = ["http", "https"]
 
     try:
         parsed = urlparse(value)
@@ -72,10 +76,12 @@ def validate_url(value: Any, field_name: str = "URL", allowed_schemes: List[str]
 
         return value
     except Exception as e:
-        raise ValidationError(f"{field_name} 格式无效: {str(e)}")
+        raise ValidationError(f"{field_name} 格式无效: {str(e)}") from e
 
 
-def validate_integer(value: Any, field_name: str = "数值", min_value: int = None, max_value: int = None) -> int:
+def validate_integer(
+    value: Any, field_name: str = "数值", min_value: int = None, max_value: int = None
+) -> int:
     """
     验证整数输入
 
@@ -125,14 +131,15 @@ def validate_bvid(bvid: str) -> str:
     bvid = validate_string(bvid, "BVID", min_length=10, max_length=15)
 
     # 如果是完整URL，提取BVID
-    if bvid.startswith('http'):
+    if bvid.startswith("http"):
         from src.backend.utils.bilibili_helpers import extract_bvid
+
         bvid = extract_bvid(bvid)
         if not bvid:
             raise ValidationError("无法从URL中提取有效的BVID")
 
     # 验证BVID格式（简化验证：以BV开头，长度合理）
-    if not bvid.startswith('BV'):
+    if not bvid.startswith("BV"):
         raise ValidationError("BVID 必须以 'BV' 开头")
 
     if len(bvid) < 10 or len(bvid) > 15:
@@ -157,7 +164,7 @@ def validate_search_keyword(keyword: str) -> str:
     keyword = validate_string(keyword, "搜索关键词", min_length=1, max_length=100)
 
     # 过滤危险字符
-    dangerous_chars = ['\x00', '\n', '\r', '\t']
+    dangerous_chars = ["\x00", "\n", "\r", "\t"]
     for char in dangerous_chars:
         if char in keyword:
             raise ValidationError("搜索关键词包含非法字符")
@@ -183,7 +190,9 @@ def validate_json_data(data: Any, required_fields: List[str] = None) -> dict:
         raise ValidationError("请求数据必须是JSON对象")
 
     if required_fields:
-        missing_fields = [field for field in required_fields if field not in data or not data[field]]
+        missing_fields = [
+            field for field in required_fields if field not in data or not data[field]
+        ]
         if missing_fields:
             raise ValidationError(f"缺少必需字段: {', '.join(missing_fields)}")
 
@@ -204,10 +213,10 @@ def sanitize_markdown(text: str) -> str:
         return text
 
     # 移除 <script> 标签
-    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
 
     # 移除 on* 事件属性（如 onclick, onerror）
-    text = re.sub(r'\s+on\w+\s*=\s*["\'][^"\']*["\']', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s+on\w+\s*=\s*["\'][^"\']*["\']', "", text, flags=re.IGNORECASE)
 
     return text
 

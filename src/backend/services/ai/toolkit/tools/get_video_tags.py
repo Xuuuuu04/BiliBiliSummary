@@ -1,6 +1,7 @@
 """
 获取视频标签信息工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -44,6 +45,10 @@ class GetVideoTagsTool(BaseTool):
         logger.info(f"[工具] 获取视频标签: {bvid}")
         res = await self._bilibili_service.get_video_tags(bvid)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取视频标签失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取视频标签失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

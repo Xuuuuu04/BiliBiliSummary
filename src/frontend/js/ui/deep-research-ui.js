@@ -359,6 +359,19 @@
         state.reportBuffer += String(delta);
         scheduleReportRender();
         updateRoundDurations(tsMs);
+
+        // 更新时间线中的报告卡片状态
+        if (state.reportCardKey) {
+            const card = state.toolCards.get(state.reportCardKey);
+            if (card && card.summaryEl) {
+                const count = state.reportBuffer.length;
+                card.summaryEl.textContent = `已生成 ${count} 字，报告同步写入“研究报告”面板`;
+            }
+            if (card && card.previewEl) {
+                card.previewEl.textContent = state.reportBuffer.slice(-200); // 显示最后 200 字预览
+                card.previewEl.scrollTop = card.previewEl.scrollHeight;
+            }
+        }
     }
     function setReportStarted(tsMs) {
         state.reportStarted = true;
@@ -377,12 +390,24 @@
         });
         card.classList.add('dr-card--report');
         markCardState(card, 'active');
-        const tips = el('div', 'dr-card-summary', '报告将同步写入“研究报告”面板');
+        const tips = el('div', 'dr-card-summary', '报告正在生成，同步写入“研究报告”面板');
         body.appendChild(tips);
+
+        const preview = el('div', 'dr-preview');
+        preview.dataset.role = 'preview';
+        preview.style.maxHeight = '120px';
+        preview.style.fontSize = '0.9em';
+        preview.style.opacity = '0.8';
+        body.appendChild(preview);
+
         setToolStatus(statusEl, 'running', tsMs);
         statusEl.classList.add('dr-status-accent');
         appendCardToRound(roundNumber, card);
-        state.toolCards.set(key, { key, tool: 'report', args: null, card, body, statusEl, summaryEl: tips, previewEl: null, rawPreEl: null, startedAt: tsMs, round: roundNumber });
+        state.toolCards.set(key, { 
+            key, tool: 'report', args: null, card, body, statusEl, 
+            summaryEl: tips, previewEl: preview, rawPreEl: null, 
+            startedAt: tsMs, round: roundNumber 
+        });
     }
     function setDone(tsMs) {
         const roundNumber = state.currentRound || 1;
@@ -563,8 +588,13 @@
             const card = upsertToolCard({ tool, args: null, tsMs, roundNumber, toolCallId, extraKey });
             setToolStatus(card.statusEl, 'running', card.startedAt);
             if (data.message) updateToolCardSummary(card, data.message);
-            if (data.title && tool === 'analyze_video') updateToolCardSummary(card, `正在分析：${data.title}`);
-            if (tool === 'analyze_video' && data.content) appendToolCardPreview(card, data.content);
+        if (data.title && tool === 'analyze_video') updateToolCardSummary(card, `正在分析：${data.title}`);
+        if (tool === 'analyze_video' && data.content) {
+            appendToolCardPreview(card, data.content);
+            // 同时更新摘要显示已提取字数
+            const currentText = card.previewEl.textContent || '';
+            updateToolCardSummary(card, `正在提取视频文案... (已提取 ${currentText.length} 字)`);
+        }
             updateToolCardRaw(card, data);
             return;
         }

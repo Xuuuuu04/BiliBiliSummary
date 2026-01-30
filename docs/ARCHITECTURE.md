@@ -27,8 +27,8 @@
 - `/api/chat/stream`
 - `/api/research`
 
-## 旧代码与迁移策略
+## 核心模块与入口
 
-- `src/backend` 保留旧 Flask 实现与历史路由，短期用于对照与平滑迁移
-- `app.py` 为旧入口，后续会逐步移除 Flask 依赖并迁移剩余模块至 FastAPI
-
+- `src/backend`：领域服务层（B 站能力、AI 能力、数据源抽象、通用工具）
+- `asgi.py`：推荐启动入口（初始化日志 + 创建 FastAPI app）
+- `app.py`：兼容入口（直接复用 `asgi.py` 的 app）

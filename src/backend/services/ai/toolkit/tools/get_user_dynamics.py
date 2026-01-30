@@ -1,6 +1,7 @@
 """
 获取UP主最新动态工具
 """
+
 from typing import Dict
 
 from src.backend.services.ai.toolkit.base_tool import BaseTool
@@ -43,6 +44,10 @@ class GetUserDynamicsTool(BaseTool):
         logger.info(f"[工具] 获取用户动态: mid={mid}, limit={limit}")
         res = await self._bilibili_service.get_user_dynamics(mid, limit=limit)
         if not res.get("success"):
-            return {"type": "error", "tool": self.name, "error": f"获取用户动态失败: {res.get('error')}"}
+            return {
+                "type": "error",
+                "tool": self.name,
+                "error": f"获取用户动态失败: {res.get('error')}",
+            }
 
         return {"type": "tool_result", "tool": self.name, "data": res.get("data")}

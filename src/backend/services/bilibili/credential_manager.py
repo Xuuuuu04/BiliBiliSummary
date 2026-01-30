@@ -2,10 +2,13 @@
 B站认证管理模块
 负责登录凭据的初始化、刷新和验证
 """
-from bilibili_api import Credential
+
 from typing import Optional
-from src.config import Config
+
+from bilibili_api import Credential
+
 from src.backend.utils.logger import get_logger
+from src.config import Config
 
 logger = get_logger(__name__)
 
@@ -39,16 +42,14 @@ class CredentialManager:
             Credential对象，如果未配置则返回None
         """
         try:
-            if all([
-                Config.BILIBILI_SESSDATA,
-                Config.BILIBILI_BILI_JCT,
-                Config.BILIBILI_DEDEUSERID
-            ]):
+            if all(
+                [Config.BILIBILI_SESSDATA, Config.BILIBILI_BILI_JCT, Config.BILIBILI_DEDEUSERID]
+            ):
                 credential = Credential(
                     sessdata=Config.BILIBILI_SESSDATA,
                     bili_jct=Config.BILIBILI_BILI_JCT,
                     buvid3=Config.BILIBILI_BUVID3 or "",
-                    dedeuserid=Config.BILIBILI_DEDEUSERID
+                    dedeuserid=Config.BILIBILI_DEDEUSERID,
                 )
                 logger.info("已加载B站登录凭据，将获取完整数据")
                 return credential

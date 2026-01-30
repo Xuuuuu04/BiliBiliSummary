@@ -4,20 +4,17 @@ B站数据源实现
 包装现有的 BilibiliService，实现 DataSource 接口。
 提供统一的 B站数据访问方式，支持视频、用户、评论、搜索等功能。
 """
+
 import re
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+from src.backend.services.bilibili.bilibili_service import BilibiliService
 from src.backend.services.data_sources.base import DataSource
 from src.backend.services.data_sources.exceptions import (
     InvalidURLError,
-    VideoNotFoundError,
-    UserNotFoundError,
-    APIError,
-    FeatureNotSupportedError,
 )
-from src.backend.services.bilibili.bilibili_service import BilibiliService
-from src.backend.utils.bilibili_helpers import extract_bvid, extract_article_id
+from src.backend.utils.bilibili_helpers import extract_article_id, extract_bvid
 from src.backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -36,8 +33,8 @@ class BilibiliSource(DataSource):
     """
 
     # 正则表达式模式
-    _BVID_PATTERN = re.compile(r'BV[a-zA-Z0-9]{10}')
-    _UID_PATTERN = re.compile(r'/(\d+)/?$')  # 匹配URL末尾的数字UID
+    _BVID_PATTERN = re.compile(r"BV[a-zA-Z0-9]{10}")
+    _UID_PATTERN = re.compile(r"/(\d+)/?$")  # 匹配URL末尾的数字UID
 
     def __init__(self, credential=None):
         """
@@ -61,12 +58,7 @@ class BilibiliSource(DataSource):
     @property
     def supported_domains(self) -> List[str]:
         """支持的域名列表"""
-        return [
-            "bilibili.com",
-            "b23.tv",
-            "www.bilibili.com",
-            "m.bilibili.com"
-        ]
+        return ["bilibili.com", "b23.tv", "www.bilibili.com", "m.bilibili.com"]
 
     # ========== URL 解析方法 ==========
 
@@ -119,7 +111,7 @@ class BilibiliSource(DataSource):
         except Exception as e:
             if isinstance(e, InvalidURLError):
                 raise
-            raise InvalidURLError(url, str(e), platform=self.platform_name)
+            raise InvalidURLError(url, str(e), platform=self.platform_name) from e
 
     async def extract_user_id(self, url: str) -> Optional[str]:
         """
@@ -198,22 +190,18 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_video_info(video_id)
 
-            if result.get('success'):
+            if result.get("success"):
                 # 添加 platform 标识
-                result['data']['platform'] = self.platform_name
-                result['platform'] = self.platform_name
+                result["data"]["platform"] = self.platform_name
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取视频信息失败')
+                    success=False, error=result.get("error", "获取视频信息失败")
                 )
         except Exception as e:
             logger.error(f"获取视频信息失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取视频信息失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取视频信息失败: {str(e)}")
 
     async def get_video_subtitles(self, video_id: str, **kwargs) -> Dict[str, Any]:
         """
@@ -229,27 +217,19 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_video_subtitles(video_id)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取字幕失败')
+                    success=False, error=result.get("error", "获取字幕失败")
                 )
         except Exception as e:
             logger.error(f"获取字幕失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取字幕失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取字幕失败: {str(e)}")
 
     async def get_video_comments(
-        self,
-        video_id: str,
-        max_count: int = 100,
-        sort_by: str = "hot",
-        **kwargs
+        self, video_id: str, max_count: int = 100, sort_by: str = "hot", **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频评论
@@ -269,31 +249,22 @@ class BilibiliSource(DataSource):
             max_pages = max(1, (max_count + 19) // 20)
 
             result = await self._service.get_video_comments(
-                video_id,
-                max_pages=max_pages,
-                target_count=max_count
+                video_id, max_pages=max_pages, target_count=max_count
             )
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取评论失败')
+                    success=False, error=result.get("error", "获取评论失败")
                 )
         except Exception as e:
             logger.error(f"获取评论失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取评论失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取评论失败: {str(e)}")
 
     async def get_video_danmaku(
-        self,
-        video_id: str,
-        max_count: int = 1000,
-        **kwargs
+        self, video_id: str, max_count: int = 1000, **kwargs
     ) -> Dict[str, Any]:
         """
         获取视频弹幕
@@ -309,20 +280,16 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_video_danmaku(video_id, limit=max_count)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取弹幕失败')
+                    success=False, error=result.get("error", "获取弹幕失败")
                 )
         except Exception as e:
             logger.error(f"获取弹幕失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取弹幕失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取弹幕失败: {str(e)}")
 
     async def get_video_tags(self, video_id: str) -> Dict[str, Any]:
         """
@@ -337,20 +304,16 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_video_tags(video_id)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取标签失败')
+                    success=False, error=result.get("error", "获取标签失败")
                 )
         except Exception as e:
             logger.error(f"获取标签失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取标签失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取标签失败: {str(e)}")
 
     async def get_related_videos(self, video_id: str, **kwargs) -> Dict[str, Any]:
         """
@@ -366,20 +329,16 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_related_videos(video_id)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取相关视频失败')
+                    success=False, error=result.get("error", "获取相关视频失败")
                 )
         except Exception as e:
             logger.error(f"获取相关视频失败 ({video_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取相关视频失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取相关视频失败: {str(e)}")
 
     # ========== 用户相关方法 ==========
 
@@ -397,32 +356,20 @@ class BilibiliSource(DataSource):
             uid = int(user_id)
             result = await self._service.get_user_info(uid)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取用户信息失败')
+                    success=False, error=result.get("error", "获取用户信息失败")
                 )
         except ValueError:
-            return self._format_response(
-                success=False,
-                error=f"无效的用户ID: {user_id}"
-            )
+            return self._format_response(success=False, error=f"无效的用户ID: {user_id}")
         except Exception as e:
             logger.error(f"获取用户信息失败 ({user_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取用户信息失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取用户信息失败: {str(e)}")
 
-    async def get_user_videos(
-        self,
-        user_id: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_user_videos(self, user_id: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取用户投稿视频
 
@@ -438,34 +385,22 @@ class BilibiliSource(DataSource):
             uid = int(user_id)
             result = await self._service.get_user_recent_videos(uid, limit=limit)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取用户视频失败')
+                    success=False, error=result.get("error", "获取用户视频失败")
                 )
         except ValueError:
-            return self._format_response(
-                success=False,
-                error=f"无效的用户ID: {user_id}"
-            )
+            return self._format_response(success=False, error=f"无效的用户ID: {user_id}")
         except Exception as e:
             logger.error(f"获取用户视频失败 ({user_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取用户视频失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取用户视频失败: {str(e)}")
 
     # ========== 搜索相关方法 ==========
 
-    async def search_videos(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_videos(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索视频
 
@@ -480,27 +415,18 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.search_videos(keyword, limit=limit)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '搜索视频失败')
+                    success=False, error=result.get("error", "搜索视频失败")
                 )
         except Exception as e:
             logger.error(f"搜索视频失败 ({keyword}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"搜索视频失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"搜索视频失败: {str(e)}")
 
-    async def search_users(
-        self,
-        keyword: str,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def search_users(self, keyword: str, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         搜索用户
 
@@ -515,28 +441,20 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.search_users(keyword, limit=limit)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '搜索用户失败')
+                    success=False, error=result.get("error", "搜索用户失败")
                 )
         except Exception as e:
             logger.error(f"搜索用户失败 ({keyword}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"搜索用户失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"搜索用户失败: {str(e)}")
 
     # ========== 热门/推荐方法 ==========
 
-    async def get_popular_videos(
-        self,
-        limit: int = 10,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def get_popular_videos(self, limit: int = 10, **kwargs) -> Dict[str, Any]:
         """
         获取热门视频
 
@@ -550,26 +468,22 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_popular_videos()
 
-            if result.get('success'):
+            if result.get("success"):
                 # 限制返回数量
-                videos = result.get('data', [])
+                videos = result.get("data", [])
                 if isinstance(videos, list) and len(videos) > limit:
                     videos = videos[:limit]
-                    result['data'] = videos
+                    result["data"] = videos
 
-                result['platform'] = self.platform_name
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取热门视频失败')
+                    success=False, error=result.get("error", "获取热门视频失败")
                 )
         except Exception as e:
             logger.error(f"获取热门视频失败: {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取热门视频失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取热门视频失败: {str(e)}")
 
     # ========== B站特有方法扩展 ==========
 
@@ -586,20 +500,16 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_article_content(article_id)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取专栏文章失败')
+                    success=False, error=result.get("error", "获取专栏文章失败")
                 )
         except Exception as e:
             logger.error(f"获取专栏文章失败 ({article_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取专栏文章失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取专栏文章失败: {str(e)}")
 
     async def get_opus_content(self, opus_id: int) -> Dict[str, Any]:
         """
@@ -614,20 +524,16 @@ class BilibiliSource(DataSource):
         try:
             result = await self._service.get_opus_content(opus_id)
 
-            if result.get('success'):
-                result['platform'] = self.platform_name
+            if result.get("success"):
+                result["platform"] = self.platform_name
                 return result
             else:
                 return self._format_response(
-                    success=False,
-                    error=result.get('error', '获取Opus动态失败')
+                    success=False, error=result.get("error", "获取Opus动态失败")
                 )
         except Exception as e:
             logger.error(f"获取Opus动态失败 ({opus_id}): {str(e)}")
-            return self._format_response(
-                success=False,
-                error=f"获取Opus动态失败: {str(e)}"
-            )
+            return self._format_response(success=False, error=f"获取Opus动态失败: {str(e)}")
 
     async def validate_credentials(self) -> Dict[str, Any]:
         """
@@ -641,17 +547,11 @@ class BilibiliSource(DataSource):
 
             return self._format_response(
                 success=True,
-                data={
-                    'valid': is_valid,
-                    'message': '凭据有效' if is_valid else '凭据无效或已过期'
-                }
+                data={"valid": is_valid, "message": "凭据有效" if is_valid else "凭据无效或已过期"},
             )
         except Exception as e:
             logger.error(f"验证凭据失败: {str(e)}")
             return self._format_response(
                 success=True,  # 不抛出异常，返回数据
-                data={
-                    'valid': False,
-                    'message': f'验证失败: {str(e)}'
-                }
+                data={"valid": False, "message": f"验证失败: {str(e)}"},
             )
