@@ -36,13 +36,13 @@ class SearchVideosTool(BaseTool):
             },
         }
 
-    async def execute(self, keyword: str, limit: int = 5) -> Dict:
+    async def execute(self, keyword: str, limit: int = 20) -> Dict:
         """
         执行搜索
 
         Args:
             keyword: 搜索关键词
-            limit: 返回数量限制
+            limit: 返回数量限制 (深度研究建议提供更多选项)
 
         Returns:
             Dict: 搜索结果
@@ -61,7 +61,7 @@ class SearchVideosTool(BaseTool):
                 "error": f"搜索失败: {search_res.get('error', 'Unknown error')}",
             }
 
-        # 只返回前3个结果给AI
-        result_data = search_res["data"][:3] if len(search_res["data"]) > 3 else search_res["data"]
+        # 返回前 12 个结果给 AI，提供足够的选择余地
+        result_data = search_res["data"][:12] if len(search_res["data"]) > 12 else search_res["data"]
 
         return {"type": "tool_result", "tool": self.name, "data": result_data}
