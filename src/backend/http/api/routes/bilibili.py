@@ -1,3 +1,48 @@
+"""
+================================================================================
+B站数据路由 (src/backend/http/api/routes/bilibili.py)
+================================================================================
+
+【架构位置】
+位于 HTTP 层的 API 路由子模块，定义 B站数据获取相关的 HTTP 端点。
+
+【设计模式】
+- 路由模式 (Router Pattern): 使用 FastAPI 的 APIRouter 组织路由
+- 依赖注入 (Dependency Injection): 使用 Depends 注入服务实例
+- 代理模式: 图片代理端点转发 B站图片资源
+
+【主要功能】
+1. 搜索服务：
+   - POST /api/search - 搜索视频/专栏/用户
+
+2. 视频数据：
+   - POST /api/video/info - 获取视频信息（含统计和推荐）
+   - POST /api/video/subtitle - 获取视频字幕
+   - GET /api/video/popular - 获取热门视频
+
+3. 图片代理：
+   - GET /api/image-proxy - 代理 B站图片（解决跨域问题）
+
+4. 健康检查：
+   - GET /api/health - 服务健康状态
+
+5. B站登录：
+   - POST /api/bilibili/login/start - 启动扫码登录
+   - POST /api/bilibili/login/status - 检查登录状态
+   - POST /api/bilibili/login/logout - 登出
+   - GET /api/bilibili/login/check - 检查当前登录状态
+
+【技术要点】
+- asyncio.gather(): 并行请求多个接口提升性能
+- 图片代理: 添加 Referer 和 User-Agent 绕过防盗链
+- 域名白名单: 仅允许 hdslb.com 和 bilibili.com
+
+【路由前缀】
+/api
+
+================================================================================
+"""
+
 import asyncio
 import urllib.parse
 

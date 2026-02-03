@@ -1,3 +1,38 @@
+"""
+================================================================================
+FastAPI 应用工厂 (src/backend/http/app.py)
+================================================================================
+
+【架构位置】
+这是 FastAPI 应用的核心工厂模块，位于 HTTP 层的顶部。
+负责创建和配置 FastAPI 应用实例，是所有 HTTP 请求的入口。
+
+【设计模式】
+- 应用工厂模式（Application Factory Pattern）：
+  将应用创建逻辑封装在函数中，而不是直接在模块级别创建
+
+【主要功能】
+1. 创建 FastAPI 应用实例
+2. 注册全局异常处理器
+3. 配置 CORS 中间件
+4. 注册 API 路由
+5. 挂载静态文件服务
+
+【使用方式】
+from src.backend.http.app import create_app
+app = create_app()
+
+【调用关系】
+asgi.py (入口)
+    └── create_app() (此函数)
+            ├── 注册异常处理器
+            ├── 添加 CORS 中间件
+            ├── 注册 api_router
+            └── 挂载静态文件
+
+================================================================================
+"""
+
 import os
 
 from fastapi import FastAPI, Request
@@ -12,16 +47,33 @@ from src.config import Config
 
 
 def create_app() -> FastAPI:
+    """
+    创建并配置 FastAPI 应用实例
+
+    设计模式：应用工厂模式（Application Factory）
+
+    为什么使用工厂模式？
+    1. 延迟初始化：避免模块加载时就执行耗时操作
+    2. 避免循环导入：其他模块可以在需要时才导入
+    3. 测试友好：可以创建多个独立的应用实例进行测试
+
+    Returns:
+        FastAPI: 配置完成的应用实例
+    """
+    # 创建 FastAPI 实例
     app = FastAPI(title="Bilibili Analysis Helper", version="1.0.0")
 
+    # 注册全局异常处理器 - 处理自定义业务异常
     @app.exception_handler(AppError)
     async def app_error_handler(_: Request, exc: AppError):
         return JSONResponse(status_code=exc.status_code, content={"success": False, "error": exc.message})
 
+    # 注册全局异常处理器 - 处理请求验证异常
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(_: Request, __: RequestValidationError):
         return JSONResponse(status_code=400, content={"success": False, "error": "请求参数验证失败"})
 
+    # 配置 CORS 中间件（如果启用）
     if Config.CORS_ENABLED:
         origins = [origin.strip() for origin in (Config.CORS_ORIGINS or "*").split(",")]
         app.add_middleware(
@@ -32,15 +84,18 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
+    # 注册 API 路由
     app.include_router(api_router)
 
+    # 获取项目根目录（从当前文件向上 4 层）
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     static_dir = os.path.join(base_dir, "src", "frontend")
     assets_dir = os.path.join(base_dir, "assets")
+
+    # 挂载静态文件服务
     if os.path.isdir(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
     if os.path.isdir(static_dir):
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
 
     return app
-
