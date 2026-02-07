@@ -7,7 +7,9 @@ from src.backend.http.usecases import research_service as research_service_modul
 from src.backend.http.usecases.research_service import ResearchService
 
 
-def test_list_history_uses_absolute_report_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_list_history_uses_absolute_report_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     report_dir = tmp_path / "research_reports"
     report_dir.mkdir()
     (report_dir / "20250207_abc_topic-a.md").write_text("content", encoding="utf-8")

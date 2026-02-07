@@ -60,6 +60,7 @@ from src.backend.http.dependencies import get_bilibili_service, get_login_servic
 from src.backend.services.bilibili import BilibiliService
 from src.backend.services.bilibili.login_service import LoginService
 from src.backend.utils.logger import get_logger
+from src.backend.utils.retry import retry_sync
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -156,7 +157,9 @@ def image_proxy(url: str = Query(min_length=1)):
     parsed = urllib.parse.urlparse(image_url)
     hostname = (parsed.hostname or "").lower()
     allowed_hosts = ("hdslb.com", "bilibili.com")
-    if not hostname or not any(hostname == domain or hostname.endswith(f".{domain}") for domain in allowed_hosts):
+    if not hostname or not any(
+        hostname == domain or hostname.endswith(f".{domain}") for domain in allowed_hosts
+    ):
         return JSONResponse(status_code=400, content={"error": "不支持的图片域名"})
 
     try:
@@ -168,7 +171,11 @@ def image_proxy(url: str = Query(min_length=1)):
             "Accept-Encoding": "identity",
             "Connection": "close",
         }
-        response = requests.get(image_url, headers=headers, timeout=10)
+        response = retry_sync(
+            lambda: requests.get(image_url, headers=headers, timeout=10),
+            retries=2,
+            should_retry=lambda exc: isinstance(exc, requests.RequestException),
+        )
         if response.status_code != 200:
             return JSONResponse(
                 status_code=404, content={"error": f"获取图片失败: {response.status_code}"}
@@ -235,7 +242,9 @@ async def check_current_login(bilibili_service: BilibiliService = Depends(get_bi
         if has_credentials:
             is_valid = await bilibili_service.check_credential_valid()
             if is_valid:
-                user_info_res = await bilibili_service.get_user_info(int(Config.BILIBILI_DEDEUSERID))
+                user_info_res = await bilibili_service.get_user_info(
+                    int(Config.BILIBILI_DEDEUSERID)
+                )
                 if user_info_res.get("success"):
                     return {
                         "success": True,
@@ -260,6 +269,9 @@ async def check_current_login(bilibili_service: BilibiliService = Depends(get_bi
                 },
             }
 
-        return {"success": True, "data": {"is_logged_in": False, "user_id": None, "message": "未登录"}}
+        return {
+            "success": True,
+            "data": {"is_logged_in": False, "user_id": None, "message": "未登录"},
+        }
     except Exception as e:
         return _server_error("检查登录状态失败", e)

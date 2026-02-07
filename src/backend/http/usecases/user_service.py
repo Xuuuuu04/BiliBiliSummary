@@ -70,7 +70,9 @@ class UserService:
             raise NotFoundError(user_info_res.get("error", "用户不存在"))
 
         recent_videos_res = run_async(self._bilibili.get_user_recent_videos(target_uid))
-        recent_videos = recent_videos_res.get("data", []) if recent_videos_res.get("success") else []
+        recent_videos = (
+            recent_videos_res.get("data", []) if recent_videos_res.get("success") else []
+        )
 
         portrait_data = self._ai.generate_user_analysis(user_info_res["data"], recent_videos)
         return {
@@ -82,4 +84,3 @@ class UserService:
                 "recent_videos": recent_videos,
             },
         }
-

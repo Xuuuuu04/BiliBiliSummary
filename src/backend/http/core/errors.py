@@ -42,6 +42,7 @@ class AppError(Exception):
     使用示例：
         raise AppError("发生错误", status_code=500)
     """
+
     message: str
     status_code: int = 400
 

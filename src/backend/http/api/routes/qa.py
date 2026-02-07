@@ -72,4 +72,3 @@ async def qa_stream(payload: QAStreamRequest, ai_service: AIService = Depends(ge
             yield sse_data({"type": "error", "error": str(e)}, ensure_ascii=False)
 
     return StreamingResponse(iterate_in_threadpool(generate()), media_type="text/event-stream")
-

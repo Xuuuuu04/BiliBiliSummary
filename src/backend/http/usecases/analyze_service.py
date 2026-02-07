@@ -80,7 +80,9 @@ class AnalyzeService:
         if danmaku_texts:
             extra_context += "\n\n【实时弹幕（采样）】\n" + "\n".join(danmaku_texts[:400])
         if comments_data:
-            comment_texts = [f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]]
+            comment_texts = [
+                f"{c['username']} (赞:{c['like']}): {c['message']}" for c in comments_data[:200]
+            ]
             extra_context += "\n\n【精彩评论（热门/高赞）】\n" + "\n".join(comment_texts)
         return extra_context
 
@@ -89,7 +91,9 @@ class AnalyzeService:
             return await asyncio.gather(
                 self._bilibili.get_video_subtitles(bvid),
                 self._bilibili.get_video_danmaku(bvid, limit=1000),
-                self._bilibili.get_video_comments(bvid, max_pages=30, target_count=comment_target_count),
+                self._bilibili.get_video_comments(
+                    bvid, max_pages=30, target_count=comment_target_count
+                ),
                 self._bilibili.get_video_stats(bvid),
                 self._bilibili.get_video_tags(bvid),
                 self._bilibili.get_video_series(bvid),
@@ -193,7 +197,9 @@ class AnalyzeService:
 
     def stream_analyze(self, url: str, mode: Literal["video", "article"]) -> Iterator[str]:
         if not url:
-            yield self._sse({"type": "error", "error": "请提供B站视频或专栏链接"}, ensure_ascii=False)
+            yield self._sse(
+                {"type": "error", "error": "请提供B站视频或专栏链接"}, ensure_ascii=False
+            )
             return
 
         bvid = BilibiliService.extract_bvid(url)
@@ -287,7 +293,9 @@ class AnalyzeService:
                     }
                 )
 
-                for chunk in self._ai.generate_article_analysis_stream(res["data"], res["data"]["content"]):
+                for chunk in self._ai.generate_article_analysis_stream(
+                    res["data"], res["data"]["content"]
+                ):
                     yield self._sse(chunk, ensure_ascii=False)
 
                 yield self._sse(
@@ -304,7 +312,12 @@ class AnalyzeService:
                 return
 
             yield self._sse(
-                {"type": "stage", "stage": "fetching_info", "message": "获取视频信息...", "progress": 5}
+                {
+                    "type": "stage",
+                    "stage": "fetching_info",
+                    "message": "获取视频信息...",
+                    "progress": 5,
+                }
             )
             video_info_result = run_async(self._bilibili.get_video_info(bvid))
             if not video_info_result.get("success"):
@@ -325,7 +338,12 @@ class AnalyzeService:
                 ensure_ascii=False,
             )
             yield self._sse(
-                {"type": "stage", "stage": "fetching_content", "message": "获取字幕和弹幕...", "progress": 20}
+                {
+                    "type": "stage",
+                    "stage": "fetching_content",
+                    "message": "获取字幕和弹幕...",
+                    "progress": 20,
+                }
             )
 
             material = self._collect_video_material(bvid, comment_target_count=500)
@@ -354,7 +372,9 @@ class AnalyzeService:
             )
 
             if len(content) < 50:
-                yield self._sse({"type": "error", "error": "无法获取视频内容（无字幕且无有效弹幕）"})
+                yield self._sse(
+                    {"type": "error", "error": "无法获取视频内容（无字幕且无有效弹幕）"}
+                )
                 return
 
             yield self._sse(
@@ -386,7 +406,12 @@ class AnalyzeService:
                 }
             )
             yield self._sse(
-                {"type": "stage", "stage": "starting_analysis", "message": "开始AI智能分析...", "progress": 55}
+                {
+                    "type": "stage",
+                    "stage": "starting_analysis",
+                    "message": "开始AI智能分析...",
+                    "progress": 55,
+                }
             )
 
             for chunk in self._ai.generate_full_analysis_stream(video_info, content, video_frames):

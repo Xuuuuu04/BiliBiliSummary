@@ -50,4 +50,3 @@ async def user_portrait(
     if not payload.uid:
         return JSONResponse(status_code=400, content={"success": False, "error": "缺少输入内容"})
     return await run_in_threadpool(user_service.get_portrait, payload.uid)
-

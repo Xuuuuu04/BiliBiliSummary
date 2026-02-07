@@ -90,13 +90,15 @@ class VideoService:
 
             subtitle_info = await v.get_subtitle(cid=cid)
             subtitles_list = subtitle_info.get("subtitles", []) if subtitle_info else []
-            
+
             tracks = []
             for s in subtitles_list:
                 lan = (s.get("lan") or "").strip()
                 lan_doc = (s.get("lan_doc") or "").strip()
                 lan_doc_lower = lan_doc.lower()
-                is_ai = any(x in lan_doc_lower for x in ["ai", "auto", "自动", "机器", "智能", "自动生成"])
+                is_ai = any(
+                    x in lan_doc_lower for x in ["ai", "auto", "自动", "机器", "智能", "自动生成"]
+                )
                 subtitle_url = s.get("subtitle_url") or ""
                 if subtitle_url.startswith("//"):
                     subtitle_url = "https:" + subtitle_url
@@ -118,6 +120,7 @@ class VideoService:
             fetch_errors = []
 
             if tracks:
+
                 def is_zh(t: Dict) -> bool:
                     lan = (t.get("lan") or "").lower()
                     lan_doc = (t.get("lan_doc") or "").lower()
@@ -148,7 +151,9 @@ class VideoService:
                         async with aiohttp.ClientSession() as session:
                             async with session.get(subtitle_url) as resp:
                                 subtitle_data = await resp.json()
-                        body = subtitle_data.get("body", []) if isinstance(subtitle_data, dict) else []
+                        body = (
+                            subtitle_data.get("body", []) if isinstance(subtitle_data, dict) else []
+                        )
                         subtitle_text = [
                             item.get("content", "").strip()
                             for item in body
@@ -168,11 +173,11 @@ class VideoService:
                         mr = res["model_result"]
                         summary = mr.get("summary") or ""
                         outline = mr.get("outline") or []
-                        
+
                         fallback_lines = []
                         if summary:
                             fallback_lines.append(f"[AI 总结]\n{summary}")
-                        
+
                         if outline:
                             fallback_lines.append("[AI 视频大纲]")
                             for item in outline:
@@ -183,7 +188,7 @@ class VideoService:
                                 fallback_lines.append(f"{time_str} {title}")
                                 if part_desc:
                                     fallback_lines.append(f"  - {part_desc}")
-                        
+
                         if fallback_lines:
                             return {
                                 "success": True,
@@ -512,6 +517,7 @@ class VideoService:
             {'success': bool, 'data': {帧信息}} 或 {'success': False, 'error': str}
         """
         try:
+
             async def fetch_image_as_jpeg_base64(url: str) -> Optional[str]:
                 if not url:
                     return None
@@ -620,9 +626,7 @@ class VideoService:
                                 continue
                             y, x = r * single_h, c * single_w
                             crop = sprite_img[y : y + single_h, x : x + single_w]
-                            ok, buffer = cv2.imencode(
-                                ".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 40]
-                            )
+                            ok, buffer = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 40])
                             if not ok:
                                 continue
                             frames_base64.append(base64.b64encode(buffer).decode("utf-8"))

@@ -8,8 +8,8 @@ from typing import Dict
 
 from bilibili_api import login_v2
 
-from src.backend.utils.logger import get_logger
 from src.backend.utils.env_store import rewrite_env_with_filter, upsert_env_values
+from src.backend.utils.logger import get_logger
 from src.config import Config
 
 logger = get_logger(__name__)

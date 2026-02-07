@@ -60,4 +60,3 @@ async def update_settings(
 ):
     data = payload.model_dump(exclude_unset=True)
     return await run_in_threadpool(settings_service.update_settings, data)
-

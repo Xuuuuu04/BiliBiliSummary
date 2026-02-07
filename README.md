@@ -66,7 +66,11 @@
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
-   pip install -r requirements.txt
+   pip install -r requirements/dev.txt
+   ```
+   如需启用 PDF 导出功能，再执行：
+   ```bash
+   pip install -r requirements/optional-pdf.txt
    ```
 
 2. **配置环境**
@@ -86,7 +90,8 @@ Bilibili_Analysis_Helper/
 ├── .github/             # CI（lint/format/test）
 ├── asgi.py             # FastAPI 启动入口（推荐）
 ├── pyproject.toml      # 工具链配置（black/ruff/pytest/mypy）
-├── requirements.txt    # 核心依赖
+├── requirements.txt    # 默认开发依赖入口
+├── requirements/       # 依赖分层（base/dev/optional）
 ├── .env.example        # 环境变量模板
 ├── README.md           # 项目文档
 ├── tests/              # 单元测试

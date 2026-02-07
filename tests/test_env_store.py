@@ -18,7 +18,9 @@ def test_upsert_and_read_env_values(tmp_path: Path) -> None:
 
 def test_rewrite_env_with_filter(tmp_path: Path) -> None:
     env_path = tmp_path / ".env"
-    upsert_env_values({"OPENAI_API_KEY": "secret", "BILIBILI_SESSDATA": "x", "MODE": "dev"}, env_path)
+    upsert_env_values(
+        {"OPENAI_API_KEY": "secret", "BILIBILI_SESSDATA": "x", "MODE": "dev"}, env_path
+    )
 
     rewrite_env_with_filter(
         keep_if=lambda key: not key.startswith("OPENAI_"),

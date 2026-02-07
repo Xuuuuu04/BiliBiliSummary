@@ -45,8 +45,12 @@ class _FakeClientSession:
 
 
 @pytest.mark.asyncio
-async def test_extract_frames_fallback_does_not_raise_name_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("src.backend.services.bilibili.video_service.aiohttp.ClientSession", _FakeClientSession)
+async def test_extract_frames_fallback_does_not_raise_name_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "src.backend.services.bilibili.video_service.aiohttp.ClientSession", _FakeClientSession
+    )
 
     service = VideoService()
 
@@ -54,7 +58,10 @@ async def test_extract_frames_fallback_does_not_raise_name_error(monkeypatch: py
         return 123
 
     async def _fake_get_info(_bvid: str):
-        return {"success": True, "data": {"duration": 120, "cover": "https://example.com/cover.jpg"}}
+        return {
+            "success": True,
+            "data": {"duration": 120, "cover": "https://example.com/cover.jpg"},
+        }
 
     monkeypatch.setattr(service, "get_cid", _fake_get_cid)
     monkeypatch.setattr(service, "get_info", _fake_get_info)

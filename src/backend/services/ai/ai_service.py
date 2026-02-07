@@ -24,6 +24,7 @@ from src.backend.services.ai.prompts import (
     get_video_analysis_prompt,
 )
 from src.backend.utils.logger import get_logger
+from src.backend.utils.retry import retry_sync
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -51,6 +52,21 @@ class AIService:
         # 初始化 Agent（深度研究Agent需要视觉模型用于视频分析）
         self._deep_research_agent = DeepResearchAgent(
             self.client, self.research_model, vl_model=self.model
+        )
+
+    @staticmethod
+    def _is_retryable_error(exc: Exception) -> bool:
+        msg = str(exc).lower()
+        return any(
+            token in msg
+            for token in ("timeout", "timed out", "connection", "429", "502", "503", "504")
+        )
+
+    def _create_completion(self, **kwargs):
+        return retry_sync(
+            lambda: self.client.chat.completions.create(**kwargs),
+            retries=2,
+            should_retry=self._is_retryable_error,
         )
 
     # ========== Agent 方法（保持向后兼容）==========
@@ -96,7 +112,7 @@ class AIService:
                 messages.extend(history)
             messages.append({"role": "user", "content": question})
 
-            stream = self.client.chat.completions.create(
+            stream = self._create_completion(
                 model=self.qa_model, messages=messages, temperature=0.4, stream=True
             )
 
@@ -129,7 +145,7 @@ class AIService:
                 messages.extend(history)
             messages.append({"role": "user", "content": question})
 
-            stream = self.client.chat.completions.create(
+            stream = self._create_completion(
                 model=self.qa_model, messages=messages, temperature=0.4, stream=True
             )
 
@@ -212,7 +228,7 @@ class AIService:
             ]
 
             logger.debug("发送请求到API...")
-            response = self.client.chat.completions.create(
+            response = self._create_completion(
                 model=self.model, messages=messages, temperature=0.2, max_tokens=8000, timeout=240
             )
 
@@ -363,7 +379,7 @@ class AIService:
             logger.debug("发送流式请求到API...")
 
             # 流式调用API
-            stream = self.client.chat.completions.create(
+            stream = self._create_completion(
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
@@ -506,7 +522,7 @@ class AIService:
         try:
             prompt = get_summary_prompt(video_info, content)
 
-            response = self.client.chat.completions.create(
+            response = self._create_completion(
                 model=self.model,
                 messages=[
                     {
@@ -537,7 +553,7 @@ class AIService:
         try:
             prompt = get_mindmap_prompt(video_info, content, summary)
 
-            response = self.client.chat.completions.create(
+            response = self._create_completion(
                 model=self.model,
                 messages=[
                     {
@@ -578,7 +594,7 @@ class AIService:
                 {"role": "user", "content": prompt},
             ]
 
-            stream = self.client.chat.completions.create(
+            stream = self._create_completion(
                 model=self.qa_model, messages=messages, temperature=0.3, stream=True
             )
 
@@ -609,7 +625,7 @@ class AIService:
             )
             prompt = get_user_portrait_prompt(user_info, videos_text)
 
-            response = self.client.chat.completions.create(
+            response = self._create_completion(
                 model=self.qa_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,

@@ -47,7 +47,9 @@ class ResearchService:
                 reports_dict[base] = {
                     "id": base,
                     "topic": topic,
-                    "created_at": datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                    "created_at": datetime.fromtimestamp(stats.st_mtime).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
                     "has_md": False,
                     "has_pdf": False,
                 }

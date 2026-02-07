@@ -62,6 +62,8 @@ class SearchVideosTool(BaseTool):
             }
 
         # 返回前 20 个结果给 AI，提供足够的选择余地
-        result_data = search_res["data"][:20] if len(search_res["data"]) > 20 else search_res["data"]
+        result_data = (
+            search_res["data"][:20] if len(search_res["data"]) > 20 else search_res["data"]
+        )
 
         return {"type": "tool_result", "tool": self.name, "data": result_data}

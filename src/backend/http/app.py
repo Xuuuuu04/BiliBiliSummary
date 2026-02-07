@@ -35,8 +35,9 @@ asgi.py (入口)
 
 import os
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -46,6 +47,7 @@ from src.backend.http.api.router import api_router
 from src.backend.http.core.errors import AppError
 from src.backend.utils.http_client import close_http_session
 from src.backend.utils.logger import get_logger
+from src.backend.utils.request_context import set_request_id
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -79,17 +81,29 @@ def create_app() -> FastAPI:
     # 注册全局异常处理器 - 处理自定义业务异常
     @app.exception_handler(AppError)
     async def app_error_handler(_: Request, exc: AppError):
-        return JSONResponse(status_code=exc.status_code, content={"success": False, "error": exc.message})
+        return JSONResponse(
+            status_code=exc.status_code, content={"success": False, "error": exc.message}
+        )
 
     # 注册全局异常处理器 - 处理请求验证异常
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(_: Request, __: RequestValidationError):
-        return JSONResponse(status_code=400, content={"success": False, "error": "请求参数验证失败"})
+        return JSONResponse(
+            status_code=400, content={"success": False, "error": "请求参数验证失败"}
+        )
 
     @app.exception_handler(Exception)
     async def unhandled_error_handler(_: Request, exc: Exception):
         logger.exception("Unhandled server error: %s", str(exc))
         return JSONResponse(status_code=500, content={"success": False, "error": "服务器内部错误"})
+
+    @app.middleware("http")
+    async def request_context_middleware(request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID") or str(uuid4())
+        set_request_id(request_id)
+        response: Response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
 
     # 配置 CORS 中间件（如果启用）
     if Config.CORS_ENABLED:
@@ -107,7 +121,9 @@ def create_app() -> FastAPI:
     app.include_router(api_router)
 
     # 获取项目根目录（从当前文件向上 4 层）
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    base_dir = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
     static_dir = os.path.join(base_dir, "src", "frontend")
     assets_dir = os.path.join(base_dir, "assets")
 

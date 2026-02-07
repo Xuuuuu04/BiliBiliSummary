@@ -39,10 +39,11 @@ uvicorn asgi:app --host 0.0.0.0 --port 5001 --workers 4
 
 import logging
 
-# 导入日志设置函数
-from src.backend.utils.logger import setup_logging
 # 导入应用工厂函数
 from src.backend.http.app import create_app
+
+# 导入日志设置函数
+from src.backend.utils.logger import setup_logging
 
 # ========================================================================
 # 第一步：初始化日志系统

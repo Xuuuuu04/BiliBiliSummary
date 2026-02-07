@@ -9,6 +9,8 @@ from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
+from src.backend.utils.request_context import get_request_id
+
 
 # 日志颜色配置
 class LogColors:
@@ -62,9 +64,10 @@ class ColoredFormatter(logging.Formatter):
 
         # 格式化消息
         message = record.getMessage()
+        request_id = get_request_id()
 
         # 组合格式
-        formatted = f"{timestamp} {levelname} {module_name}"
+        formatted = f"{timestamp} {levelname} {module_name} [rid:{request_id}]"
         if location:
             formatted += f" {location}"
         formatted += f" - {message}"
@@ -97,9 +100,10 @@ class FileFormatter(logging.Formatter):
 
         # 格式化消息
         message = record.getMessage()
+        request_id = get_request_id()
 
         # 组合格式
-        formatted = f"{timestamp} {levelname} {module_name}"
+        formatted = f"{timestamp} {levelname} {module_name} [rid:{request_id}]"
         if location:
             formatted += f" {location}"
         formatted += f" - {message}"

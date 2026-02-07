@@ -81,7 +81,9 @@ async def download_research_report(
     format: str,
     research_service: ResearchService = Depends(get_research_service),
 ):
-    filepath, filename = await run_in_threadpool(research_service.resolve_download_path, file_id, format)
+    filepath, filename = await run_in_threadpool(
+        research_service.resolve_download_path, file_id, format
+    )
     return FileResponse(path=filepath, filename=filename, media_type="application/octet-stream")
 
 
@@ -90,4 +92,3 @@ async def get_research_report(
     filename: str, research_service: ResearchService = Depends(get_research_service)
 ):
     return await run_in_threadpool(research_service.read_report, filename)
-

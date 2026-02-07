@@ -36,6 +36,7 @@ model = Config.OPENAI_MODEL
 import os
 
 from dotenv import load_dotenv
+
 from src.backend.utils.config_normalizer import normalize_openai_api_base
 
 # 在模块加载时自动加载 .env 文件

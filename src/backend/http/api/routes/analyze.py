@@ -99,4 +99,3 @@ async def analyze_video_stream(
             "Access-Control-Allow-Headers": "Cache-Control",
         },
     )
-

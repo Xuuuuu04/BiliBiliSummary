@@ -68,7 +68,6 @@ from src.backend.services.ai import AIService
 from src.backend.services.bilibili import BilibiliService
 from src.backend.services.bilibili.login_service import LoginService
 
-
 # ========================================================================
 # 基础服务提供者（单例模式）
 # ========================================================================
@@ -110,18 +109,12 @@ def get_login_service() -> LoginService:
 
 def get_analyze_service() -> AnalyzeService:
     """获取分析服务实例（每次新建）"""
-    return AnalyzeService(
-        bilibili_service=get_bilibili_service(),
-        ai_service=get_ai_service()
-    )
+    return AnalyzeService(bilibili_service=get_bilibili_service(), ai_service=get_ai_service())
 
 
 def get_research_service() -> ResearchService:
     """获取深度研究服务实例（每次新建）"""
-    return ResearchService(
-        ai_service=get_ai_service(),
-        bilibili_service=get_bilibili_service()
-    )
+    return ResearchService(ai_service=get_ai_service(), bilibili_service=get_bilibili_service())
 
 
 @lru_cache(maxsize=1)
@@ -132,7 +125,4 @@ def get_settings_service() -> SettingsService:
 
 def get_user_service() -> UserService:
     """获取用户服务实例（每次新建）"""
-    return UserService(
-        bilibili_service=get_bilibili_service(),
-        ai_service=get_ai_service()
-    )
+    return UserService(bilibili_service=get_bilibili_service(), ai_service=get_ai_service())
