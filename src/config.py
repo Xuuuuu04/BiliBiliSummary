@@ -36,6 +36,7 @@ model = Config.OPENAI_MODEL
 import os
 
 from dotenv import load_dotenv
+from src.backend.utils.config_normalizer import normalize_openai_api_base
 
 # 在模块加载时自动加载 .env 文件
 # .env 文件应该位于项目根目录，包含所有敏感配置
@@ -66,22 +67,11 @@ class Config:
     # API 基础 URL（代理地址）
     # 例如：https://api.siliconflow.cn/v1
     _api_base = os.getenv("OPENAI_API_BASE")
-
-    # 自动处理 API Base URL 格式
-    # 确保格式统一，避免因斜杠问题导致请求失败
-    if _api_base:
-        _api_base = _api_base.rstrip("/")  # 移除末尾斜杠
-        # 如果是 OpenAI 官网且没有 /v1，自动添加
-        if not _api_base.endswith("/v1") and "openai.com" in _api_base:
-            OPENAI_API_BASE = _api_base + "/v1"
-        else:
-            OPENAI_API_BASE = _api_base
-    else:
-        OPENAI_API_BASE = None
+    OPENAI_API_BASE = normalize_openai_api_base(_api_base)
 
     # 主分析模型：用于视频分析、专栏分析等多模态任务
     # 建议：支持视觉的模型，如 Qwen2-VL、GPT-4V 等
-    OPENAI_MODEL = os.getenv("model")
+    OPENAI_MODEL = os.getenv("model") or os.getenv("QA_MODEL", "Qwen/Qwen2.5-72B-Instruct")
 
     # 问答模型：用于智能问答、对话等文本任务
     # 建议：快速响应的文本模型，如 Qwen2.5-72B-Instruct

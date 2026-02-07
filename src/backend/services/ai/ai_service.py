@@ -38,10 +38,13 @@ class AIService:
 
     def __init__(self):
         """初始化AI服务"""
+        if not Config.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY 未配置，无法初始化 AIService")
+
         self.client = OpenAI(
             api_key=Config.OPENAI_API_KEY, base_url=Config.OPENAI_API_BASE, timeout=180.0
         )
-        self.model = Config.OPENAI_MODEL
+        self.model = Config.OPENAI_MODEL or Config.QA_MODEL
         self.qa_model = Config.QA_MODEL
         self.research_model = Config.DEEP_RESEARCH_MODEL
 

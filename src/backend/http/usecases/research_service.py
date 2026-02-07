@@ -2,46 +2,16 @@
 ================================================================================
 深度研究用例服务 (src/backend/http/usecases/research_service.py)
 ================================================================================
-
-【架构位置】
-位于 HTTP 层的用例子模块 (usecases/)，是深度研究业务逻辑的编排层。
-
-【设计模式】
-- 用例模式 (Use Case Pattern): 封装深度研究业务流程
-- 代理模式: 将请求代理给 AIService 的深度研究功能
-- 仓库模式: 管理研究报告文件的存储和检索
-
-【主要功能】
-1. 深度研究流式输出：
-   - 接收研究课题
-   - 调用 AI 深度研究服务
-   - 流式返回研究进度和结果
-
-2. 研究报告管理：
-   - list_history(): 列出所有历史报告
-   - resolve_download_path(): 解析报告下载路径
-   - read_report(): 读取报告内容
-
-【文件命名规范】
-研究报告文件名格式: {timestamp}_{id}_{topic}.{ext}
-- timestamp: Unix 时间戳
-- id: 短ID（用于标识）
-- topic: 课题名称（URL编码）
-- ext: .md 或 .pdf
-
-【存储位置】
-reports/ 目录（项目根目录下）
-
-================================================================================
 """
 
-import os
 from collections.abc import Iterator
 from datetime import datetime
+from pathlib import Path
 
 from src.backend.http.core.errors import BadRequestError, NotFoundError
 from src.backend.services.ai import AIService
 from src.backend.services.bilibili import BilibiliService
+from src.backend.utils.project_paths import research_reports_dir
 
 
 class ResearchService:
@@ -55,19 +25,23 @@ class ResearchService:
         return self._ai.deep_research_stream(topic, self._bilibili)
 
     def list_history(self) -> dict:
-        report_dir = "research_reports"
-        if not os.path.exists(report_dir):
+        report_dir = research_reports_dir()
+        if not report_dir.exists():
             return {"success": True, "data": []}
 
         reports_dict: dict[str, dict] = {}
-        for filename in os.listdir(report_dir):
-            if not (filename.endswith(".md") or filename.endswith(".pdf")):
+        for file_path in report_dir.iterdir():
+            if not file_path.is_file():
                 continue
 
-            base, ext = filename.rsplit(".", 1)
+            suffix = file_path.suffix.lower()
+            if suffix not in {".md", ".pdf"}:
+                continue
+
+            base = file_path.stem
+            ext = suffix.lstrip(".")
             if base not in reports_dict:
-                path = os.path.join(report_dir, filename)
-                stats = os.stat(path)
+                stats = file_path.stat()
                 parts = base.split("_", 2)
                 topic = parts[2] if len(parts) > 2 else base
                 reports_dict[base] = {
@@ -84,7 +58,7 @@ class ResearchService:
                 reports_dict[base]["has_pdf"] = True
 
         reports = list(reports_dict.values())
-        reports.sort(key=lambda x: x["id"], reverse=True)
+        reports.sort(key=lambda item: item["id"], reverse=True)
         return {"success": True, "data": reports}
 
     def resolve_download_path(self, file_id: str, format: str) -> tuple[str, str]:
@@ -94,21 +68,21 @@ class ResearchService:
             raise BadRequestError("无效的文件ID")
 
         filename = f"{file_id}.{format}"
-        filepath = os.path.join("research_reports", filename)
-        if not os.path.exists(filepath):
+        filepath = research_reports_dir() / filename
+        if not filepath.exists():
             raise NotFoundError("报告不存在")
-        return filepath, filename
+        return str(filepath), filename
 
     def read_report(self, filename: str) -> dict:
         if ".." in filename or "/" in filename or "\\" in filename:
             raise BadRequestError("无效的文件名")
 
-        filepath = os.path.join("research_reports", filename)
-        if not os.path.exists(filepath):
+        safe_name = Path(filename).name
+        filepath = research_reports_dir() / safe_name
+        if not filepath.exists():
             raise NotFoundError("报告不存在")
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
+        with filepath.open("r", encoding="utf-8") as handle:
+            content = handle.read()
 
-        return {"success": True, "data": {"content": content, "filename": filename}}
-
+        return {"success": True, "data": {"content": content, "filename": safe_name}}

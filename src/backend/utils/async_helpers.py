@@ -5,6 +5,7 @@
 """
 
 import asyncio
+import threading
 from typing import Any, Coroutine
 
 
@@ -24,6 +25,27 @@ def run_async(coro: Coroutine[Any, Any, Any]) -> Any:
         - 自动处理事件循环的创建和清理
         - 线程安全，避免事件循环冲突
     """
-    # 使用 asyncio.run() 创建新的事件循环并运行协程
-    # 这会自动处理事件循环的创建、运行和清理
-    return asyncio.run(coro)
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # 当前线程没有事件循环，直接运行
+        return asyncio.run(coro)
+
+    # 当前线程已有事件循环，切到新线程避免 RuntimeError
+    result: list[Any] = [None]
+    exception: list[BaseException | None] = [None]
+
+    def _runner() -> None:
+        try:
+            result[0] = asyncio.run(coro)
+        except BaseException as exc:  # noqa: B036
+            exception[0] = exc
+
+    thread = threading.Thread(target=_runner, daemon=True)
+    thread.start()
+    thread.join()
+
+    if exception[0] is not None:
+        raise exception[0]
+
+    return result[0]

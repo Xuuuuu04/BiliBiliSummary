@@ -59,6 +59,7 @@
 
 from functools import lru_cache
 
+from src.backend.http.core.errors import BadRequestError
 from src.backend.http.usecases.analyze_service import AnalyzeService
 from src.backend.http.usecases.research_service import ResearchService
 from src.backend.http.usecases.settings_service import SettingsService
@@ -88,7 +89,10 @@ def get_bilibili_service() -> BilibiliService:
 @lru_cache(maxsize=1)
 def get_ai_service() -> AIService:
     """获取 AI服务实例（单例）"""
-    return AIService()
+    try:
+        return AIService()
+    except ValueError as exc:
+        raise BadRequestError(str(exc)) from exc
 
 
 @lru_cache(maxsize=1)

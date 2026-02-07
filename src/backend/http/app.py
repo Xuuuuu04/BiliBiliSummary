@@ -34,6 +34,7 @@ asgi.py (入口)
 """
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -43,7 +44,19 @@ from fastapi.staticfiles import StaticFiles
 
 from src.backend.http.api.router import api_router
 from src.backend.http.core.errors import AppError
+from src.backend.utils.http_client import close_http_session
+from src.backend.utils.logger import get_logger
 from src.config import Config
+
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        yield
+    finally:
+        await close_http_session()
 
 
 def create_app() -> FastAPI:
@@ -61,7 +74,7 @@ def create_app() -> FastAPI:
         FastAPI: 配置完成的应用实例
     """
     # 创建 FastAPI 实例
-    app = FastAPI(title="Bilibili Analysis Helper", version="1.0.0")
+    app = FastAPI(title="Bilibili Analysis Helper", version="1.0.0", lifespan=lifespan)
 
     # 注册全局异常处理器 - 处理自定义业务异常
     @app.exception_handler(AppError)
@@ -73,13 +86,19 @@ def create_app() -> FastAPI:
     async def validation_error_handler(_: Request, __: RequestValidationError):
         return JSONResponse(status_code=400, content={"success": False, "error": "请求参数验证失败"})
 
+    @app.exception_handler(Exception)
+    async def unhandled_error_handler(_: Request, exc: Exception):
+        logger.exception("Unhandled server error: %s", str(exc))
+        return JSONResponse(status_code=500, content={"success": False, "error": "服务器内部错误"})
+
     # 配置 CORS 中间件（如果启用）
     if Config.CORS_ENABLED:
         origins = [origin.strip() for origin in (Config.CORS_ORIGINS or "*").split(",")]
+        allow_wildcard = origins == ["*"]
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=origins if origins != ["*"] else ["*"],
-            allow_credentials=True,
+            allow_origins=["*"] if allow_wildcard else origins,
+            allow_credentials=not allow_wildcard,
             allow_methods=["*"],
             allow_headers=["*"],
         )

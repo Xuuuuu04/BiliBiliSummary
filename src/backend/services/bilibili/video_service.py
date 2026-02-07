@@ -542,6 +542,11 @@ class VideoService:
             if not cid:
                 return {"success": False, "error": "无法获取视频CID"}
 
+            v_info = await self.get_info(bvid)
+            video_data = v_info.get("data", {}) if v_info.get("success") else {}
+            duration = video_data.get("duration", 600)
+            cover_url = video_data.get("cover", "")
+
             api_url = f"https://api.bilibili.com/x/player/videoshot?bvid={bvid}&cid={cid}"
             headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.bilibili.com"}
 
@@ -550,10 +555,8 @@ class VideoService:
                     data = await resp.json()
 
             if data.get("code") != 0 or "data" not in data:
-                cover_frame = await fetch_image_as_jpeg_base64(info.get("pic") or "")
+                cover_frame = await fetch_image_as_jpeg_base64(cover_url)
                 if cover_frame:
-                    v_info = await self.get_info(bvid)
-                    duration = v_info["data"].get("duration", 600) if v_info.get("success") else 600
                     return {
                         "success": True,
                         "data": {
@@ -568,10 +571,8 @@ class VideoService:
             shot_data = data["data"]
             image_urls = shot_data.get("image", [])
             if not image_urls:
-                cover_frame = await fetch_image_as_jpeg_base64(info.get("pic") or "")
+                cover_frame = await fetch_image_as_jpeg_base64(cover_url)
                 if cover_frame:
-                    v_info = await self.get_info(bvid)
-                    duration = v_info["data"].get("duration", 600) if v_info.get("success") else 600
                     return {
                         "success": True,
                         "data": {
@@ -583,8 +584,6 @@ class VideoService:
                     }
                 return {"success": False, "error": "未找到预览图数据且封面回退失败"}
 
-            v_info = await self.get_info(bvid)
-            duration = v_info["data"].get("duration", 600)
             target_frames, _ = calculate_optimal_frame_params(duration)
             if max_frames:
                 target_frames = max_frames
@@ -630,7 +629,7 @@ class VideoService:
                             count += 1
 
             if not frames_base64:
-                cover_frame = await fetch_image_as_jpeg_base64(info.get("pic") or "")
+                cover_frame = await fetch_image_as_jpeg_base64(cover_url)
                 if cover_frame:
                     return {
                         "success": True,

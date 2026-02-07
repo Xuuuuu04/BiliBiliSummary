@@ -5,6 +5,7 @@ HTTP客户端管理模块
 """
 
 import asyncio
+from threading import Lock
 from typing import Optional
 
 import aiohttp
@@ -23,6 +24,7 @@ class HTTPClientManager:
 
     _instance: Optional["HTTPClientManager"] = None
     _session: Optional[aiohttp.ClientSession] = None
+    _lock = Lock()
 
     def __new__(cls):
         """单例模式"""
@@ -32,8 +34,8 @@ class HTTPClientManager:
 
     def __init__(self):
         """初始化HTTP客户端管理器"""
-        if self._session is None or self._session.closed:
-            self._initialize_session()
+        # Session 使用惰性初始化，在事件循环中首次请求时创建
+        pass
 
     def _initialize_session(self):
         """初始化 ClientSession"""
@@ -60,7 +62,9 @@ class HTTPClientManager:
             aiohttp.ClientSession 实例
         """
         if self._session is None or self._session.closed:
-            self._initialize_session()
+            with self._lock:
+                if self._session is None or self._session.closed:
+                    self._initialize_session()
 
         return self._session
 

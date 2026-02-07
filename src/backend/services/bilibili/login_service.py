@@ -3,13 +3,13 @@ B站登录服务模块（重构版）
 提供二维码登录、会话管理、凭据保存等功能
 """
 
-import os
 import time
 from typing import Dict
 
 from bilibili_api import login_v2
 
 from src.backend.utils.logger import get_logger
+from src.backend.utils.env_store import rewrite_env_with_filter, upsert_env_values
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -166,26 +166,14 @@ class LoginService:
             保存是否成功
         """
         try:
-            env_file = ".env"
-
             # 更新内存中的配置
             Config.BILIBILI_SESSDATA = credentials.get("SESSDATA", "")
             Config.BILIBILI_BILI_JCT = credentials.get("bili_jct", "")
             Config.BILIBILI_BUVID3 = credentials.get("buvid3", "")
             Config.BILIBILI_DEDEUSERID = credentials.get("DedeUserID", "")
 
-            # 读取现有的.env内容
-            env_content = {}
-            if os.path.exists(env_file):
-                with open(env_file, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith("#") and "=" in line:
-                            key, value = line.split("=", 1)
-                            env_content[key] = value
-
-            # 更新凭据
-            env_content.update(
+            # 更新凭据到 .env
+            upsert_env_values(
                 {
                     "BILIBILI_SESSDATA": Config.BILIBILI_SESSDATA,
                     "BILIBILI_BILI_JCT": Config.BILIBILI_BILI_JCT,
@@ -193,18 +181,6 @@ class LoginService:
                     "BILIBILI_DEDEUSERID": Config.BILIBILI_DEDEUSERID,
                 }
             )
-
-            # 写入.env文件
-            with open(env_file, "w", encoding="utf-8") as f:
-                f.write("# B站API配置（自动保存）\n")
-                for key, value in env_content.items():
-                    if key.startswith("BILIBILI_"):
-                        f.write(f"{key}={value}\n")
-
-                f.write("\n# 其他配置\n")
-                for key, value in env_content.items():
-                    if not key.startswith("BILIBILI_"):
-                        f.write(f"{key}={value}\n")
 
             logger.info("凭据已保存到.env文件并更新内存")
             return True
@@ -245,21 +221,7 @@ class LoginService:
             Config.BILIBILI_DEDEUSERID = None
 
             # 清理.env文件中的B站凭据
-            env_file = ".env"
-            if os.path.exists(env_file):
-                env_content = {}
-                with open(env_file, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith("#") and "=" in line:
-                            key, value = line.split("=", 1)
-                            if not key.startswith("BILIBILI_"):
-                                env_content[key] = value
-
-                # 重写.env文件
-                with open(env_file, "w", encoding="utf-8") as f:
-                    for key, value in env_content.items():
-                        f.write(f"{key}={value}\n")
+            rewrite_env_with_filter(lambda key: not key.startswith("BILIBILI_"))
 
             logger.info("已清理B站登录凭据(内存及文件)和所有会话")
 

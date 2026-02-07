@@ -15,6 +15,7 @@ from typing import Dict
 import requests
 
 from src.backend.utils.logger import get_logger
+from src.backend.utils.project_paths import research_reports_dir
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -159,7 +160,7 @@ def web_search_exa(query: str) -> Dict:
         return {"success": False, "error": str(e)}
 
 
-def save_research_report(topic: str, content: str, report_dir: str = "research_reports"):
+def save_research_report(topic: str, content: str, report_dir: str | None = None):
     """
     将研究报告保存到本地 Markdown 文件
 
@@ -172,8 +173,9 @@ def save_research_report(topic: str, content: str, report_dir: str = "research_r
         {'success': bool, 'path': str} - 保存的文件路径
     """
     try:
-        if not os.path.exists(report_dir):
-            os.makedirs(report_dir)
+        resolved_report_dir = report_dir or str(research_reports_dir())
+        if not os.path.exists(resolved_report_dir):
+            os.makedirs(resolved_report_dir)
 
         # 清理文件名
         safe_topic = re.sub(r'[\\/*?:"<>|]', "_", topic)[:50]
@@ -181,7 +183,7 @@ def save_research_report(topic: str, content: str, report_dir: str = "research_r
         filename_base = f"{timestamp}_{safe_topic}"
 
         # 保存 Markdown
-        md_filepath = os.path.join(report_dir, f"{filename_base}.md")
+        md_filepath = os.path.join(resolved_report_dir, f"{filename_base}.md")
         with open(md_filepath, "w", encoding="utf-8") as f:
             f.write(f"# 研究课题：{topic}\n")
             f.write(f"生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")

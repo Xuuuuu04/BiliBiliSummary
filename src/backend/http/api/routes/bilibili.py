@@ -67,6 +67,11 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["api"])
 
 
+def _server_error(message: str, error: Exception) -> JSONResponse:
+    logger.exception("%s: %s", message, str(error))
+    return JSONResponse(status_code=500, content={"success": False, "error": message})
+
+
 @router.post("/search")
 async def search_content(
     payload: SearchRequest, bilibili_service: BilibiliService = Depends(get_bilibili_service)
@@ -85,7 +90,7 @@ async def search_content(
             res = await bilibili_service.search_videos(payload.keyword, limit=10)
         return res
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+        return _server_error("搜索失败", e)
 
 
 @router.post("/video/info")
@@ -114,9 +119,7 @@ async def get_video_info(
         related_videos = related_res.get("data") if related_res.get("success") else []
         return {"success": True, "data": video_data, "related": related_videos}
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"获取视频信息失败: {str(e)}"}
-        )
+        return _server_error("获取视频信息失败", e)
 
 
 @router.post("/video/subtitle")
@@ -131,9 +134,7 @@ async def get_video_subtitle(
             )
         return await bilibili_service.get_video_subtitles(bvid)
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"获取字幕失败: {str(e)}"}
-        )
+        return _server_error("获取字幕失败", e)
 
 
 @router.get("/video/popular")
@@ -141,7 +142,7 @@ async def get_popular_videos(bilibili_service: BilibiliService = Depends(get_bil
     try:
         return await bilibili_service.get_popular_videos()
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+        return _server_error("获取热门视频失败", e)
 
 
 @router.get("/image-proxy")
@@ -152,7 +153,10 @@ def image_proxy(url: str = Query(min_length=1)):
     elif not image_url.startswith(("http://", "https://")):
         image_url = "https://" + image_url
 
-    if not any(domain in image_url for domain in ["hdslb.com", "bilibili.com"]):
+    parsed = urllib.parse.urlparse(image_url)
+    hostname = (parsed.hostname or "").lower()
+    allowed_hosts = ("hdslb.com", "bilibili.com")
+    if not hostname or not any(hostname == domain or hostname.endswith(f".{domain}") for domain in allowed_hosts):
         return JSONResponse(status_code=400, content={"error": "不支持的图片域名"})
 
     try:
@@ -172,8 +176,8 @@ def image_proxy(url: str = Query(min_length=1)):
         content_type = response.headers.get("content-type", "image/jpeg")
         return Response(content=response.content, media_type=content_type)
     except Exception as e:
-        logger.error(f"图片代理失败: {str(e)}")
-        return JSONResponse(status_code=500, content={"error": f"获取图片失败: {str(e)}"})
+        logger.exception("图片代理失败: %s", str(e))
+        return JSONResponse(status_code=500, content={"error": "获取图片失败"})
 
 
 @router.get("/health")
@@ -186,9 +190,7 @@ async def start_bilibili_login(login_service: LoginService = Depends(get_login_s
     try:
         return await login_service.start_login()
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"启动登录失败: {str(e)}"}
-        )
+        return _server_error("启动登录失败", e)
 
 
 @router.post("/bilibili/login/status")
@@ -208,9 +210,7 @@ async def check_login_status(
             bilibili_service.refresh_credential()
         return result
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"检查登录状态失败: {str(e)}"}
-        )
+        return _server_error("检查登录状态失败", e)
 
 
 @router.post("/bilibili/login/logout")
@@ -223,9 +223,7 @@ async def logout_bilibili(
         bilibili_service.refresh_credential()
         return result
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"登出失败: {str(e)}"}
-        )
+        return _server_error("登出失败", e)
 
 
 @router.get("/bilibili/login/check")
@@ -264,7 +262,4 @@ async def check_current_login(bilibili_service: BilibiliService = Depends(get_bi
 
         return {"success": True, "data": {"is_logged_in": False, "user_id": None, "message": "未登录"}}
     except Exception as e:
-        return JSONResponse(
-            status_code=500, content={"success": False, "error": f"检查登录状态失败: {str(e)}"}
-        )
-
+        return _server_error("检查登录状态失败", e)

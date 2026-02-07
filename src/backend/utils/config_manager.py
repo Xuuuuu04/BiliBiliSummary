@@ -4,11 +4,12 @@
 提供统一的配置管理、验证和持久化功能
 """
 
-from pathlib import Path
 from threading import Lock
 from typing import Any, Callable, Dict
 
+from src.backend.utils.env_store import rewrite_env_with_filter, upsert_env_values
 from src.backend.utils.logger import get_logger
+from src.backend.utils.project_paths import env_file_path
 from src.config import Config
 
 logger = get_logger(__name__)
@@ -26,9 +27,7 @@ class ConfigManager:
         self._lock = Lock()
         self._watchers: Dict[str, list] = {}  # 配置变更监听器
 
-        # 项目根目录
-        self._project_root = Path(__file__).parent.parent.parent.parent.parent
-        self._env_file = self._project_root / ".env"
+        self._env_file = env_file_path()
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -148,27 +147,8 @@ class ConfigManager:
             value: 配置值
         """
         try:
-            if not self._env_file.exists():
-                logger.warning(f".env 文件不存在: {self._env_file}")
-                return
-
-            # 读取现有配置
-            env_content = {}
-            with open(self._env_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        k, v = line.split("=", 1)
-                        env_content[k] = v
-
-            # 更新配置
             env_key = key.upper()
-            env_content[env_key] = value
-
-            # 写回文件
-            with open(self._env_file, "w", encoding="utf-8") as f:
-                for k, v in env_content.items():
-                    f.write(f"{k}={v}\n")
+            upsert_env_values({env_key: str(value)}, self._env_file)
 
             logger.debug(f"配置已持久化到 .env: {env_key}")
         except Exception as e:
@@ -182,33 +162,17 @@ class ConfigManager:
             credentials: 凭据字典
         """
         try:
-            if not self._env_file.exists():
-                logger.warning(f".env 文件不存在: {self._env_file}")
-                return
-
-            # 读取现有配置
-            env_content = {}
-            with open(self._env_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        k, v = line.split("=", 1)
-                        env_content[k] = v
-
-            # 更新B站凭据
-            env_content["BILIBILI_SESSDATA"] = credentials.get("SESSDATA", "")
-            env_content["BILIBILI_BILI_JCT"] = credentials.get("BILI_JCT", "")
-            env_content["BILIBILI_BUVID3"] = credentials.get("BUVID3", "")
-            env_content["BILIBILI_DEDEUSERID"] = credentials.get("DEDEUSERID", "")
-
-            # 写回文件
-            with open(self._env_file, "w", encoding="utf-8") as f:
-                f.write("# B站API配置（自动保存）\n")
-                for key, value in env_content.items():
-                    if key.startswith("BILIBILI_"):
-                        f.write(f"{key}={value}\n")
-                    elif not key.startswith("OPENAI_"):  # 非敏感配置
-                        f.write(f"{key}={value}\n")
+            updates = {
+                "BILIBILI_SESSDATA": credentials.get("SESSDATA", ""),
+                "BILIBILI_BILI_JCT": credentials.get("BILI_JCT", ""),
+                "BILIBILI_BUVID3": credentials.get("BUVID3", ""),
+                "BILIBILI_DEDEUSERID": credentials.get("DEDEUSERID", ""),
+            }
+            rewrite_env_with_filter(
+                keep_if=lambda key: not key.startswith("OPENAI_"),
+                updates=updates,
+                path=self._env_file,
+            )
 
             logger.info("B站凭据已持久化到 .env 文件")
         except Exception as e:
